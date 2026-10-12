@@ -40,7 +40,7 @@ export default async function AdminSchedulePage({ searchParams }: { searchParams
       <WeekNav basePath="/admin/schedule" weekStart={weekStart} currentWeek={currentWeekStart()} />
 
       <ScheduleTools
-        key={weekStart}
+        key={`tools-${weekStart}`}
         weekStart={weekStart}
         draftIds={draftIds}
         defaultSlots={settings.default_time_slots}
@@ -73,7 +73,7 @@ export default async function AdminSchedulePage({ searchParams }: { searchParams
         </div>
       )}
 
-      <WhatsAppPanel key={weekStart} message={message} link={link} />
+      <WhatsAppPanel key={`whatsapp-${weekStart}`} message={message} link={link} />
     </div>
   );
 }
