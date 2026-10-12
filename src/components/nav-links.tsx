@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, ClipboardList, History, House, Layers, LayoutDashboard, Settings, UserRound, Users } from 'lucide-react';
+import { CalendarDays, CalendarHeart, ClipboardList, History, House, Layers, LayoutDashboard, Settings, UserRound, Users } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const ICONS = {
@@ -15,12 +15,15 @@ const ICONS = {
   plans: Layers,
   settings: Settings,
   audit: History,
+  events: CalendarHeart,
 } as const;
 
 export interface NavItem {
   href: string;
   label: string;
   icon: keyof typeof ICONS;
+  /** Shorter label for the cramped bottom tab bar (the full label stays the accessible name). */
+  tabLabel?: string;
   /** Match the pathname exactly (used for "/" and "/admin"). */
   exact?: boolean;
 }
@@ -54,6 +57,7 @@ export function NavLinks({
               <Link
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
+                aria-label={layout === 'tabs' && item.tabLabel ? item.label : undefined}
                 className={cn(
                   'flex items-center transition-colors duration-150',
                   layout === 'tabs' && 'min-h-16 flex-col justify-center gap-1 px-1 text-[0.6875rem] font-semibold',
@@ -75,7 +79,7 @@ export function NavLinks({
                 ) : (
                   <Icon className="size-5" aria-hidden="true" strokeWidth={1.6} />
                 )}
-                <span>{item.label}</span>
+                <span>{layout === 'tabs' ? (item.tabLabel ?? item.label) : item.label}</span>
               </Link>
             </li>
           );

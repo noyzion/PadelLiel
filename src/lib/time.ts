@@ -192,3 +192,127 @@ export function greetingHe(now: Date = new Date()): { text: string } {
   if (hour >= 17 && hour < 21) return { text: 'ערב טוב' };
   return { text: 'לילה טוב' };
 }
+/* ------------------------------------------------------------------ */
+/* Community events: instants displayed / entered in Israel time        */
+/* ------------------------------------------------------------------ */
+
+const ISRAEL_PARTS = new Intl.DateTimeFormat('en-US', {
+  timeZone: COMMUNITY_TIME_ZONE,
+  hourCycle: 'h23',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+});
+
+/** Wall-clock components of an instant in Israel. */
+function israelWallClock(at: Date) {
+  const parts = ISRAEL_PARTS.formatToParts(at);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)!.value);
+  return { year: get('year'), month: get('month'), day: get('day'), hour: get('hour'), minute: get('minute'), second: get('second') };
+}
+
+/** Israel's UTC offset (ms, positive = ahead of UTC) at the given instant. DST-aware. */
+function israelOffsetMs(at: Date): number {
+  const w = israelWallClock(at);
+  const asUtc = Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute, w.second);
+  return asUtc - Math.floor(at.getTime() / 1000) * 1000;
+}
+
+const LOCAL_DATETIME_RE = /^(\d{4})-(\d{2})-(\d{2})T([01]\d|2[0-3]):([0-5]\d)$/;
+
+/**
+ * Converts what a staff member typed into a `datetime-local` input ("2026-11-02T18:30", Israel wall-clock time)
+ * into the exact instant. Returns null for malformed values, impossible dates, and wall-clock times that do not
+ * exist in Israel (the hour skipped when daylight saving time starts).
+ */
+export function israelLocalToInstant(local: string): Date | null {
+  const m = LOCAL_DATETIME_RE.exec(local);
+  if (!m) return null;
+  const [y, mo, d, h, mi] = m.slice(1).map(Number);
+  if (!isValidDateString(`${m[1]}-${m[2]}-${m[3]}`)) return null;
+
+  const wall = Date.UTC(y, mo - 1, d, h, mi);
+  // Two passes: the offset must be read at the *target* instant, which depends on the offset.
+  let guess = wall - israelOffsetMs(new Date(wall));
+  guess = wall - israelOffsetMs(new Date(guess));
+  const result = new Date(guess);
+
+  const back = israelWallClock(result);
+  const roundTrips = back.year === y && back.month === mo && back.day === d && back.hour === h && back.minute === mi;
+  return roundTrips ? result : null;
+}
+
+/** The inverse of `israelLocalToInstant`: an instant as a `datetime-local` value in Israel time. */
+export function instantToIsraelLocal(iso: string): string {
+  const w = israelWallClock(new Date(iso));
+  const p2 = (n: number) => String(n).padStart(2, '0');
+  return `${String(w.year).padStart(4, '0')}-${p2(w.month)}-${p2(w.day)}T${p2(w.hour)}:${p2(w.minute)}`;
+}
+
+function eventFormat(options: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat('he-IL', { timeZone: COMMUNITY_TIME_ZONE, ...options });
+}
+
+/** "יום שני, 2 בנובמבר 2026" */
+export function formatEventDateHe(iso: string): string {
+  return eventFormat({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
+}
+
+/** "2 בנובמבר" (no year, for compact lists) */
+export function formatEventDayMonthHe(iso: string): string {
+  return eventFormat({ day: 'numeric', month: 'long' }).format(new Date(iso));
+}
+
+/** "יום שני" */
+export function formatEventWeekdayHe(iso: string): string {
+  return eventFormat({ weekday: 'long' }).format(new Date(iso));
+}
+
+/** "יום שני, 2 בנובמבר" (no year, for compact lists) */
+export function formatEventDayCompactHe(iso: string): string {
+  return `${formatEventWeekdayHe(iso)}, ${formatEventDayMonthHe(iso)}`;
+}
+
+/** "2" */
+export function formatEventDayNumberHe(iso: string): string {
+  return eventFormat({ day: 'numeric' }).format(new Date(iso));
+}
+
+/** "נובמבר" */
+export function formatEventMonthHe(iso: string): string {
+  return eventFormat({ month: 'long' }).format(new Date(iso));
+}
+
+/** "18:30" (24-hour, Israel time) */
+export function formatEventTimeHe(iso: string): string {
+  return eventFormat({ hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+}
+
+/** The Israel calendar date ("YYYY-MM-DD") of an instant. */
+export function israelDateOf(iso: string): string {
+  return israelToday(new Date(iso));
+}
+
+/**
+ * The "when" of an event for display (`compact` drops the year, for cards).
+ *   same day / no end: date = "יום שני, 2 בנובמבר 2026", time = "18:30–20:00" (or "18:30")
+ *   spans days:        date = "2 בנובמבר, 18:30 – 3 בנובמבר, 12:00", time = null
+ */
+export function formatEventWhenHe(
+  startsAt: string,
+  endsAt: string | null,
+  compact = false,
+): { date: string; time: string | null } {
+  const day = compact ? formatEventDayCompactHe : formatEventDateHe;
+  if (!endsAt) return { date: day(startsAt), time: formatEventTimeHe(startsAt) };
+  if (israelDateOf(startsAt) === israelDateOf(endsAt)) {
+    return { date: day(startsAt), time: `${formatEventTimeHe(startsAt)}–${formatEventTimeHe(endsAt)}` };
+  }
+  return {
+    date: `${formatEventDayMonthHe(startsAt)}, ${formatEventTimeHe(startsAt)} – ${formatEventDayMonthHe(endsAt)}, ${formatEventTimeHe(endsAt)}`,
+    time: null,
+  };
+}

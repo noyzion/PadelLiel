@@ -1,8 +1,35 @@
 import type { NextConfig } from 'next';
 
+/** Event cover images live in the public `event-images` bucket of the project's Supabase Storage. */
+function supabaseImageConfig(): NonNullable<NextConfig['images']> {
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '');
+    const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    return {
+      remotePatterns: [
+        {
+          protocol: url.protocol === 'http:' ? 'http' : 'https',
+          hostname: url.hostname,
+          port: url.port,
+          pathname: '/storage/v1/object/public/event-images/**',
+        },
+      ],
+      // Only for a local Supabase (supabase start); never in production.
+      dangerouslyAllowLocalIP: isLocal && process.env.NODE_ENV !== 'production',
+    };
+  } catch {
+    return {};
+  }
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  images: supabaseImageConfig(),
+  experimental: {
+    // Event cover images are uploaded through a server action: 4 MB image + multipart overhead.
+    serverActions: { bodySizeLimit: '5mb' },
+  },
   async headers() {
     return [
       {

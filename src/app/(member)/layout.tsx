@@ -6,6 +6,7 @@ const NAV: NavItem[] = [
   { href: '/', label: 'בית', icon: 'home', exact: true },
   { href: '/schedule', label: 'אימונים', icon: 'calendar' },
   { href: '/bookings', label: 'ההרשמות שלי', icon: 'bookings' },
+  { href: '/events', label: 'אירועים בקהילה', tabLabel: 'אירועים', icon: 'events' },
   { href: '/profile', label: 'פרופיל', icon: 'profile' },
 ];
 

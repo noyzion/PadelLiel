@@ -12,14 +12,16 @@ message with the booking link to copy/share.
 
 | Area | Status |
 |---|---|
-| SQL business rules, RLS, privileges, concurrency | **Verified** – 117 tests against a real PostgreSQL 18 (`npm run test:db`) |
-| Pure TypeScript (time, validation, error mapping, generators) | **Verified** – 29 unit tests |
+| SQL business rules, RLS, privileges, concurrency | **Verified** – 164 tests against a real PostgreSQL 18 (`npm run test:db`), including the community-events RLS and storage policies |
+| Pure TypeScript (time, validation, error mapping, generators) | **Verified** – 56 unit tests |
 | Type check, lint, production build | **Verified** (`npm run typecheck`, `npm run lint`, `npm run build`) |
 | App boots without env and redirects to `/setup`; `/setup` renders RTL Hebrew | **Verified** (smoke test against `next start`) |
 | Against a **live Supabase project**: Auth e-mail flows, PostgREST RPC argument shapes, `.select()` behaviour, RLS through PostgREST | **NOT verified** – no Supabase credentials were available while building. Follow the first-run checklist below. |
 | In-browser UI behaviour (modals, dialogs, RTL layout on devices) | **NOT verified** – no browser automation was run |
 
-The DB tests use a stub of Supabase's `auth` schema (`auth.users`, `auth.uid()`), not Supabase itself.
+Community-event image upload (Supabase Storage API, `next/image` with the Supabase host, browser-side image downscaling) is likewise **NOT verified** against a live project or a browser; the storage RLS policies are tested against a stub of the `storage` schema.
+
+"The DB tests use a stub of Supabase's `auth` and `storage` schemas (`auth.users`, `auth.uid()`, `storage.buckets/objects`), not Supabase itself.
 
 ## Local setup
 
@@ -46,7 +48,7 @@ The Supabase `service_role` key is **never** used or needed. Do not commit `.env
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota) using the SQL Editor.
+2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events) using the SQL Editor.
    The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (once / twice / three times a week = 4 / 8 / 13 sessions per month) and default settings (8h cutoff, capacity 4, 07:00–08:00 and 08:00–09:00).
 3. **Authentication → URL Configuration**
    - Site URL: your app URL (e.g. `https://padel-liel.vercel.app`).
@@ -61,6 +63,10 @@ where email = 'admin@example.com';   -- use the real address
 ```
 
 This is the only manual SQL step. Everything else is done from the admin screens.
+
+**Staff for community events.** There is no separate staff role: anyone who may publish events is an approved `admin` (same SQL as above). Admins also manage sessions and members. Roles can only be changed in the database, never by a user.
+
+**Event images.** The community-events migration creates the public `event-images` bucket (jpeg/png/webp, 4 MB) and its storage policies. If a project rejects `create policy ... on storage.objects` from the SQL Editor, create the bucket in **Storage** with the same settings and add the four admin-only policies from the migration there.
 
 ### First-run checklist (because the live integration is unverified)
 
@@ -95,7 +101,9 @@ still counts. The app asks for explicit confirmation before a late cancellation,
 
 **Coach (admin):** dashboard → schedule (bulk-create by days × time slots × levels, duplicate a week, publish, WhatsApp message) → session page
 (roster, attendance, manual assignment, waiting list, cancel session) → members (approve, level, plan, manual allowance adjustments) →
-plans → settings (cutoff hours, default capacity and time slots) → audit log.
+plans → settings (cutoff hours, default capacity and time slots) → audit log. **Events** (`/admin/events`): create, edit, save as draft, publish, unpublish and delete announcements with an optional cover image.
+
+**Community events:** the trainee tab **אירועים בקהילה** (`/events`) lists published events (upcoming first, then **אירועי עבר**) and opens each one for its full details. It is purely informational: no registration, RSVP, payments or notifications, and it never touches the monthly quota.
 
 ## Repository layout
 

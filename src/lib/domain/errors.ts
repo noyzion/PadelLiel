@@ -36,6 +36,7 @@ export const ERROR_MESSAGES_HE = {
   CAPACITY_BELOW_OCCUPANCY: 'הקיבולת קטנה ממספר הרשומות באימון.',
   PLAN_NOT_FOUND: 'המנוי לא נמצא.',
   ANOTHER_SUBSCRIPTION_ACTIVE: 'כבר קיים מנוי פעיל למתאמנת. החליפי מנוי במקום להפעיל ישן.',
+  EVENT_NOT_FOUND: 'האירוע לא נמצא.',
   INVALID_INPUT: 'הנתונים שהוזנו אינם תקינים.',
   INTERNAL: 'אירעה שגיאה. נסי שוב בעוד רגע.',
 } as const;

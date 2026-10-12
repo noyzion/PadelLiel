@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { slotsOverlap } from '@/lib/domain/schedule-generator';
-import { isValidDateString } from '@/lib/time';
+import { EVENT_DESCRIPTION_MAX, EVENT_LOCATION_MAX, EVENT_TITLE_MAX } from '@/lib/domain/events';
+import { isValidDateString, israelLocalToInstant } from '@/lib/time';
 
 /** Runtime validation for every untrusted input that reaches a server action. */
 
@@ -170,6 +171,49 @@ export const settingsSchema = z.object({
     .min(1, 'לפחות חלון זמן אחד')
     .max(12),
 });
+
+/* ------------------------------ community events ------------------------------ */
+
+/** "2026-11-02T18:30": what a datetime-local input produces, interpreted as Israel time. */
+const localDateTime = z.string().refine((v) => israelLocalToInstant(v) !== null, 'תאריך או שעה לא תקינים');
+
+const eventFields = z.object({
+  title: z.string().trim().min(2, 'יש להזין כותרת').max(EVENT_TITLE_MAX, 'הכותרת ארוכה מדי'),
+  description: z.string().trim().max(EVENT_DESCRIPTION_MAX, 'התיאור ארוך מדי').default(''),
+  startsAt: localDateTime,
+  endsAt: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => v || undefined)
+    .refine((v) => v === undefined || israelLocalToInstant(v) !== null, 'תאריך או שעה לא תקינים'),
+  location: z.string().trim().min(1, 'יש להזין מיקום').max(EVENT_LOCATION_MAX, 'המיקום ארוך מדי'),
+  /** The status the event should have after saving. */
+  status: z.enum(['DRAFT', 'PUBLISHED']),
+});
+
+type EventFieldValues = z.infer<typeof eventFields>;
+
+function refineEvent(v: EventFieldValues, ctx: z.RefinementCtx) {
+  const start = israelLocalToInstant(v.startsAt);
+  const end = v.endsAt ? israelLocalToInstant(v.endsAt) : null;
+  if (start && end && end.getTime() <= start.getTime()) {
+    ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'שעת הסיום חייבת להיות אחרי שעת ההתחלה' });
+  }
+  if (v.status === 'PUBLISHED' && !v.description) {
+    ctx.addIssue({ code: 'custom', path: ['description'], message: 'כדי לפרסם אירוע יש להוסיף תיאור' });
+  }
+}
+
+export const eventFormSchema = eventFields.superRefine(refineEvent);
+
+/** Create (no `id`) or update (with `id`); the image itself travels separately in the FormData. */
+export const eventSaveSchema = eventFields
+  .extend({ id: uuid.optional(), removeImage: z.boolean().default(false) })
+  .superRefine(refineEvent);
+
+export const eventIdSchema = z.object({ eventId: uuid });
+export const eventStatusSchema = z.object({ eventId: uuid, status: z.enum(['DRAFT', 'PUBLISHED']) });
 
 export function firstIssueMessage(error: z.ZodError): string {
   return error.issues[0]?.message ?? 'הנתונים שהוזנו אינם תקינים';
