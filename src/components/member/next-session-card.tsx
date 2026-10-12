@@ -18,7 +18,7 @@ export function NextSessionCard({
 }) {
   const label = `${formatDateHe(booking.session_date)} · ${formatTimeRange(booking.start_time, booking.end_time)}`;
   return (
-    <Card tone="pink" className="flex flex-col gap-4">
+    <Card tone="blue" className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-small font-semibold text-ocean-700">{formatDateHe(booking.session_date)}</p>
@@ -35,7 +35,7 @@ export function NextSessionCard({
         <MapPin className="size-4 shrink-0 text-ocean-700" aria-hidden="true" />
         {VENUE_NAME}
       </p>
-      <div className="flex flex-col gap-3 border-t border-pink-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-ocean-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-caption text-muted">
           ביטול שמחזיר את האימון למכסה אפשרי עד <span className="num font-semibold text-navy-900">{formatInstantHe(booking.cancellation_deadline)}</span>
         </p>

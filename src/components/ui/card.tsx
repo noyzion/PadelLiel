@@ -13,7 +13,7 @@ type CardTone = 'default' | 'pink' | 'blue';
 const cardTones: Record<CardTone, string> = {
   default: 'border-line bg-surface',
   pink: 'border-pink-200 bg-pink-50',
-  blue: 'border-pink-200 bg-pink-50',
+  blue: 'border-ocean-100 bg-ocean-50',
 };
 
 export function Card({ className, tone = 'default', ...props }: HTMLAttributes<HTMLDivElement> & { tone?: CardTone }) {
@@ -30,7 +30,7 @@ const badgeTones: Record<Tone, string> = {
   green: 'border-success-line bg-success-soft text-success',
   amber: 'border-warning-line bg-warning-soft text-warning',
   red: 'border-danger-line bg-danger-soft text-danger',
-  blue: 'border-navy-100 bg-navy-50 text-navy-900',
+  blue: 'border-ocean-100 bg-ocean-50 text-ocean-700',
 };
 
 export function Badge({ tone = 'neutral', className, children }: { tone?: Tone; className?: string; children: ReactNode }) {
@@ -57,7 +57,7 @@ const alertTones: Record<Tone, string> = {
   green: 'border-success-line bg-success-soft text-ink',
   amber: 'border-warning-line bg-warning-soft text-ink',
   red: 'border-danger-line bg-danger-soft text-ink',
-  blue: 'border-pink-200 bg-pink-50 text-ink',
+  blue: 'border-ocean-100 bg-ocean-50 text-ink',
 };
 
 const alertIconTones: Record<Tone, string> = {
@@ -66,7 +66,7 @@ const alertIconTones: Record<Tone, string> = {
   green: 'text-success',
   amber: 'text-warning',
   red: 'text-danger',
-  blue: 'text-pink-700',
+  blue: 'text-ocean-700',
 };
 
 const alertIcons = {
@@ -126,7 +126,7 @@ export function EmptyState({
         className,
       )}
     >
-      <PadelRackets className="mb-2 w-20 text-pink-500" />
+      <PadelRackets className="mb-2 w-20 text-pink-200" />
       <p className="text-card font-semibold text-navy-900">{title}</p>
       {description ? <p className="max-w-sm text-small text-muted">{description}</p> : null}
       {action ? <div className="mt-3">{action}</div> : null}
@@ -195,9 +195,9 @@ export function ProgressBar({ value, max, label }: { value: number; max: number;
       aria-valuemin={0}
       aria-valuemax={max}
       aria-label={label}
-      className="h-2.5 w-full overflow-hidden rounded-chip bg-pink-100"
+      className="h-2.5 w-full overflow-hidden rounded-chip bg-navy-100"
     >
-      <div className="h-full rounded-chip bg-pink-500 transition-[width] duration-200" style={{ width: `${percent}%` }} />
+      <div className="h-full rounded-chip bg-navy-900 transition-[width] duration-200" style={{ width: `${percent}%` }} />
     </div>
   );
 }

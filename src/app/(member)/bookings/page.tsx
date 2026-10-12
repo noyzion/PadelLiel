@@ -47,7 +47,7 @@ function BookingCard({
   const note = statusNote(b, hours);
   const label = `${formatDateHe(b.session_date)} · ${formatTimeRange(b.start_time, b.end_time)}`;
   return (
-    <Card tone={highlight ? 'pink' : 'default'} className="flex flex-col gap-3 p-4">
+    <Card tone={highlight ? 'blue' : 'default'} className="flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="num text-card font-semibold text-navy-900">

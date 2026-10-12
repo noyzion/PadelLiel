@@ -84,7 +84,7 @@ export function Brand({
       <VenueLogo size={stacked ? 'lg' : 'sm'} />
       <span className={cn('flex flex-col', stacked ? 'items-center gap-1' : 'leading-tight')}>
         <span className={cn('font-semibold text-navy-900', stacked ? 'text-hero tracking-tight' : 'text-body')}>{COMMUNITY_NAME}</span>
-        <span className={cn('text-pink-700', stacked ? 'text-body tracking-[0.12em]' : 'text-caption tracking-wide')}>{VENUE_SHORT}</span>
+        <span className={cn('text-muted', stacked ? 'text-body tracking-[0.12em]' : 'text-caption tracking-wide')}>{VENUE_SHORT}</span>
       </span>
     </Link>
   );

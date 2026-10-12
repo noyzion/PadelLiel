@@ -11,7 +11,7 @@ export function MonthlyUsageProgress({ used, total }: { used: number; total: num
   return (
     <div className="flex gap-1" aria-hidden="true">
       {Array.from({ length: segments }, (_, i) => (
-        <span key={i} className={cn('h-2 flex-1 rounded-chip', i < filled ? 'bg-pink-500' : 'bg-pink-100')} />
+        <span key={i} className={cn('h-2 flex-1 rounded-chip', i < filled ? 'bg-navy-900' : 'bg-navy-100')} />
       ))}
     </div>
   );

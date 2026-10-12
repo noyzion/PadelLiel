@@ -32,13 +32,13 @@ export function FilterChips({
                 className={cn(
                   'inline-flex min-h-11 items-center gap-1.5 rounded-chip border px-4 text-small font-semibold transition-colors duration-150',
                   active
-                    ? 'border-pink-200 bg-pink-100 text-pink-700'
-                    : 'border-line-strong bg-surface text-navy-900 hover:border-pink-200 hover:bg-pink-50',
+                    ? 'border-navy-900 bg-navy-900 text-white'
+                    : 'border-line-strong bg-surface text-navy-900 hover:border-navy-900/50 hover:bg-navy-50',
                 )}
               >
                 {chip.label}
                 {chip.count !== undefined ? (
-                  <span className={cn('num rounded-chip px-1.5 text-caption', active ? 'bg-white/70' : 'bg-pink-50')}>{chip.count}</span>
+                  <span className={cn('num rounded-chip px-1.5 text-caption', active ? 'bg-white/20' : 'bg-navy-100')}>{chip.count}</span>
                 ) : null}
               </Link>
             </li>
