@@ -27,7 +27,7 @@ const summarize = (outcomes: Outcome[]) => ({
 // Several rounds per scenario make an unsynchronised implementation fail with high probability.
 const ROUNDS = 5;
 
-describe('concurrent bookings — capacity', () => {
+describe('concurrent bookings - capacity', () => {
   it('only one of many trainees can take the last spot', async () => {
     for (let round = 0; round < ROUNDS; round++) {
       const session = await db.createSession({ date: '2026-11-10', start: '07:00', capacity: 1 });
@@ -79,7 +79,7 @@ describe('concurrent bookings — capacity', () => {
   });
 });
 
-describe('concurrent bookings — weekly allowance', () => {
+describe('concurrent bookings - weekly allowance', () => {
   it('one trainee with one remaining session cannot book two different sessions at once', async () => {
     for (let round = 0; round < ROUNDS; round++) {
       const member = await db.createMember({ limit: 1 });

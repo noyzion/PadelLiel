@@ -75,7 +75,7 @@ export async function getDashboard(db: Db, currentWeek: string): Promise<Dashboa
           booking_id: r.id,
           status: r.status,
           cancelled_at: r.cancelled_at,
-          member_name: memberById.get(r.member_id) ?? '—',
+          member_name: memberById.get(r.member_id) ?? '-',
           session_id: r.session_id,
           session_date: s.session_date,
           start_time: s.start_time,
@@ -92,5 +92,5 @@ export async function getAuditLog(db: Db, limit = 100) {
   const actorIds = [...new Set(logs.map((l) => l.actor_id).filter((x): x is string => Boolean(x)))];
   const actors = actorIds.length ? (unwrap(await db.from('profiles').select('id, full_name').in('id', actorIds)) as { id: string; full_name: string }[]) : [];
   const byId = new Map(actors.map((a) => [a.id, a.full_name]));
-  return logs.map((l) => ({ ...l, actor_name: l.actor_id ? (byId.get(l.actor_id) ?? '—') : 'מערכת' }));
+  return logs.map((l) => ({ ...l, actor_name: l.actor_id ? (byId.get(l.actor_id) ?? '-') : 'מערכת' }));
 }

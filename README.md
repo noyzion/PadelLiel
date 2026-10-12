@@ -1,4 +1,4 @@
-# PadelLiel – Padel Community Management
+# PadelLiel - Padel Community Management
 
 Mobile-first, Hebrew / RTL web app for the coaching team and its padel trainees (Kochav Yair). It replaces WhatsApp polls and spreadsheets:
 the coach publishes weekly sessions, trainees book and cancel themselves, and the rules (monthly session quota, 8-hour cancellation policy,
@@ -12,12 +12,12 @@ message with the booking link to copy/share.
 
 | Area | Status |
 |---|---|
-| SQL business rules, RLS, privileges, concurrency | **Verified** – 164 tests against a real PostgreSQL 18 (`npm run test:db`), including the community-events RLS and storage policies |
-| Pure TypeScript (time, validation, error mapping, generators) | **Verified** – 56 unit tests |
+| SQL business rules, RLS, privileges, concurrency | **Verified** - 164 tests against a real PostgreSQL 18 (`npm run test:db`), including the community-events RLS and storage policies |
+| Pure TypeScript (time, validation, error mapping, generators) | **Verified** - 56 unit tests |
 | Type check, lint, production build | **Verified** (`npm run typecheck`, `npm run lint`, `npm run build`) |
 | App boots without env and redirects to `/setup`; `/setup` renders RTL Hebrew | **Verified** (smoke test against `next start`) |
-| Against a **live Supabase project**: Auth e-mail flows, PostgREST RPC argument shapes, `.select()` behaviour, RLS through PostgREST | **NOT verified** – no Supabase credentials were available while building. Follow the first-run checklist below. |
-| In-browser UI behaviour (modals, dialogs, RTL layout on devices) | **NOT verified** – no browser automation was run |
+| Against a **live Supabase project**: Auth e-mail flows, PostgREST RPC argument shapes, `.select()` behaviour, RLS through PostgREST | **NOT verified** - no Supabase credentials were available while building. Follow the first-run checklist below. |
+| In-browser UI behaviour (modals, dialogs, RTL layout on devices) | **NOT verified** - no browser automation was run |
 
 Community-event image upload (Supabase Storage API, `next/image` with the Supabase host, browser-side image downscaling) is likewise **NOT verified** against a live project or a browser; the storage RLS policies are tested against a stub of the `storage` schema.
 
@@ -49,7 +49,7 @@ The Supabase `service_role` key is **never** used or needed. Do not commit `.env
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events) using the SQL Editor.
-   The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (once / twice / three times a week = 4 / 8 / 13 sessions per month) and default settings (8h cutoff, capacity 4, 07:00–08:00 and 08:00–09:00).
+   The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (once / twice / three times a week = 4 / 8 / 13 sessions per month) and default settings (8h cutoff, capacity 4, 07:00-08:00 and 08:00-09:00).
 3. **Authentication → URL Configuration**
    - Site URL: your app URL (e.g. `https://padel-liel.vercel.app`).
    - Redirect URLs: add `https://<your-app>/auth/callback` and `http://localhost:3000/auth/callback`.
@@ -74,7 +74,7 @@ This is the only manual SQL step. Everything else is done from the admin screens
 2. Log in as the admin → **מתאמנות** → approve the trainee, set her level, assign a plan.
 3. **לוח אימונים** → create sessions for next week → publish.
 4. Log in as the trainee → book → cancel → check the allowance card.
-5. If an admin action fails with a generic error, check the Supabase logs (PostgREST / Postgres) – the RPC names and argument names are in `src/server/services`.
+5. If an admin action fails with a generic error, check the Supabase logs (PostgREST / Postgres) - the RPC names and argument names are in `src/server/services`.
 
 ## Deployment (Vercel)
 
@@ -91,7 +91,7 @@ This is the only manual SQL step. Everything else is done from the admin screens
 | `npm run lint` | ESLint |
 | `npm test` | unit + DB tests |
 | `npm run test:unit` | pure TypeScript tests (fast) |
-| `npm run test:db` | SQL tests against an embedded PostgreSQL 18 – no Docker or Supabase needed (first run downloads the Postgres binary) |
+| `npm run test:db` | SQL tests against an embedded PostgreSQL 18 - no Docker or Supabase needed (first run downloads the Postgres binary) |
 
 ## Using the app
 

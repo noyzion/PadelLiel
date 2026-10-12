@@ -93,7 +93,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                   <div className="min-w-0">
                     <p className="truncate text-body font-semibold text-navy-900">{m.full_name}</p>
                     <p className="truncate text-caption text-muted">
-                      <span dir="ltr">{m.phone ?? '—'}</span> · <span dir="ltr">{m.email ?? '—'}</span>
+                      <span dir="ltr">{m.phone ?? '-'}</span> · <span dir="ltr">{m.email ?? '-'}</span>
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -127,11 +127,11 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                       {m.full_name}
                     </Link>
                     <div className="text-caption font-normal text-muted" dir="ltr">
-                      {m.email ?? '—'}
+                      {m.email ?? '-'}
                     </div>
                   </Td>
                   <Td>
-                    <span dir="ltr">{m.phone ?? '—'}</span>
+                    <span dir="ltr">{m.phone ?? '-'}</span>
                   </Td>
                   <Td>
                     <SkillLevelBadge label={levelLabel(m.skill_level_code, levels)} />
@@ -139,7 +139,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                   <Td>
                     <SubscriptionBadge m={m} />
                   </Td>
-                  <Td>{monthlyUsage(m) ?? '—'}</Td>
+                  <Td>{monthlyUsage(m) ?? '-'}</Td>
                   <Td>
                     <ApprovalBadge status={m.approval_status} />
                   </Td>

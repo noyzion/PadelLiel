@@ -16,7 +16,7 @@ export default defineConfig({
         },
       },
       {
-        // Real PostgreSQL (embedded) — exercises the actual migrations, RLS and RPCs.
+        // Real PostgreSQL (embedded) - exercises the actual migrations, RLS and RPCs.
         extends: true,
         test: {
           name: 'db',

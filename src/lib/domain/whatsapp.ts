@@ -14,7 +14,7 @@ export function buildWeeklyWhatsAppMessage(params: {
   const hours = formatHours(params.cancellationCutoffHours ?? 8);
   return [
     'היי בנות,',
-    `האימונים לשבוע ${formatDayMonth(start)}–${formatDayMonth(end)} פורסמו.`,
+    `האימונים לשבוע ${formatDayMonth(start)}-${formatDayMonth(end)} פורסמו.`,
     'אפשר להירשם לאימונים, לבטל ולהצטרף לרשימת המתנה דרך הקישור:',
     params.bookingUrl,
     '',

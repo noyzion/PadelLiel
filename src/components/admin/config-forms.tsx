@@ -45,16 +45,18 @@ export function PlanManager({ plans, memberCounts }: { plans: SubscriptionPlan[]
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {plans.map((p) => (
+        {plans.map((p) => {
+          const limitText = `${p.monthly_session_limit} אימונים בחודש`;
+          return (
           <Card key={p.id} className="flex flex-col gap-2 p-4">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-semibold">{p.name}</p>
-                <p className="text-small text-muted">{p.monthly_session_limit} אימונים בחודש</p>
+                <p className="text-small text-muted">{limitText}</p>
               </div>
               <Badge tone={p.is_active ? 'green' : 'neutral'}>{p.is_active ? 'פעילה' : 'לא פעילה'}</Badge>
             </div>
-            {p.description ? <p className="text-small text-muted">{p.description}</p> : null}
+            {p.description && p.description.trim() !== limitText ? <p className="text-small text-muted">{p.description}</p> : null}
             <div className="flex items-center justify-between">
               <span className="text-caption text-muted">{memberCounts[p.id] ?? 0} מנויים פעילים</span>
               <Button
@@ -69,7 +71,8 @@ export function PlanManager({ plans, memberCounts }: { plans: SubscriptionPlan[]
               </Button>
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       <Modal

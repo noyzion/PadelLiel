@@ -94,7 +94,7 @@ describe('WhatsApp message', () => {
     const link = scheduleLink('https://padel.example.com/', '2026-11-04');
     expect(link).toBe('https://padel.example.com/schedule?week=2026-11-01');
     const msg = buildWeeklyWhatsAppMessage({ weekStart: '2026-11-04', bookingUrl: link, cancellationCutoffHours: 6 });
-    expect(msg).toContain('1.11–7.11');
+    expect(msg).toContain('1.11-7.11');
     expect(msg).toContain(link);
     expect(msg).toContain('6 שעות');
     expect(whatsappShareUrl(msg)).toMatch(/^https:\/\/wa\.me\/\?text=/);

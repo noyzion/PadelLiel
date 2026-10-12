@@ -65,13 +65,13 @@ describe('event date formatting (Hebrew, Asia/Jerusalem)', () => {
   });
 
   it('describes a single-day event with and without an end time', () => {
-    expect(formatEventWhenHe(start, '2026-11-02T18:00:00Z')).toEqual({ date: 'יום שני, 2 בנובמבר 2026', time: '18:30–20:00' });
+    expect(formatEventWhenHe(start, '2026-11-02T18:00:00Z')).toEqual({ date: 'יום שני, 2 בנובמבר 2026', time: '18:30-20:00' });
     expect(formatEventWhenHe(start, null)).toEqual({ date: 'יום שני, 2 בנובמבר 2026', time: '18:30' });
     expect(formatEventWhenHe(start, null, true)).toEqual({ date: 'יום שני, 2 בנובמבר', time: '18:30' });
   });
 
   it('describes an event that spans days', () => {
-    expect(formatEventWhenHe(start, '2026-11-03T10:00:00Z')).toEqual({ date: '2 בנובמבר, 18:30 – 3 בנובמבר, 12:00', time: null });
+    expect(formatEventWhenHe(start, '2026-11-03T10:00:00Z')).toEqual({ date: '2 בנובמבר, 18:30 - 3 בנובמבר, 12:00', time: null });
   });
 });
 

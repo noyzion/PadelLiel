@@ -82,7 +82,7 @@ describe('changing a session after bookings exist', () => {
     await member.book(s);
     await admin.query("update public.sessions set start_time = '09:00', end_time = '10:00' where id = $1", [s]);
     const r = await db.sql("select to_char(starts_at at time zone 'UTC','HH24:MI') t from public.sessions where id = $1", [s]);
-    expect(r.rows[0].t).toBe('07:00'); // 09:00 Israel (UTC+2) = 07:00Z — generated column follows the change
+    expect(r.rows[0].t).toBe('07:00'); // 09:00 Israel (UTC+2) = 07:00Z - generated column follows the change
   });
 
   it('refuses to move a booked session into another week', async () => {

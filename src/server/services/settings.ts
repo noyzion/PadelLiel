@@ -13,7 +13,7 @@ const DEFAULTS: AppSettings = {
   ],
 };
 
-/** Reads the editable business settings (display only — the database enforces them). */
+/** Reads the editable business settings (display only - the database enforces them). */
 export async function getSettings(db: Db): Promise<AppSettings> {
   const rows = unwrap(await db.from('app_settings').select('key, value')) as { key: string; value: unknown }[];
   const map = new Map(rows.map((r) => [r.key, r.value]));

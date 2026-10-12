@@ -210,7 +210,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
           <Card key={r.booking_id} className="flex flex-col gap-3 p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-semibold">{r.member?.full_name ?? '—'}</p>
+                <p className="font-semibold">{r.member?.full_name ?? '-'}</p>
                 <p className="text-caption text-muted" dir="ltr">
                   {r.member?.phone ?? ''}
                 </p>
@@ -257,7 +257,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
             {history.map((r) => (
               <li key={r.booking_id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-small">
                 <div>
-                  <p className="font-medium">{r.member?.full_name ?? '—'}</p>
+                  <p className="font-medium">{r.member?.full_name ?? '-'}</p>
                   <p className="text-caption text-muted">{r.cancelled_at ? formatInstantHe(r.cancelled_at) : ''}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -394,7 +394,7 @@ export function AssignForm({
     <Card className="flex flex-col gap-3">
       <h2 className="text-card font-semibold">הוספת מתאמנת לאימון</h2>
       {isFull ? (
-        <Alert tone="amber">האימון מלא. אי אפשר לעבור את הקיבולת – אפשר להגדיל אותה בעריכת האימון.</Alert>
+        <Alert tone="amber">האימון מלא. אי אפשר לעבור את הקיבולת - אפשר להגדיל אותה בעריכת האימון.</Alert>
       ) : null}
       <form
         className="flex flex-col gap-3"
@@ -458,7 +458,7 @@ export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: 
             <div className="flex items-center gap-3">
               <span className="grid size-8 place-items-center rounded-full bg-pink-100 text-small font-semibold text-pink-700">{e.position}</span>
               <div>
-                <p className="font-semibold">{e.member?.full_name ?? '—'}</p>
+                <p className="font-semibold">{e.member?.full_name ?? '-'}</p>
                 <p className="text-caption text-muted">הצטרפה {formatInstantHe(e.joined_at)}</p>
               </div>
             </div>
@@ -475,7 +475,7 @@ export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: 
       </div>
       {past.length > 0 ? (
         <p className="text-caption text-muted">
-          היסטוריה: {past.map((e) => `${e.member?.full_name ?? '—'} (${WAITLIST_STATUS_LABEL_HE[e.status]})`).join(' · ')}
+          היסטוריה: {past.map((e) => `${e.member?.full_name ?? '-'} (${WAITLIST_STATUS_LABEL_HE[e.status]})`).join(' · ')}
         </p>
       ) : null}
 

@@ -105,7 +105,7 @@ export function ScheduleTools({
               loading={pending}
               onClick={() =>
                 run(() => duplicateWeekAction({ fromWeek: shiftWeek(weekStart, -1), toWeek: weekStart }), {
-                  success: (d) => (d.created > 0 ? `נוצרו ${d.created} טיוטות` : 'אין מה לשכפל – האימונים כבר קיימים'),
+                  success: (d) => (d.created > 0 ? `נוצרו ${d.created} טיוטות` : 'אין מה לשכפל - האימונים כבר קיימים'),
                   onSuccess: () => setDupOpen(false),
                 })
               }
@@ -116,7 +116,7 @@ export function ScheduleTools({
         }
       >
         <p>
-          האימונים של השבוע הקודם ({formatDayMonth(shiftWeek(weekStart, -1))}–{formatDayMonth(addDays(weekStart, -1))}) יועתקו לשבוע הזה כטיוטות, באותם ימים ושעות.
+          האימונים של השבוע הקודם ({formatDayMonth(shiftWeek(weekStart, -1))}-{formatDayMonth(addDays(weekStart, -1))}) יועתקו לשבוע הזה כטיוטות, באותם ימים ושעות.
           אימונים שכבר קיימים באותו זמן לא יוכפלו.
         </p>
         {sessionCount > 0 ? <Alert tone="blue" className="mt-3">בשבוע הזה כבר יש {sessionCount} אימונים.</Alert> : null}
@@ -211,7 +211,7 @@ function BulkCreateModal({
           {slots.map((slot, i) => (
             <Checkbox
               key={`${slot.start}-${slot.end}`}
-              label={`${slot.start}–${slot.end}`}
+              label={`${slot.start}-${slot.end}`}
               checked={selectedSlots.includes(i)}
               onChange={() => setSelectedSlots((s) => toggle(s, i))}
             />

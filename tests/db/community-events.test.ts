@@ -449,3 +449,52 @@ describe('events are independent of training', () => {
     expect(await db.bookingStatus(bookingId)).toBe('CANCELLED_EARLY');
   });
 });
+
+describe('previewing a saved event (admin-only reads, no side effects)', () => {
+  // Exactly what the admin preview route reads (see getEvent in src/server/services/events.ts).
+  const byId = 'select * from public.community_events where id = $1';
+
+  it('an admin can read a draft and a published event by id', async () => {
+    const admin = await db.createAdmin();
+    const draft = await makeEvent({ status: 'DRAFT' });
+    const published = await makeEvent({ status: 'PUBLISHED' });
+    expect((await admin.query(byId, [draft])).rows[0].status).toBe('DRAFT');
+    expect((await admin.query(byId, [published])).rows[0].status).toBe('PUBLISHED');
+  });
+
+  it('a trainee cannot reach a draft by its id, but still reads a published event', async () => {
+    const member = await db.createMember();
+    const draft = await makeEvent({ status: 'DRAFT' });
+    const published = await makeEvent({ status: 'PUBLISHED' });
+    expect((await member.query(byId, [draft])).rowCount).toBe(0);
+    expect((await member.query(byId, [published])).rowCount).toBe(1);
+  });
+
+  it('visitors who are not logged in cannot read a draft either', async () => {
+    const draft = await makeEvent({ status: 'DRAFT' });
+    await expect(asAnon(`select * from public.community_events where id = '${draft}'`)).rejects.toThrow(/permission denied/);
+  });
+
+  it('previewing never publishes or changes the event, and the draft stays hidden from trainees', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember();
+    const draft = await makeEvent({ status: 'DRAFT' });
+    const snapshot = async () => (await db.sql('select * from public.community_events where id = $1', [draft])).rows[0];
+    const before = await snapshot();
+
+    await admin.query(byId, [draft]); // the admin opens the preview
+    expect((await member.query(byId, [draft])).rowCount).toBe(0); // trainee, while the admin is previewing
+    expect((await member.query(upcomingSql, [at(0)])).rows.map((r) => r.id)).not.toContain(draft);
+
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it('the preview of a draft is not an upcoming event for trainees even after the admin previewed an edit', async () => {
+    // Unsaved edits are previewed in the browser only: the row is untouched until an explicit save.
+    const admin = await db.createAdmin();
+    const member = await db.createMember();
+    const id = await makeEvent({ title: 'שם מקורי', status: 'PUBLISHED' });
+    await admin.query(byId, [id]);
+    expect((await member.query('select title from public.community_events where id = $1', [id])).rows[0].title).toBe('שם מקורי');
+  });
+});

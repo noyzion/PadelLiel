@@ -19,7 +19,7 @@ import {
   weekStartOf,
 } from '@/lib/time';
 
-describe('week arithmetic (Sunday–Saturday)', () => {
+describe('week arithmetic (Sunday-Saturday)', () => {
   it('finds the Sunday that starts a week for every weekday', () => {
     // 2026-11-01 is a Sunday
     expect(weekStartOf('2026-11-01')).toBe('2026-11-01');
@@ -118,8 +118,8 @@ describe('Israel "today"', () => {
 describe('Hebrew formatting', () => {
   it('formats dates, ranges and times', () => {
     expect(formatDateHe('2026-11-02')).toBe('יום שני, 2.11');
-    expect(formatWeekRangeHe('2026-11-04')).toBe('1.11 – 7.11');
-    expect(formatTimeRange('07:00:00', '08:00:00')).toBe('07:00–08:00');
+    expect(formatWeekRangeHe('2026-11-04')).toBe('1.11 - 7.11');
+    expect(formatTimeRange('07:00:00', '08:00:00')).toBe('07:00-08:00');
   });
 
   it('formats instants in Israel time', () => {

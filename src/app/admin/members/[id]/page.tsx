@@ -61,7 +61,7 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
         <BackLink href="/admin/members">חזרה לרשימת המתאמנות</BackLink>
         <PageHeader title={profile.full_name} description={levelLabel(profile.skill_level_code, levels)} />
         <p className="text-small text-muted">
-          <span dir="ltr">{profile.phone ?? '—'}</span> · <span dir="ltr">{profile.email ?? '—'}</span> · הצטרפה {formatInstantHe(profile.created_at)}
+          <span dir="ltr">{profile.phone ?? '-'}</span> · <span dir="ltr">{profile.email ?? '-'}</span> · הצטרפה {formatInstantHe(profile.created_at)}
         </p>
       </div>
 

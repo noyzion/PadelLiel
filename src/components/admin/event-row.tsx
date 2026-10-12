@@ -40,6 +40,9 @@ export function EventRow({ event }: { event: EventView }) {
         <ButtonLink href={`/admin/events/${event.id}`} variant="secondary" size="sm">
           עריכה
         </ButtonLink>
+        <ButtonLink href={`/admin/events/${event.id}/preview`} variant="ghost" size="sm">
+          תצוגה מקדימה
+        </ButtonLink>
         <PublishToggleButton eventId={event.id} status={event.status} />
         <DeleteEventButton eventId={event.id} title={event.title} />
       </div>

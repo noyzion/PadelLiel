@@ -52,7 +52,7 @@ describe('generated timestamps', () => {
 describe('early cancellation (>= 8h before start)', () => {
   it('cancels, frees the spot and restores the weekly allowance', async () => {
     const { member, session, bookingId } = await bookedMondaySession(1);
-    await db.setNow('2026-11-01T18:00:00Z'); // Sunday 20:00 local — 11h before
+    await db.setNow('2026-11-01T18:00:00Z'); // Sunday 20:00 local - 11h before
     const result = await member.cancel(bookingId);
     expect(result).toMatchObject({ status: 'CANCELLED_EARLY', allowance_restored: true });
     expect(await db.bookingStatus(bookingId)).toBe('CANCELLED_EARLY');
@@ -86,7 +86,7 @@ describe('late cancellation (< 8h before start)', () => {
 
   it('frees the spot but keeps counting toward the weekly allowance', async () => {
     const { member, session, bookingId } = await bookedMondaySession(1);
-    await db.setNow('2026-11-02T00:00:00Z'); // Monday 02:00 local — 5h before
+    await db.setNow('2026-11-02T00:00:00Z'); // Monday 02:00 local - 5h before
     await member.cancel(bookingId, true);
     expect(await db.occupied(session)).toBe(0);
     expect(await member.allowance('2026-11-01')).toMatchObject({ used: 1, remaining: 0 });
@@ -135,7 +135,7 @@ describe('daylight saving time', () => {
 
   it('uses an absolute 8h window when clocks go FORWARD (Fri 2026-03-27)', async () => {
     // Clocks jump 02:00 -> 03:00 on Friday. Session Fri 07:00 local = 04:00Z (UTC+3).
-    // Deadline = 20:00Z Thursday = 22:00 local Thursday (UTC+2) — only 7 wall-clock hours before 07:00? No: 9h of wall clock, 8h real.
+    // Deadline = 20:00Z Thursday = 22:00 local Thursday (UTC+2) - only 7 wall-clock hours before 07:00? No: 9h of wall clock, 8h real.
     const member = await db.createMember({ startsOn: '2026-01-01' });
     const session = await db.createSession({ date: '2026-03-27', start: '07:00', end: '08:00' });
     await db.setNow('2026-03-26T08:00:00Z');

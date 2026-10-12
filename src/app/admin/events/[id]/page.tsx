@@ -21,28 +21,26 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
   if (!event) notFound();
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-2">
-      <div>
-        <BackLink href="/admin/events">חזרה לאירועים</BackLink>
-        <PageHeader title="עריכת אירוע" />
-        <Badge tone={event.status === 'PUBLISHED' ? 'green' : 'amber'}>{EVENT_STATUS_LABEL_HE[event.status]}</Badge>
-      </div>
-      <div className="mt-4">
-        <EventForm
-          // A fresh form (and fresh state) whenever the saved event changes.
-          key={event.updated_at}
-          mode={{ type: 'edit', eventId: event.id, title: event.title }}
-          initial={{
-            title: event.title,
-            description: event.description,
-            startsAt: instantToIsraelLocal(event.starts_at),
-            endsAt: event.ends_at ? instantToIsraelLocal(event.ends_at) : '',
-            location: event.location,
-            status: event.status,
-            imageUrl: event.image_url,
-          }}
-        />
-      </div>
-    </div>
+    <EventForm
+      // A fresh form (and fresh state) whenever the saved event changes.
+      key={event.updated_at}
+      mode={{ type: 'edit', eventId: event.id, title: event.title }}
+      header={
+        <div>
+          <BackLink href="/admin/events">חזרה לאירועים</BackLink>
+          <PageHeader title="עריכת אירוע" />
+          <Badge tone={event.status === 'PUBLISHED' ? 'green' : 'amber'}>{EVENT_STATUS_LABEL_HE[event.status]}</Badge>
+        </div>
+      }
+      initial={{
+        title: event.title,
+        description: event.description,
+        startsAt: instantToIsraelLocal(event.starts_at),
+        endsAt: event.ends_at ? instantToIsraelLocal(event.ends_at) : '',
+        location: event.location,
+        status: event.status,
+        imageUrl: event.image_url,
+      }}
+    />
   );
 }

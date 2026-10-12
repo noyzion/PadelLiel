@@ -2,7 +2,7 @@
  * Date helpers for the community timezone (Asia/Jerusalem).
  *
  * These are for DISPLAY and NAVIGATION only. Every business rule (allowance, cancellation
- * cutoff, week attribution, capacity) is decided by the database — see supabase/migrations.
+ * cutoff, week attribution, capacity) is decided by the database - see supabase/migrations.
  *
  * Calendar dates are handled as plain `YYYY-MM-DD` strings so daylight-saving changes can
  * never shift a day or a week.
@@ -45,7 +45,7 @@ export function dayOfWeek(date: string): number {
   return toUtcDate(date).getUTCDay();
 }
 
-/** The Sunday that starts the (Sunday–Saturday) week containing `date`. */
+/** The Sunday that starts the (Sunday-Saturday) week containing `date`. */
 export function weekStartOf(date: string): string {
   return addDays(date, -dayOfWeek(date));
 }
@@ -142,10 +142,10 @@ export function formatDateHe(date: string): string {
   return `יום ${weekdayNameHe(date)}, ${formatDayMonth(date)}`;
 }
 
-/** "1.11 – 7.11" for the week containing `date`. */
+/** "1.11 - 7.11" for the week containing `date`. */
 export function formatWeekRangeHe(date: string): string {
   const start = weekStartOf(date);
-  return `${formatDayMonth(start)} – ${formatDayMonth(addDays(start, 6))}`;
+  return `${formatDayMonth(start)} - ${formatDayMonth(addDays(start, 6))}`;
 }
 
 /** "07:00:00" -> "07:00" */
@@ -154,7 +154,7 @@ export function formatTime(time: string): string {
 }
 
 export function formatTimeRange(start: string, end: string): string {
-  return `${formatTime(start)}–${formatTime(end)}`;
+  return `${formatTime(start)}-${formatTime(end)}`;
 }
 
 /** Formats an instant in Israel time, e.g. "ב׳ 02.11, 07:00". */
@@ -296,10 +296,16 @@ export function israelDateOf(iso: string): string {
   return israelToday(new Date(iso));
 }
 
+/** The first instant of the Israel calendar day after the one `iso` falls on. */
+export function israelEndOfDay(iso: string): Date {
+  // Midnight always exists in Israel (daylight saving time changes at 02:00).
+  return israelLocalToInstant(`${addDays(israelDateOf(iso), 1)}T00:00`)!;
+}
+
 /**
  * The "when" of an event for display (`compact` drops the year, for cards).
- *   same day / no end: date = "יום שני, 2 בנובמבר 2026", time = "18:30–20:00" (or "18:30")
- *   spans days:        date = "2 בנובמבר, 18:30 – 3 בנובמבר, 12:00", time = null
+ *   same day / no end: date = "יום שני, 2 בנובמבר 2026", time = "18:30-20:00" (or "18:30")
+ *   spans days:        date = "2 בנובמבר, 18:30 - 3 בנובמבר, 12:00", time = null
  */
 export function formatEventWhenHe(
   startsAt: string,
@@ -309,10 +315,10 @@ export function formatEventWhenHe(
   const day = compact ? formatEventDayCompactHe : formatEventDateHe;
   if (!endsAt) return { date: day(startsAt), time: formatEventTimeHe(startsAt) };
   if (israelDateOf(startsAt) === israelDateOf(endsAt)) {
-    return { date: day(startsAt), time: `${formatEventTimeHe(startsAt)}–${formatEventTimeHe(endsAt)}` };
+    return { date: day(startsAt), time: `${formatEventTimeHe(startsAt)}-${formatEventTimeHe(endsAt)}` };
   }
   return {
-    date: `${formatEventDayMonthHe(startsAt)}, ${formatEventTimeHe(startsAt)} – ${formatEventDayMonthHe(endsAt)}, ${formatEventTimeHe(endsAt)}`,
+    date: `${formatEventDayMonthHe(startsAt)}, ${formatEventTimeHe(startsAt)} - ${formatEventDayMonthHe(endsAt)}, ${formatEventTimeHe(endsAt)}`,
     time: null,
   };
 }

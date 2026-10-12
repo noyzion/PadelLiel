@@ -17,15 +17,15 @@ export const metadata: Metadata = { title: 'ההרשמות שלי' };
 function statusNote(b: MyBooking, hours: string): string | null {
   switch (b.status) {
     case 'CANCELLED_EARLY':
-      return 'בוטל בזמן – לא נספר במכסה החודשית';
+      return 'בוטל בזמן - לא נספר במכסה החודשית';
     case 'CANCELLED_LATE':
       return b.counts_toward_allowance
-        ? `בוטל פחות מ-${hours} שעות לפני האימון – נספר במכסה החודשית`
+        ? `בוטל פחות מ-${hours} שעות לפני האימון - נספר במכסה החודשית`
         : 'בוטל מאוחר, אבל האימון בוטל ע״י המאמנת ולכן לא נספר';
     case 'CANCELLED_BY_COACH':
-      return 'האימון או ההרשמה בוטלו ע״י המאמנת – לא נספר במכסה';
+      return 'האימון או ההרשמה בוטלו ע״י המאמנת - לא נספר במכסה';
     case 'NO_SHOW':
-      return 'לא הגעת לאימון – נספר במכסה החודשית';
+      return 'לא הגעת לאימון - נספר במכסה החודשית';
     default:
       return null;
   }

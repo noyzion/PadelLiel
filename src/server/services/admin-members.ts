@@ -115,7 +115,7 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
     profile,
     subscriptions: (unwrap(subs) as MemberSubscription[]).map((s) => ({
       ...s,
-      plan_name: planById.get(s.plan_id)?.name ?? '—',
+      plan_name: planById.get(s.plan_id)?.name ?? '-',
       monthly_limit: planById.get(s.plan_id)?.monthly_session_limit ?? 0,
     })),
     thisMonth,

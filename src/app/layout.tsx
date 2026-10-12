@@ -11,7 +11,7 @@ const assistant = Assistant({
 
 export const metadata: Metadata = {
   title: { default: 'אימוני פאדל לנשים כוכב יאיר', template: '%s · אימוני פאדל כוכב יאיר' },
-  description: 'ניהול הרשמות לאימוני פאדל של הצוות שלנו – קהילת נשים בכוכב יאיר',
+  description: 'ניהול הרשמות לאימוני פאדל של הצוות שלנו - קהילת נשים בכוכב יאיר',
   robots: { index: false, follow: false },
 };
 

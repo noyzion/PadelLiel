@@ -23,7 +23,16 @@ export function EventCover({
   return (
     <div className={cn('relative overflow-hidden bg-pink-100', className)}>
       {event.image_url ? (
-        <Image src={event.image_url} alt="" fill sizes={sizes} preload={preload} className="object-cover" />
+        <Image
+          src={event.image_url}
+          alt=""
+          fill
+          sizes={sizes}
+          preload={preload}
+          // Admin previews show a local (blob:) file that has not been uploaded yet.
+          unoptimized={event.image_url.startsWith('blob:')}
+          className="object-cover"
+        />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className={cn('num font-semibold leading-none text-navy-900', small ? 'text-title' : 'text-[3rem]')}>{formatEventDayNumberHe(event.starts_at)}</span>

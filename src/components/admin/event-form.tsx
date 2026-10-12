@@ -2,20 +2,26 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { saveEventAction } from '@/app/admin/events/actions';
 import { prepareEventImage } from '@/components/admin/image-compress';
 import { DeleteEventButton } from '@/components/admin/event-actions';
+import { PreviewBar } from '@/components/admin/preview-bar';
+import { EventDetails } from '@/components/events/event-details';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/form';
 import { useServerAction } from '@/components/use-server-action';
+import { buildPreviewEvent } from '@/lib/domain/event-preview';
+import { nowMs } from '@/lib/now';
 import {
   EVENT_DESCRIPTION_MAX,
   EVENT_IMAGE_ACCEPT,
   EVENT_IMAGE_MAX_BYTES,
   EVENT_LOCATION_MAX,
   EVENT_TITLE_MAX,
+  isEventPast,
   type EventStatus,
+  type EventView,
 } from '@/lib/domain/events';
 
 /** Splits a `YYYY-MM-DDTHH:mm` value into `[date, time]` (both empty when there is no value). */
@@ -39,7 +45,16 @@ export interface EventFormInitial {
  * Create or edit a community event. The event is informational only: there is deliberately no
  * registration, capacity or attendance setting here.
  */
-export function EventForm({ initial, mode }: { initial: EventFormInitial; mode: { type: 'create' } | { type: 'edit'; eventId: string; title: string } }) {
+export function EventForm({
+  initial,
+  mode,
+  header,
+}: {
+  initial: EventFormInitial;
+  mode: { type: 'create' } | { type: 'edit'; eventId: string; title: string };
+  /** Page heading shown above the form (hidden while previewing, so the preview looks like the real page). */
+  header?: ReactNode;
+}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -59,9 +74,11 @@ export function EventForm({ initial, mode }: { initial: EventFormInitial; mode: 
   const [preparing, setPreparing] = useState(false);
   const [imageError, setImageError] = useState<string>();
   const [error, setError] = useState<string>();
+  // The event as trainees would see it, built from the unsaved form values. Never sent anywhere.
+  const [previewing, setPreviewing] = useState<{ event: EventView; past: boolean } | null>(null);
   const { pending, run } = useServerAction();
 
-  // Release the object URL of the previous preview when it changes and on unmount.
+  // Release the object URL of the previous image preview when it changes and on unmount.
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview);
@@ -104,16 +121,48 @@ export function EventForm({ initial, mode }: { initial: EventFormInitial; mode: 
     setImageError(undefined);
   }
 
+  /** The `datetime-local` values (Israel time) behind the date and the two time fields. */
+  function composeDateTimes() {
+    // An existing event that spans several days keeps its end date as long as the date isn't changed.
+    const endDate = initialEndDate && initialEndDate !== startDate && values.date === startDate ? initialEndDate : values.date;
+    return {
+      startsAt: `${values.date}T${values.startTime}`,
+      endsAt: values.endTime ? `${endDate}T${values.endTime}` : '',
+    };
+  }
+
+  function openPreview() {
+    setError(undefined);
+    if (!formRef.current?.reportValidity()) return;
+    // Validated like a save, but a draft does not need a description yet.
+    const result = buildPreviewEvent(
+      { title: values.title, description: values.description, location: values.location, ...composeDateTimes() },
+      wasPublished ? 'PUBLISHED' : 'DRAFT',
+      shownImage,
+    );
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setPreviewing({ event: result.event, past: isEventPast(result.event, nowMs()) });
+    window.scrollTo({ top: 0 });
+  }
+
+  function closePreview() {
+    setError(undefined);
+    setPreviewing(null);
+    window.scrollTo({ top: 0 });
+  }
+
   function submit(status: EventStatus) {
     setError(undefined);
     const form = new FormData();
     if (mode.type === 'edit') form.set('id', mode.eventId);
     form.set('title', values.title);
     form.set('description', values.description);
-    form.set('startsAt', `${values.date}T${values.startTime}`);
-    // An existing event that spans several days keeps its end date as long as the date isn't changed.
-    const endDate = initialEndDate && initialEndDate !== startDate && values.date === startDate ? initialEndDate : values.date;
-    form.set('endsAt', values.endTime ? `${endDate}T${values.endTime}` : '');
+    const { startsAt, endsAt } = composeDateTimes();
+    form.set('startsAt', startsAt);
+    form.set('endsAt', endsAt);
     form.set('location', values.location);
     form.set('status', status);
     if (imageFile) form.set('image', imageFile, imageFile.name);
@@ -126,7 +175,7 @@ export function EventForm({ initial, mode }: { initial: EventFormInitial; mode: 
     });
   }
 
-  return (
+  const formElement = (
     <form
       ref={formRef}
       onSubmit={(e) => {
@@ -208,6 +257,9 @@ export function EventForm({ initial, mode }: { initial: EventFormInitial; mode: 
         >
           {wasPublished ? 'ביטול פרסום' : 'שמירה כטיוטה'}
         </Button>
+        <Button type="button" variant="ghost" disabled={pending || preparing} onClick={openPreview}>
+          תצוגה מקדימה
+        </Button>
         {mode.type === 'edit' ? (
           <span className="ms-auto">
             <DeleteEventButton eventId={mode.eventId} title={mode.title} redirectTo="/admin/events" />
@@ -218,5 +270,41 @@ export function EventForm({ initial, mode }: { initial: EventFormInitial; mode: 
         <p className="-mt-2 text-caption text-muted">״ביטול פרסום״ שומר את השינויים כטיוטה, והאירוע מוסתר מהמתאמנות מיד.</p>
       ) : null}
     </form>
+  );
+
+  return (
+    <>
+      {previewing ? (
+        <div>
+          <PreviewBar
+            description={
+              wasPublished
+                ? 'כך ייראו השינויים. הם עוד לא נשמרו, והאירוע המפורסם לא השתנה.'
+                : 'כך ייראה האירוע. הוא עוד לא נשמר ולא מוצג למתאמנות.'
+            }
+          >
+            <Button size="sm" variant="secondary" disabled={pending} onClick={closePreview}>
+              חזרה לעריכה
+            </Button>
+            <Button size="sm" loading={pending} onClick={() => submit('PUBLISHED')}>
+              {wasPublished ? 'שמירת שינויים' : 'פרסום'}
+            </Button>
+          </PreviewBar>
+          {error ? (
+            <p role="alert" className="mx-auto mb-6 max-w-3xl rounded-2xl border border-danger-line bg-danger-soft px-4 py-3 text-small text-danger">
+              {error}
+            </p>
+          ) : null}
+          <EventDetails event={previewing.event} past={previewing.past} preloadImage={false} />
+        </div>
+      ) : null}
+      {/* The form stays mounted (hidden) while previewing so nothing typed or picked is lost. */}
+      <div hidden={Boolean(previewing)} className="mx-auto max-w-3xl">
+        <div className="flex max-w-2xl flex-col gap-6">
+          {header}
+          {formElement}
+        </div>
+      </div>
+    </>
   );
 }

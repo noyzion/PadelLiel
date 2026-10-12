@@ -18,7 +18,7 @@ export function parseInput<T>(schema: ZodType<T>, input: unknown): T {
 
 /**
  * Runs a server action body and converts any failure into a typed result for the UI.
- * Do not call redirect() inside `fn` (it works by throwing) — redirect after checking the result.
+ * Do not call redirect() inside `fn` (it works by throwing) - redirect after checking the result.
  */
 export async function runAction<T = void>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
