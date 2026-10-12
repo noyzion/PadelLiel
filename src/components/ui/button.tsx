@@ -36,15 +36,15 @@ export type RacketPlacement = 'end' | 'start' | 'corner';
 
 const racketPlacements: Record<RacketPlacement, { racket: string; ball: string | null }> = {
   end: {
-    racket: 'end-4 -bottom-3 h-[4.5rem] -rotate-[32deg] group-hover:-rotate-[22deg]',
+    racket: 'end-4 -bottom-3 h-[4.5rem] -rotate-[32deg] group-hover:-rotate-[22deg] group-focus-visible:-rotate-[22deg] group-active:-rotate-[10deg] group-active:scale-110',
     ball: 'end-[4.6rem] top-2.5',
   },
   start: {
-    racket: 'start-4 -bottom-3 h-[4.5rem] rotate-[32deg] group-hover:rotate-[22deg]',
+    racket: 'start-4 -bottom-3 h-[4.5rem] rotate-[32deg] group-hover:rotate-[22deg] group-focus-visible:rotate-[22deg] group-active:rotate-[10deg] group-active:scale-110',
     ball: 'start-[4.6rem] top-2.5',
   },
   corner: {
-    racket: 'end-2 -bottom-7 h-24 -rotate-[48deg] group-hover:-rotate-[38deg]',
+    racket: 'end-2 -bottom-7 h-24 -rotate-[48deg] group-hover:-rotate-[38deg] group-focus-visible:-rotate-[38deg] group-active:-rotate-[26deg] group-active:scale-110',
     ball: null,
   },
 };
