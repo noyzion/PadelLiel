@@ -1,10 +1,19 @@
 import type { Metadata } from 'next';
 import { SessionCard } from '@/components/member/session-card';
+import { DayTabs, type DayTab } from '@/components/member/day-tabs';
 import { EmptyState, PageHeader } from '@/components/ui/card';
 import { WeekNav } from '@/components/week-nav';
 import { levelLabel } from '@/lib/domain/labels';
-import type { ScheduleSession } from '@/lib/domain/types';
-import { currentWeekStart, formatDateHe, parseWeekParam, weekdayNameHe } from '@/lib/time';
+import { nowMs } from '@/lib/now';
+import {
+  currentWeekStart,
+  formatDayMonth,
+  israelToday,
+  parseWeekParam,
+  shiftWeek,
+  weekDates,
+  weekdayNameHe,
+} from '@/lib/time';
 import { requireMember } from '@/server/auth';
 import { getWeekSchedule } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
@@ -14,43 +23,67 @@ export const metadata: Metadata = { title: 'לוח אימונים' };
 export default async function SchedulePage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const params = await searchParams;
   const { db } = await requireMember();
-  const weekStart = parseWeekParam(params.week);
+  // Members only see this week, plus next week once its sessions have been published.
+  const thisWeek = currentWeekStart();
+  const nextWeek = shiftWeek(thisWeek, 1);
 
-  const [sessions, settings, levels] = await Promise.all([
-    getWeekSchedule(db, weekStart),
+  const [thisWeekSessions, nextWeekSessions, settings, levels] = await Promise.all([
+    getWeekSchedule(db, thisWeek),
+    getWeekSchedule(db, nextWeek),
     getSettings(db),
     getSkillLevels(db),
   ]);
 
-  const byDay = new Map<string, ScheduleSession[]>();
-  for (const s of sessions) byDay.set(s.session_date, [...(byDay.get(s.session_date) ?? []), s]);
+  const nextWeekOpen = nextWeekSessions.length > 0;
+  const showNextWeek = nextWeekOpen && parseWeekParam(params.week) === nextWeek;
+  const weekStart = showNextWeek ? nextWeek : thisWeek;
+  const sessions = showNextWeek ? nextWeekSessions : thisWeekSessions;
+
+  const today = israelToday(new Date(nowMs()));
+  const dates = weekDates(weekStart);
+
+  const days: DayTab[] = dates.map((date) => {
+    const daySessions = sessions.filter((s) => s.session_date === date);
+    return {
+      date,
+      weekday: weekdayNameHe(date),
+      dayNumber: String(Number(date.slice(8, 10))),
+      dayMonth: formatDayMonth(date),
+      sessionCount: daySessions.length,
+      isToday: date === today,
+      content: daySessions.map((session) => (
+        <SessionCard
+          key={session.id}
+          session={session}
+          levelLabel={levelLabel(session.skill_level_code, levels)}
+          cutoffHours={settings.cancellation_cutoff_hours}
+        />
+      )),
+    };
+  });
+
+  // Open on the first day from today onward that has sessions (any day of a future week counts as
+  // upcoming); fall back to the first day with sessions, then to the first day of the week.
+  const defaultDate =
+    days.find((d) => d.sessionCount > 0 && d.date >= today)?.date ??
+    days.find((d) => d.sessionCount > 0)?.date ??
+    days[0].date;
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="לוח אימונים" description="בחרי אימון להרשמה" />
-      <WeekNav basePath="/schedule" weekStart={weekStart} currentWeek={currentWeekStart()} />
+      <PageHeader title="לוח אימונים" description="בחרי יום ואז אימון להרשמה" />
+      <WeekNav
+        basePath="/schedule"
+        weekStart={weekStart}
+        currentWeek={thisWeek}
+        canGoPrev={showNextWeek}
+        canGoNext={nextWeekOpen && !showNextWeek}
+      />
 
       {sessions.length === 0 ? (
         <EmptyState title="עוד לא פורסמו אימונים לשבוע הזה" description="אימונים חדשים יופיעו כאן כשיפורסמו." />
       ) : (
-        [...byDay.entries()].map(([date, daySessions]) => (
-          <section key={date} aria-labelledby={`day-${date}`} className="flex flex-col gap-3">
-            <h2 id={`day-${date}`} className="flex items-baseline gap-2 text-card font-semibold">
-              <span>יום {weekdayNameHe(date)}</span>
-              <span className="text-small font-medium text-muted">{formatDateHe(date).split(', ')[1]}</span>
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {daySessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  levelLabel={levelLabel(session.skill_level_code, levels)}
-                  cutoffHours={settings.cancellation_cutoff_hours}
-                />
-              ))}
-            </div>
-          </section>
-        ))
+        <DayTabs key={weekStart} days={days} defaultDate={defaultDate} />
       )}
     </div>
   );

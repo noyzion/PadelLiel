@@ -26,6 +26,7 @@ export function SessionCard({
   cutoffHours: number;
 }) {
   const [lateBookOpen, setLateBookOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const toast = useToast();
   const hours = formatHours(cutoffHours);
@@ -68,6 +69,7 @@ export function SessionCard({
     const entryId = session.my_waitlist_entry_id;
     startTransition(async () => {
       const result = await leaveWaitlistAction({ entryId });
+      setLeaveOpen(false);
       if (result.ok) toast.info('הוסרת מרשימת ההמתנה.');
       else toast.error(result.error);
     });
@@ -132,7 +134,7 @@ export function SessionCard({
         ) : null}
 
         {canBook ? (
-          <Button racket="start" className="w-full" loading={pending} onClick={() => (session.is_late_window ? setLateBookOpen(true) : book(false))}>
+          <Button className="w-full" loading={pending} onClick={() => (session.is_late_window ? setLateBookOpen(true) : book(false))}>
             להרשמה לאימון
           </Button>
         ) : null}
@@ -140,14 +142,14 @@ export function SessionCard({
         {canWait ? (
           <>
             <p className="text-small text-muted">האימון מלא. רוצה להיכנס לרשימת ההמתנה?</p>
-            <Button variant="accent" racket="end" className="w-full" loading={pending} onClick={join}>
+            <Button variant="accent" className="w-full" loading={pending} onClick={join}>
               הצטרפות לרשימת המתנה
             </Button>
           </>
         ) : null}
 
         {isOnWaitlist ? (
-          <Button variant="ghost" size="sm" className="w-full" loading={pending} onClick={leave}>
+          <Button variant="ghost" size="sm" className="w-full" loading={pending} onClick={() => setLeaveOpen(true)}>
             יציאה מרשימת ההמתנה
           </Button>
         ) : null}
@@ -189,6 +191,25 @@ export function SessionCard({
         <Alert tone="amber" title="שימי לב">
           האימון מתחיל בעוד פחות מ-{hours} שעות. אם תבטלי את ההרשמה הזו, האימון עדיין ייספר במכסה החודשית שלך.
         </Alert>
+      </Modal>
+
+      <Modal
+        open={leaveOpen}
+        onClose={() => !pending && setLeaveOpen(false)}
+        title="יציאה מרשימת ההמתנה"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setLeaveOpen(false)} disabled={pending}>
+              חזרה
+            </Button>
+            <Button variant="danger" onClick={leave} loading={pending}>
+              כן, להסיר אותי
+            </Button>
+          </>
+        }
+      >
+        <p className="mb-3 text-body font-semibold text-navy-900">{label}</p>
+        <p>תוסרי מרשימת ההמתנה ותאבדי את מקומך בתור.</p>
       </Modal>
     </article>
   );

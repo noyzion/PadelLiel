@@ -51,6 +51,7 @@ export function SessionActions({
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [reason, setReason] = useState('');
   const { pending, run } = useServerAction();
   const isEditable = status === 'DRAFT' || status === 'PUBLISHED';
@@ -90,13 +91,7 @@ export function SessionActions({
         <Button
           size="sm"
           variant="ghost"
-          loading={pending}
-          onClick={() =>
-            run(() => deleteDraftSessionAction({ sessionId }), {
-              success: 'הטיוטה נמחקה',
-              onSuccess: () => router.push(`/admin/schedule?week=${weekStart}`),
-            })
-          }
+          onClick={() => setDeleteOpen(true)}
         >
           מחיקת טיוטה
         </Button>
@@ -106,6 +101,36 @@ export function SessionActions({
           ביטול האימון
         </Button>
       ) : null}
+
+      <Modal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="מחיקת טיוטה"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDeleteOpen(false)}>
+              חזרה
+            </Button>
+            <Button
+              variant="danger"
+              loading={pending}
+              onClick={() =>
+                run(() => deleteDraftSessionAction({ sessionId }), {
+                  success: 'הטיוטה נמחקה',
+                  onSuccess: () => {
+                    setDeleteOpen(false);
+                    router.push(`/admin/schedule?week=${weekStart}`);
+                  },
+                })
+              }
+            >
+              מחיקה
+            </Button>
+          </>
+        }
+      >
+        <p>הטיוטה תימחק לצמיתות. לא ניתן לשחזר אותה.</p>
+      </Modal>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="עריכת אימון">
         <SessionForm
@@ -165,6 +190,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
   const { pending, run } = useServerAction();
   const [restoreFor, setRestoreFor] = useState<RosterEntry | null>(null);
   const [removeFor, setRemoveFor] = useState<RosterEntry | null>(null);
+  const [unmarkFor, setUnmarkFor] = useState<RosterEntry | null>(null);
   const [reason, setReason] = useState('');
 
   const active = roster.filter((r) => ACTIVE.includes(r.status));
@@ -207,7 +233,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
                 </Button>
               ) : null}
               {r.status !== 'CONFIRMED' ? (
-                <Button size="sm" variant="ghost" loading={pending} onClick={() => setStatus(r.booking_id, 'CONFIRMED', 'הסימון בוטל')}>
+                <Button size="sm" variant="ghost" loading={pending} onClick={() => setUnmarkFor(r)}>
                   ביטול סימון
                 </Button>
               ) : null}
@@ -278,6 +304,33 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
           ל{restoreFor?.member?.full_name ?? ''} תתווסף התאמה של +1 למכסה באותו חודש. סטטוס ההרשמה המקורי לא ישתנה, וההתאמה תתועד ביומן הפעולות.
         </p>
         <Field label="סיבה (חובה)">{(p) => <Input {...p} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} />}</Field>
+      </Modal>
+
+      <Modal
+        open={Boolean(unmarkFor)}
+        onClose={() => setUnmarkFor(null)}
+        title="ביטול סימון"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setUnmarkFor(null)}>
+              חזרה
+            </Button>
+            <Button
+              loading={pending}
+              onClick={() =>
+                unmarkFor &&
+                run(() => setBookingStatusAction({ bookingId: unmarkFor.booking_id, status: 'CONFIRMED' }), {
+                  success: 'הסימון בוטל',
+                  onSuccess: () => setUnmarkFor(null),
+                })
+              }
+            >
+              ביטול סימון
+            </Button>
+          </>
+        }
+      >
+        <p>הסימון של {unmarkFor?.member?.full_name ?? ''} יבוטל וההרשמה תחזור לסטטוס &quot;רשומה&quot;.</p>
       </Modal>
 
       <Modal
@@ -386,6 +439,7 @@ export function AssignForm({
 
 export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: boolean }) {
   const { pending, run } = useServerAction();
+  const [removeEntry, setRemoveEntry] = useState<WaitlistRow | null>(null);
   const waiting = entries.filter((e) => e.status === 'WAITING');
   const past = entries.filter((e) => e.status !== 'WAITING');
 
@@ -412,7 +466,7 @@ export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: 
               <Button size="sm" loading={pending} disabled={isFull} onClick={() => run(() => promoteWaitlistAction({ entryId: e.entry_id }), { success: 'שובצה לאימון' })}>
                 שיבוץ לאימון
               </Button>
-              <Button size="sm" variant="ghost" loading={pending} onClick={() => run(() => removeWaitlistAction({ entryId: e.entry_id }), { success: 'הוסרה מהרשימה' })}>
+              <Button size="sm" variant="ghost" loading={pending} onClick={() => setRemoveEntry(e)}>
                 הסרה
               </Button>
             </div>
@@ -424,6 +478,34 @@ export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: 
           היסטוריה: {past.map((e) => `${e.member?.full_name ?? '—'} (${WAITLIST_STATUS_LABEL_HE[e.status]})`).join(' · ')}
         </p>
       ) : null}
+
+      <Modal
+        open={Boolean(removeEntry)}
+        onClose={() => setRemoveEntry(null)}
+        title="הסרה מרשימת ההמתנה"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setRemoveEntry(null)}>
+              חזרה
+            </Button>
+            <Button
+              variant="danger"
+              loading={pending}
+              onClick={() =>
+                removeEntry &&
+                run(() => removeWaitlistAction({ entryId: removeEntry.entry_id }), {
+                  success: 'הוסרה מהרשימה',
+                  onSuccess: () => setRemoveEntry(null),
+                })
+              }
+            >
+              הסרה
+            </Button>
+          </>
+        }
+      >
+        <p>{removeEntry?.member?.full_name ?? ''} תוסר מרשימת ההמתנה ותאבד את מקומה בתור.</p>
+      </Modal>
     </section>
   );
 }
