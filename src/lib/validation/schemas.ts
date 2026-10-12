@@ -1,0 +1,173 @@
+import { z } from 'zod';
+import { isValidDateString } from '@/lib/time';
+
+/** Runtime validation for every untrusted input that reaches a server action. */
+
+const uuid = z.string().uuid('מזהה לא תקין');
+const dateString = z.string().refine(isValidDateString, 'תאריך לא תקין');
+const timeString = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'שעה לא תקינה (HH:MM)');
+const levelCode = z.string().regex(/^[a-z][a-z0-9_]*$/, 'רמה לא תקינה');
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `עד ${max} תווים`)
+    .optional()
+    .transform((v) => (v ? v : undefined));
+
+const phone = z
+  .string()
+  .trim()
+  .min(7, 'מספר טלפון קצר מדי')
+  .max(20, 'מספר טלפון ארוך מדי')
+  .regex(/^[0-9+\-\s()]+$/, 'מספר טלפון יכול להכיל ספרות בלבד');
+
+export const emailSchema = z.string().trim().toLowerCase().email('כתובת אימייל לא תקינה').max(254);
+export const passwordSchema = z.string().min(8, 'הסיסמה חייבת להכיל לפחות 8 תווים').max(72, 'הסיסמה ארוכה מדי');
+
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'יש להזין סיסמה').max(72),
+});
+
+export const registerSchema = z.object({
+  fullName: z.string().trim().min(2, 'יש להזין שם מלא').max(80, 'השם ארוך מדי'),
+  phone,
+  email: emailSchema,
+  password: passwordSchema,
+});
+
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+export const resetPasswordSchema = z.object({ password: passwordSchema });
+
+export const profileUpdateSchema = z.object({
+  fullName: z.string().trim().min(2, 'יש להזין שם מלא').max(80, 'השם ארוך מדי'),
+  phone,
+});
+
+export const bookSessionSchema = z.object({ sessionId: uuid, ackLatePolicy: z.boolean().default(false) });
+export const cancelBookingSchema = z.object({ bookingId: uuid, confirmLate: z.boolean().default(false) });
+export const sessionIdSchema = z.object({ sessionId: uuid });
+export const entryIdSchema = z.object({ entryId: uuid });
+
+export const sessionFormSchema = z
+  .object({
+    date: dateString,
+    start: timeString,
+    end: timeString,
+    level: levelCode,
+    capacity: z.coerce.number().int('מספר שלם').min(1, 'לפחות 1').max(50, 'עד 50'),
+    registrationOpen: z.boolean().default(true),
+    notes: optionalText(500),
+  })
+  .refine((v) => v.end > v.start, { path: ['end'], message: 'שעת הסיום חייבת להיות אחרי שעת ההתחלה' });
+
+export const bulkCreateSchema = z.object({
+  weekStart: dateString,
+  weekdays: z.array(z.number().int().min(0).max(6)).min(1, 'בחרי לפחות יום אחד').max(7),
+  slots: z
+    .array(
+      z
+        .object({ start: timeString, end: timeString })
+        .refine((v) => v.end > v.start, 'שעת הסיום חייבת להיות אחרי שעת ההתחלה'),
+    )
+    .min(1, 'בחרי לפחות שעה אחת')
+    .max(12),
+  levels: z.array(levelCode).min(1, 'בחרי לפחות רמה אחת').max(10),
+  capacity: z.coerce.number().int().min(1, 'לפחות 1').max(50, 'עד 50'),
+});
+
+export const duplicateWeekSchema = z.object({ fromWeek: dateString, toWeek: dateString });
+
+export const updateSessionSchema = z.object({ sessionId: uuid, form: sessionFormSchema });
+
+export const cancelSessionSchema = z.object({ sessionId: uuid, reason: optionalText(300) });
+
+export const publishSessionsSchema = z.object({ sessionIds: z.array(uuid).min(1).max(200) });
+
+export const assignBookingSchema = z.object({
+  sessionId: uuid,
+  memberId: uuid,
+  overrideSkill: z.boolean().default(false),
+  note: optionalText(300),
+});
+
+export const setBookingStatusSchema = z.object({
+  bookingId: uuid,
+  status: z.enum(['CONFIRMED', 'ATTENDED', 'NO_SHOW', 'CANCELLED_BY_COACH', 'CANCELLED_EARLY', 'CANCELLED_LATE']),
+  note: optionalText(300),
+});
+
+export const restoreAllowanceSchema = z.object({
+  bookingId: uuid,
+  reason: z.string().trim().min(3, 'יש לציין סיבה').max(300),
+});
+
+export const adjustAllowanceSchema = z.object({
+  memberId: uuid,
+  weekStart: dateString,
+  delta: z.coerce
+    .number()
+    .int('מספר שלם')
+    .min(-14)
+    .max(14)
+    .refine((v) => v !== 0, 'ההתאמה לא יכולה להיות 0'),
+  reason: z.string().trim().min(3, 'יש לציין סיבה').max(300),
+});
+
+export const memberPatchSchema = z
+  .object({
+    approval_status: z.enum(['pending', 'approved', 'rejected']).optional(),
+    skill_level_code: z.union([levelCode, z.literal('')]).optional(),
+    admin_notes: z.string().trim().max(2000).optional(),
+    full_name: z.string().trim().min(2).max(80).optional(),
+    phone: phone.optional(),
+  })
+  .strict();
+export const updateMemberSchema = z.object({ memberId: uuid, patch: memberPatchSchema });
+
+export const assignSubscriptionSchema = z
+  .object({
+    memberId: uuid,
+    planId: uuid,
+    startsOn: dateString.optional(),
+    endsOn: dateString.optional(),
+  })
+  .refine((v) => !v.startsOn || !v.endsOn || v.endsOn >= v.startsOn, {
+    path: ['endsOn'],
+    message: 'תאריך הסיום חייב להיות אחרי תאריך ההתחלה',
+  });
+
+export const subscriptionActiveSchema = z.object({ subscriptionId: uuid, active: z.boolean() });
+
+export const subscriptionValiditySchema = z
+  .object({ subscriptionId: uuid, startsOn: dateString, endsOn: dateString.optional() })
+  .refine((v) => !v.endsOn || v.endsOn >= v.startsOn, {
+    path: ['endsOn'],
+    message: 'תאריך הסיום חייב להיות אחרי תאריך ההתחלה',
+  });
+
+export const planSchema = z.object({
+  id: uuid.optional(),
+  name: z.string().trim().min(2, 'יש להזין שם').max(60, 'השם ארוך מדי'),
+  weeklyLimit: z.coerce.number().int('מספר שלם').min(1, 'לפחות 1').max(14, 'עד 14'),
+  description: optionalText(200),
+  isActive: z.boolean().default(true),
+});
+
+export const settingsSchema = z.object({
+  cancellationCutoffHours: z.coerce.number().min(0, 'לפחות 0').max(168, 'עד 168'),
+  defaultCapacity: z.coerce.number().int().min(1).max(50),
+  defaultTimeSlots: z
+    .array(
+      z
+        .object({ start: timeString, end: timeString })
+        .refine((v) => v.end > v.start, 'שעת הסיום חייבת להיות אחרי שעת ההתחלה'),
+    )
+    .min(1, 'לפחות חלון זמן אחד')
+    .max(12),
+});
+
+export function firstIssueMessage(error: z.ZodError): string {
+  return error.issues[0]?.message ?? 'הנתונים שהוזנו אינם תקינים';
+}

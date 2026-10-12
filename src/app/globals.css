@@ -1,0 +1,175 @@
+@import 'tailwindcss';
+
+/*
+  PadelLiel design system - a boutique women's padel club.
+  Calm, warm and minimal: off-white base, deep navy for structure, soft rose as the only accent.
+  Every colour, radius, shadow and type size used by the UI comes from the tokens below;
+  do not add raw hex values in components.
+
+  Layout uses logical properties (ms-/me-/ps-/pe-/text-start) so RTL just works.
+*/
+@theme {
+  /* Reset Tailwind's default palette so only brand tokens exist. */
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-sans: var(--font-assistant), ui-sans-serif, system-ui, 'Segoe UI', Arial, sans-serif;
+
+  /* Deep blue: structure, text, primary actions */
+  --color-navy-50: #f4f6fa;
+  --color-navy-100: #e4e9f1;
+  --color-navy-700: #0b3b77;
+  --color-navy-800: #072f64;
+  --color-navy-900: #012653;
+
+  /* Muted blue tints for quiet informational surfaces (no bright blue in the UI) */
+  --color-ocean-50: #f4f6fa;
+  --color-ocean-100: #e4e9f1;
+  --color-ocean-500: #3b6aa8; /* focus ring */
+  --color-ocean-700: #1d4a82; /* text-safe blue */
+
+  /* Soft rose: the only accent */
+  --color-pink-50: #fdf8f9;
+  --color-pink-100: #f9eef1;
+  --color-pink-200: #f0d6de;
+  --color-pink-500: #d98aa3;
+  --color-pink-700: #a2385f; /* text / accent buttons (AA on white) */
+
+  /* Surfaces and text */
+  --color-canvas: #fcfaf9;
+  --color-surface: #ffffff;
+  --color-ink: #1c2433;
+  --color-muted: #5d6675;
+  --color-line: #ece7e5;
+  --color-line-strong: #dad2cf;
+  --color-control: #8b8791; /* form-control borders (>= 3:1 on white) */
+
+  /* States: each has text colour, soft background and border */
+  --color-success: #276b58;
+  --color-success-soft: #eef6f3;
+  --color-success-line: #cfe4dc;
+  --color-warning: #805312;
+  --color-warning-soft: #fbf5ea;
+  --color-warning-line: #eddcb8;
+  --color-danger: #a82b3d;
+  --color-danger-strong: #8f1b2b;
+  --color-danger-soft: #fcf1f2;
+  --color-danger-line: #f0cdd2;
+
+  /* Type scale (Assistant). Weights used: 400 / 500 / 600 / 700. */
+  --text-hero: 1.75rem;
+  --text-hero--line-height: 1.2;
+  --text-title: 1.4375rem;
+  --text-title--line-height: 1.25;
+  --text-card: 1.125rem;
+  --text-card--line-height: 1.35;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.45;
+
+  /* Shape */
+  --radius-card: 1.125rem; /* 18px */
+  --radius-control: 0.75rem; /* 12px */
+  --radius-chip: 9999px;
+
+  /* Elevation: prefer borders, keep shadows soft */
+  --shadow-soft: 0 1px 2px rgb(28 36 51 / 0.03), 0 8px 24px -14px rgb(28 36 51 / 0.1);
+  --shadow-lift: 0 1px 3px rgb(28 36 51 / 0.04), 0 18px 40px -20px rgb(28 36 51 / 0.18);
+
+  --animate-sheet-in: sheet-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    /* Never allow sideways scrolling on small phones. */
+    overflow-x: clip;
+  }
+  h1,
+  h2,
+  h3 {
+    color: var(--color-navy-900);
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-ocean-500);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+  ::selection {
+    background: var(--color-pink-200);
+  }
+  button,
+  [role='button'],
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  dialog::backdrop {
+    background: rgb(1 38 83 / 0.5);
+    backdrop-filter: blur(2px);
+    animation: fade-in 160ms ease-out;
+  }
+  /* Keep times, dates and numbers readable inside RTL text. */
+  bdi,
+  .num {
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

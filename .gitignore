@@ -1,0 +1,30 @@
+node_modules/
+.next/
+out/
+build/
+coverage/
+scratch/
+*.tsbuildinfo
+next-env.d.ts
+
+# env files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+.vercel
+npm-debug.log*
+.DS_Store
+
+# local logs
+*.err
+*.out
+
+# vitest cache
+.vitest/
+
+# database migrations (kept local only)
+supabase/
+
+# docs (kept local only)
+docs/
