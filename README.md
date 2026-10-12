@@ -1,7 +1,7 @@
 # PadelLiel – Padel Community Management
 
 Mobile-first, Hebrew / RTL web app for the coaching team and its padel trainees (Kochav Yair). It replaces WhatsApp polls and spreadsheets:
-the coach publishes weekly sessions, trainees book and cancel themselves, and the rules (weekly allowance, 8-hour cancellation policy,
+the coach publishes weekly sessions, trainees book and cancel themselves, and the rules (monthly session quota, 8-hour cancellation policy,
 capacity, levels, waiting list) are enforced in the database.
 
 **Stack:** Next.js 16 (App Router, TypeScript, React 19, Tailwind 4) · Supabase (PostgreSQL, Auth, RLS) · Vercel.
@@ -46,8 +46,8 @@ The Supabase `service_role` key is **never** used or needed. Do not commit `.env
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list) using the SQL Editor.
-   The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (1/2/3 per week) and default settings (8h cutoff, capacity 4, 07:00–08:00 and 08:00–09:00).
+2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota) using the SQL Editor.
+   The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (once / twice / three times a week = 4 / 8 / 13 sessions per month) and default settings (8h cutoff, capacity 4, 07:00–08:00 and 08:00–09:00).
 3. **Authentication → URL Configuration**
    - Site URL: your app URL (e.g. `https://padel-liel.vercel.app`).
    - Redirect URLs: add `https://<your-app>/auth/callback` and `http://localhost:3000/auth/callback`.
@@ -89,8 +89,8 @@ This is the only manual SQL step. Everything else is done from the admin screens
 
 ## Using the app
 
-**Trainee:** home (this week's allowance and upcoming sessions) → schedule (book, join the waiting list, cancel) → my sessions → profile.
-A cancellation up to 8 hours before the session returns the session to the weekly allowance; after that the spot is released but the session
+**Trainee:** home (this month's quota and upcoming sessions) → schedule (book, join the waiting list, cancel) → my sessions → profile.
+A cancellation up to 8 hours before the session returns the session to the monthly quota; after that the spot is released but the session
 still counts. The app asks for explicit confirmation before a late cancellation, and before booking a session that starts in under 8 hours.
 
 **Coach (admin):** dashboard → schedule (bulk-create by days × time slots × levels, duplicate a week, publish, WhatsApp message) → session page

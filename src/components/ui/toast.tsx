@@ -22,13 +22,13 @@ const ToastContext = createContext<ToastApi | null>(null);
 const toneClasses: Record<ToastTone, string> = {
   success: 'border-success-line bg-success-soft',
   error: 'border-danger-line bg-danger-soft',
-  info: 'border-ocean-100 bg-ocean-50',
+  info: 'border-pink-200 bg-pink-50',
 };
 
 const toneIcons = {
   success: { Icon: CircleCheck, className: 'text-success' },
   error: { Icon: OctagonAlert, className: 'text-danger' },
-  info: { Icon: Info, className: 'text-ocean-700' },
+  info: { Icon: Info, className: 'text-pink-700' },
 } as const;
 
 export function ToastProvider({ children }: { children: ReactNode }) {

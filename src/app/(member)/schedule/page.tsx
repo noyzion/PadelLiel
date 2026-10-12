@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { SessionCard } from '@/components/member/session-card';
-import { Alert, EmptyState, PageHeader } from '@/components/ui/card';
+import { MonthlyQuotaTracker } from '@/components/member/subscription-summary';
+import { EmptyState, PageHeader } from '@/components/ui/card';
 import { WeekNav } from '@/components/week-nav';
 import { levelLabel } from '@/lib/domain/labels';
 import type { ScheduleSession } from '@/lib/domain/types';
-import { currentWeekStart, formatDateHe, parseWeekParam, weekdayNameHe } from '@/lib/time';
+import { currentWeekStart, formatDateHe, monthStartOf, parseWeekParam, weekEndOf, weekdayNameHe } from '@/lib/time';
 import { requireMember } from '@/server/auth';
 import { getAllowance, getWeekSchedule } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
@@ -16,9 +17,12 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const { db, userId } = await requireMember();
   const weekStart = parseWeekParam(params.week);
 
-  const [sessions, allowance, settings, levels] = await Promise.all([
+  // The quota is monthly; a week can touch two months, so show each month it touches.
+  const months = [...new Set([monthStartOf(weekStart), monthStartOf(weekEndOf(weekStart))])];
+
+  const [sessions, allowances, settings, levels] = await Promise.all([
     getWeekSchedule(db, weekStart),
-    getAllowance(db, userId, weekStart),
+    Promise.all(months.map((m) => getAllowance(db, userId, m))),
     getSettings(db),
     getSkillLevels(db),
   ]);
@@ -31,20 +35,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
       <PageHeader title="לוח אימונים" description="בחרי אימון להרשמה" />
       <WeekNav basePath="/schedule" weekStart={weekStart} currentWeek={currentWeekStart()} />
 
-      {!allowance.has_active_subscription ? (
-        <Alert tone="amber" title="אין מנוי פעיל לשבוע הזה">
-          אפשר לראות את האימונים, אבל ההרשמה דורשת מנוי פעיל. פני לצוות שלנו.
-        </Alert>
-      ) : allowance.remaining === 0 ? (
-        <Alert tone="amber" title="מימשת את מכסת האימונים השבועית שלך">
-          במנוי שלך ({allowance.plan_name}) יש {allowance.effective_limit} אימונים בשבוע, וכולם שמורים או נוצלו. ביטול בזמן יחזיר אימון
-          למכסה.
-        </Alert>
-      ) : (
-        <Alert tone="blue">
-          נותרו לך <strong className="num">{allowance.remaining}</strong> מתוך <span className="num">{allowance.effective_limit}</span> אימונים בשבוע הזה.
-        </Alert>
-      )}
+      <MonthlyQuotaTracker allowances={allowances} />
 
       {sessions.length === 0 ? (
         <EmptyState title="עוד לא פורסמו אימונים לשבוע הזה" description="אימונים חדשים יופיעו כאן כשיפורסמו." />

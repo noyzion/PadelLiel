@@ -8,14 +8,14 @@ import type {
   Profile,
   SessionRow,
   SubscriptionPlan,
-  WeeklyUsageRow,
+  MonthlyUsageRow,
 } from '@/lib/domain/types';
-import { shiftWeek } from '@/lib/time';
+import { shiftMonth } from '@/lib/time';
 import { rpc, unwrap } from '../rpc';
-import { getAllowance, getWeeklyUsage } from './booking';
+import { getAllowance, getMonthlyUsage } from './booking';
 
-export function listMembers(db: Db, weekStart: string) {
-  return rpc<MemberOverview[]>(db, 'admin_list_members', { p_week_start: weekStart });
+export function listMembers(db: Db, monthStart: string) {
+  return rpc<MemberOverview[]>(db, 'admin_list_members', { p_month_start: monthStart });
 }
 
 export async function updateMember(db: Db, memberId: string, patch: Record<string, unknown>) {
@@ -57,7 +57,7 @@ export interface MemberBookingRow {
 
 export interface AdjustmentRow {
   id: string;
-  week_start: string;
+  month_start: string;
   delta: number;
   kind: string;
   reason: string;
@@ -66,27 +66,27 @@ export interface AdjustmentRow {
 
 export interface MemberDetail {
   profile: Profile;
-  subscriptions: (MemberSubscription & { plan_name: string; weekly_limit: number })[];
-  thisWeek: Allowance;
-  nextWeek: Allowance;
-  usage: WeeklyUsageRow[];
+  subscriptions: (MemberSubscription & { plan_name: string; monthly_limit: number })[];
+  thisMonth: Allowance;
+  nextMonth: Allowance;
+  usage: MonthlyUsageRow[];
   bookings: MemberBookingRow[];
   adjustments: AdjustmentRow[];
 }
 
-export async function getMemberDetail(db: Db, memberId: string, currentWeek: string): Promise<MemberDetail | null> {
+export async function getMemberDetail(db: Db, memberId: string, currentMonth: string): Promise<MemberDetail | null> {
   const profile = unwrap(
     await db.from('profiles').select('*').eq('id', memberId).eq('role', 'trainee').maybeSingle(),
   ) as Profile | null;
   if (!profile) return null;
 
-  const nextWeekStart = shiftWeek(currentWeek, 1);
-  const [subs, plans, thisWeek, nextWeek, usage, bookings, adjustments] = await Promise.all([
+  const nextMonthStart = shiftMonth(currentMonth, 1);
+  const [subs, plans, thisMonth, nextMonth, usage, bookings, adjustments] = await Promise.all([
     db.from('member_subscriptions').select('*').eq('member_id', memberId).order('starts_on', { ascending: false }),
     db.from('subscription_plans').select('*'),
-    getAllowance(db, memberId, currentWeek),
-    getAllowance(db, memberId, nextWeekStart),
-    getWeeklyUsage(db, memberId, shiftWeek(currentWeek, -7), nextWeekStart),
+    getAllowance(db, memberId, currentMonth),
+    getAllowance(db, memberId, nextMonthStart),
+    getMonthlyUsage(db, memberId, shiftMonth(currentMonth, -3), nextMonthStart),
     db.from('bookings').select('*').eq('member_id', memberId).order('created_at', { ascending: false }).limit(200),
     db.from('allowance_adjustments').select('*').eq('member_id', memberId).order('created_at', { ascending: false }),
   ]);
@@ -116,10 +116,10 @@ export async function getMemberDetail(db: Db, memberId: string, currentWeek: str
     subscriptions: (unwrap(subs) as MemberSubscription[]).map((s) => ({
       ...s,
       plan_name: planById.get(s.plan_id)?.name ?? '—',
-      weekly_limit: planById.get(s.plan_id)?.weekly_session_limit ?? 0,
+      monthly_limit: planById.get(s.plan_id)?.monthly_session_limit ?? 0,
     })),
-    thisWeek,
-    nextWeek,
+    thisMonth,
+    nextMonth,
     usage,
     bookings: bookingRows
       .map((b) => ({

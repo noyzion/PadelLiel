@@ -31,19 +31,19 @@
   --color-ocean-700: #1d4a82; /* text-safe blue */
 
   /* Soft rose: the only accent */
-  --color-pink-50: #fdf8f9;
-  --color-pink-100: #f9eef1;
-  --color-pink-200: #f0d6de;
-  --color-pink-500: #d98aa3;
-  --color-pink-700: #a2385f; /* text / accent buttons (AA on white) */
+  --color-pink-50: #fef6f8;
+  --color-pink-100: #fbe8ef;
+  --color-pink-200: #f5cfdd;
+  --color-pink-500: #dc6b98;
+  --color-pink-700: #a8305f; /* text / accent buttons (AA on white) */
 
   /* Surfaces and text */
-  --color-canvas: #fcfaf9;
+  --color-canvas: #fdf8f9;
   --color-surface: #ffffff;
   --color-ink: #1c2433;
   --color-muted: #5d6675;
-  --color-line: #ece7e5;
-  --color-line-strong: #dad2cf;
+  --color-line: #f0e2e7;
+  --color-line-strong: #e2cfd7;
   --color-control: #8b8791; /* form-control borders (>= 3:1 on white) */
 
   /* States: each has text colour, soft background and border */

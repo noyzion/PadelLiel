@@ -112,7 +112,7 @@ describe('private data isolation', () => {
     const session = await db.createSession({ date: '2026-11-03', capacity: 1 });
     await a.book(session);
     await b.call('join_waitlist', { p_session_id: session });
-    await admin.call('admin_adjust_allowance', { p_member_id: a.userId, p_week_start: '2026-11-01', p_delta: 1, p_reason: 'test' });
+    await admin.call('admin_adjust_allowance', { p_member_id: a.userId, p_month_start: '2026-11-01', p_delta: 1, p_reason: 'test' });
 
     for (const table of ['bookings', 'member_subscriptions', 'allowance_adjustments', 'waitlist_entries']) {
       const rows = await b.query<{ member_id: string }>(`select member_id from public.${table}`);
@@ -152,7 +152,7 @@ describe('write protection', () => {
     const attempts = [
       ['insert into public.bookings (session_id, member_id) values ($1, $2)', [session, m.userId]],
       ['insert into public.waitlist_entries (session_id, member_id) values ($1, $2)', [session, m.userId]],
-      ["insert into public.allowance_adjustments (member_id, week_start, delta, kind, reason) values ($1, '2026-11-01', 5, 'manual', 'x')", [m.userId]],
+      ["insert into public.allowance_adjustments (member_id, month_start, delta, kind, reason) values ($1, '2026-11-01', 5, 'manual', 'x')", [m.userId]],
       ['update public.member_subscriptions set is_active = true where member_id = $1', [m.userId]],
       ["update public.bookings set status = 'ATTENDED' where member_id = $1", [m.userId]],
       ['delete from public.bookings where member_id = $1', [m.userId]],
@@ -169,13 +169,13 @@ describe('write protection', () => {
     await expect(
       m.query("insert into public.sessions (session_date, start_time, end_time, skill_level_code) values ('2026-12-01','07:00','08:00','beginner')"),
     ).rejects.toThrow(/row-level security/);
-    const upd = await m.query("update public.subscription_plans set weekly_session_limit = 14");
+    const upd = await m.query("update public.subscription_plans set monthly_session_limit = 14");
     expect(upd.rowCount).toBe(0);
     const set = await m.query("update public.app_settings set value = '0'::jsonb where key = 'cancellation_cutoff_hours'");
     expect(set.rowCount).toBe(0);
 
     await admin.query("insert into public.sessions (session_date, start_time, end_time, skill_level_code) values ('2026-12-01','07:00','08:00','beginner')");
-    await admin.query("insert into public.subscription_plans (name, weekly_session_limit) values ('VIP', 5)");
+    await admin.query("insert into public.subscription_plans (name, monthly_session_limit) values ('VIP', 5)");
   });
 
   it('no payment, invoice, wallet or credit tables exist', async () => {
@@ -192,12 +192,12 @@ describe('write protection', () => {
     await expect(
       m.query('select public.create_booking_internal($1, $2, true, true, true, null)', [m.userId, session]),
     ).rejects.toThrow(/permission denied/);
-    await expect(m.query('select * from public.allowance_for_week($1, current_date)', [m.userId])).rejects.toThrow(/permission denied/);
+    await expect(m.query('select * from public.allowance_for_month($1, current_date)', [m.userId])).rejects.toThrow(/permission denied/);
   });
 
   it("allowance of other members is not readable through the RPC", async () => {
     const a = await db.createMember();
     const b = await db.createMember();
-    await expect(b.rpc('get_member_allowance', { p_member_id: a.userId, p_week_start: '2026-11-01' })).rejects.toMatchObject(code('NOT_AUTHORIZED'));
+    await expect(b.rpc('get_member_allowance', { p_member_id: a.userId, p_month_start: '2026-11-01' })).rejects.toMatchObject(code('NOT_AUTHORIZED'));
   });
 });

@@ -8,7 +8,7 @@ import { Badge, Card, PageHeader, ProgressBar, SectionHeading } from '@/componen
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
 import type { Allowance } from '@/lib/domain/types';
-import { currentWeekStart, formatDateHe, formatInstantHe, formatTimeRange, formatWeekRangeHe, israelToday, shiftWeek } from '@/lib/time';
+import { currentMonthStart, formatDateHe, formatInstantHe, formatMonthHe, formatTimeRange, israelToday, shiftMonth } from '@/lib/time';
 import { requireAdmin } from '@/server/auth';
 import { getMemberDetail, type MemberBookingRow } from '@/server/services/admin-members';
 import { listPlans } from '@/server/services/admin-plans';
@@ -34,7 +34,7 @@ function AllowanceSummary({ title, allowance }: { title: string; allowance: Allo
           </p>
         </>
       ) : (
-        <p className="text-small text-muted">אין מנוי פעיל בשבוע הזה</p>
+        <p className="text-small text-muted">אין מנוי פעיל בחודש הזה</p>
       )}
     </Card>
   );
@@ -44,13 +44,13 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const { db } = await requireAdmin();
-  const week = currentWeekStart();
+  const month = currentMonthStart();
 
-  const [detail, plans, levels] = await Promise.all([getMemberDetail(db, id, week), listPlans(db), getSkillLevels(db)]);
+  const [detail, plans, levels] = await Promise.all([getMemberDetail(db, id, month), listPlans(db), getSkillLevels(db)]);
   if (!detail) notFound();
 
-  const { profile, subscriptions, thisWeek, nextWeek, usage, bookings, adjustments } = detail;
-  const adjustWeeks = [week, shiftWeek(week, 1), shiftWeek(week, -1), shiftWeek(week, -2)];
+  const { profile, subscriptions, thisMonth, nextMonth, usage, bookings, adjustments } = detail;
+  const adjustMonths = [month, shiftMonth(month, 1), shiftMonth(month, -1), shiftMonth(month, -2)];
   const nowIso = new Date().toISOString();
   const upcoming = bookings.filter((b) => b.status === 'CONFIRMED' && b.session && b.session.starts_at >= nowIso);
   const history = bookings.filter((b) => !upcoming.includes(b));
@@ -66,8 +66,8 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <AllowanceSummary title={`השבוע · ${formatWeekRangeHe(week)}`} allowance={thisWeek} />
-        <AllowanceSummary title={`שבוע הבא · ${formatWeekRangeHe(shiftWeek(week, 1))}`} allowance={nextWeek} />
+        <AllowanceSummary title={`החודש · ${formatMonthHe(month)}`} allowance={thisMonth} />
+        <AllowanceSummary title={`החודש הבא · ${formatMonthHe(shiftMonth(month, 1))}`} allowance={nextMonth} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -86,14 +86,14 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
         />
       </div>
 
-      <AllowanceAdjustForm memberId={profile.id} weeks={adjustWeeks} />
+      <AllowanceAdjustForm memberId={profile.id} months={adjustMonths} />
 
       <section aria-labelledby="usage" className="flex flex-col gap-3">
-        <SectionHeading id="usage">שימוש שבועי</SectionHeading>
-        <DataTable caption="שימוש שבועי">
+        <SectionHeading id="usage">שימוש חודשי</SectionHeading>
+        <DataTable caption="שימוש חודשי">
           <THead>
             <Tr>
-              <Th>שבוע</Th>
+              <Th>חודש</Th>
               <Th>מכסה</Th>
               <Th>נוצל</Th>
               <Th>השתתפה</Th>
@@ -103,8 +103,8 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
           </THead>
           <tbody>
             {usage.map((u) => (
-              <Tr key={u.week_start}>
-                <Td>{formatWeekRangeHe(u.week_start)}</Td>
+              <Tr key={u.month_start}>
+                <Td>{formatMonthHe(u.month_start)}</Td>
                 <Td>{u.effective_limit}</Td>
                 <Td>{u.used}</Td>
                 <Td>{u.attended}</Td>
@@ -138,7 +138,7 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
                   <div>
                     <p className="font-medium">
                       {a.delta > 0 ? '+' : ''}
-                      {a.delta} · {formatWeekRangeHe(a.week_start)}
+                      {a.delta} · {formatMonthHe(a.month_start)}
                     </p>
                     <p className="text-caption text-muted">{a.reason}</p>
                   </div>

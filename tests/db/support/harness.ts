@@ -10,6 +10,9 @@ pg.types.setTypeParser(1083, (v) => v);
 export const BASE_NOW = '2026-10-29T07:00:00Z';
 export const THIS_WEEK = '2026-10-25';
 export const NEXT_WEEK = '2026-11-01';
+/** First day of the month of BASE_NOW / of the following month. */
+export const THIS_MONTH = '2026-10-01';
+export const NEXT_MONTH = '2026-11-01';
 
 export type Level = 'beginner' | 'intermediate' | 'advanced';
 
@@ -27,7 +30,7 @@ export interface MemberInput {
   name?: string;
   approved?: boolean;
   level?: Level | null;
-  /** weekly limit of the plan to subscribe to; null = no subscription */
+  /** monthly session limit of the plan to subscribe to; null = no subscription */
   limit?: number | null;
   subscriptionActive?: boolean;
   startsOn?: string;
@@ -91,7 +94,7 @@ export class UserSession {
     }>('cancel_booking', { p_booking_id: bookingId, p_confirm_late: confirmLate });
   }
 
-  async allowance(weekStart: string) {
+  async allowance(monthStart: string) {
     const rows = await this.rpc<{
       effective_limit: number;
       used: number;
@@ -99,7 +102,7 @@ export class UserSession {
       plan_limit: number;
       adjustments: number;
       has_active_subscription: boolean;
-    }>('get_member_allowance', { p_member_id: this.userId, p_week_start: weekStart });
+    }>('get_member_allowance', { p_member_id: this.userId, p_month_start: monthStart });
     return rows[0];
   }
 }
@@ -132,7 +135,7 @@ export class TestDb {
     await this.adminPool.end();
   }
 
-  /** Superuser query (bypasses RLS) — for fixtures and assertions. */
+  /** Superuser query (bypasses RLS) â€” for fixtures and assertions. */
   sql<T extends pg.QueryResultRow = Record<string, unknown>>(text: string, params: unknown[] = []) {
     return this.pool.query<T>(text, params);
   }
@@ -184,12 +187,12 @@ export class TestDb {
 
   async planIdForLimit(limit: number): Promise<string> {
     const found = await this.sql<{ id: string }>(
-      'select id from public.subscription_plans where weekly_session_limit = $1 order by created_at limit 1',
+      'select id from public.subscription_plans where monthly_session_limit = $1 order by created_at limit 1',
       [limit],
     );
     if (found.rows[0]) return found.rows[0].id;
     const created = await this.sql<{ id: string }>(
-      'insert into public.subscription_plans (name, weekly_session_limit) values ($1, $2) returning id',
+      'insert into public.subscription_plans (name, monthly_session_limit) values ($1, $2) returning id',
       [`plan-${limit}`, limit],
     );
     return created.rows[0].id;

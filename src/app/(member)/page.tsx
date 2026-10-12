@@ -6,7 +6,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { Card, SectionHeading } from '@/components/ui/card';
 import { levelLabel } from '@/lib/domain/labels';
 import { nowMs } from '@/lib/now';
-import { currentWeekStart, greetingHe, shiftWeek } from '@/lib/time';
+import { currentMonthStart, currentWeekStart, greetingHe, shiftMonth } from '@/lib/time';
 import { requireMember } from '@/server/auth';
 import { getAllowance, getMyBookings, getWeekSchedule } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
@@ -16,10 +16,11 @@ export const metadata: Metadata = { title: 'בית' };
 export default async function MemberHomePage() {
   const { db, userId, profile } = await requireMember();
   const week = currentWeekStart();
+  const month = currentMonthStart();
 
-  const [thisWeek, nextWeek, bookings, settings, levels, weekSessions] = await Promise.all([
-    getAllowance(db, userId, week),
-    getAllowance(db, userId, shiftWeek(week, 1)),
+  const [thisMonth, nextMonth, bookings, settings, levels, weekSessions] = await Promise.all([
+    getAllowance(db, userId, month),
+    getAllowance(db, userId, shiftMonth(month, 1)),
     getMyBookings(db),
     getSettings(db),
     getSkillLevels(db),
@@ -86,11 +87,11 @@ export default async function MemberHomePage() {
 
         <div className="contents lg:flex lg:flex-col lg:gap-5">
           <div className="order-1 lg:order-none">
-            <SubscriptionSummary allowance={thisWeek} title="האימונים שלי השבוע" cutoffHours={settings.cancellation_cutoff_hours} />
+            <SubscriptionSummary allowance={thisMonth} title="האימונים שלי החודש" cutoffHours={settings.cancellation_cutoff_hours} />
           </div>
-          {nextWeek.has_active_subscription ? (
+          {nextMonth.has_active_subscription ? (
             <div className="order-6 lg:order-none">
-              <SubscriptionSummary allowance={nextWeek} title="שבוע הבא" cutoffHours={settings.cancellation_cutoff_hours} />
+              <SubscriptionSummary allowance={nextMonth} title="החודש הבא" cutoffHours={settings.cancellation_cutoff_hours} />
             </div>
           ) : null}
         </div>

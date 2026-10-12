@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { BASE_NOW, THIS_WEEK, TestDb } from './support/harness';
+import { BASE_NOW, THIS_MONTH, TestDb } from './support/harness';
 
 let db: TestDb;
 beforeAll(async () => {
@@ -14,7 +14,7 @@ interface Row {
   full_name: string;
   approval_status: string;
   plan_name: string | null;
-  weekly_limit: number;
+  monthly_limit: number;
   used: number;
   remaining: number;
   adjustments: number;
@@ -22,7 +22,7 @@ interface Row {
 }
 
 describe('admin_list_members', () => {
-  it('lists trainees with plan and weekly usage, pending approvals first, never admins', async () => {
+  it('lists trainees with plan and monthly usage, pending approvals first, never admins', async () => {
     const admin = await db.createAdmin('Test Admin');
     const active = await db.createMember({ name: 'Bar', limit: 2 });
     const pending = await db.createMember({ name: 'Zohar', approved: false, limit: null });
@@ -31,13 +31,13 @@ describe('admin_list_members', () => {
     const s1 = await db.createSession({ date: '2026-10-30', start: '07:00', end: '08:00' });
     await active.book(s1);
 
-    const rows = await admin.rpc<Row>('admin_list_members', { p_week_start: THIS_WEEK });
+    const rows = await admin.rpc<Row>('admin_list_members', { p_month_start: THIS_MONTH });
     const byName = new Map(rows.map((r) => [r.full_name, r]));
 
     expect(byName.has('Test Admin')).toBe(false);
     expect(rows[0].full_name).toBe('Zohar'); // pending approval first
 
-    expect(byName.get('Bar')).toMatchObject({ has_active_subscription: true, weekly_limit: 2, used: 1, remaining: 1 });
+    expect(byName.get('Bar')).toMatchObject({ has_active_subscription: true, monthly_limit: 2, used: 1, remaining: 1 });
     expect(byName.get('Adi')).toMatchObject({ has_active_subscription: false, plan_name: null, used: 0 });
     expect(byName.get('Zohar')).toMatchObject({ approval_status: 'pending', has_active_subscription: false });
     expect(pending.userId).toBeTruthy();
@@ -55,21 +55,21 @@ describe('admin_list_members', () => {
     await member.cancel(bookingId, true);
     await db.setNow(BASE_NOW);
 
-    let row = (await admin.rpc<Row>('admin_list_members', { p_week_start: THIS_WEEK })).find((r) => r.full_name === 'Maya')!;
+    let row = (await admin.rpc<Row>('admin_list_members', { p_month_start: THIS_MONTH })).find((r) => r.full_name === 'Maya')!;
     expect(row).toMatchObject({ used: 1, remaining: 0 });
 
     await admin.call('admin_adjust_allowance', {
       p_member_id: member.userId,
-      p_week_start: THIS_WEEK,
+      p_month_start: THIS_MONTH,
       p_delta: 1,
       p_reason: 'בדיקה',
     });
-    row = (await admin.rpc<Row>('admin_list_members', { p_week_start: THIS_WEEK })).find((r) => r.full_name === 'Maya')!;
+    row = (await admin.rpc<Row>('admin_list_members', { p_month_start: THIS_MONTH })).find((r) => r.full_name === 'Maya')!;
     expect(row).toMatchObject({ adjustments: 1, remaining: 1 });
   });
 
   it('is restricted to admins', async () => {
     const member = await db.createMember();
-    await expect(member.rpc('admin_list_members', { p_week_start: THIS_WEEK })).rejects.toMatchObject({ message: 'NOT_AUTHORIZED' });
+    await expect(member.rpc('admin_list_members', { p_month_start: THIS_MONTH })).rejects.toMatchObject({ message: 'NOT_AUTHORIZED' });
   });
 });

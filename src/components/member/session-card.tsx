@@ -187,7 +187,7 @@ export function SessionCard({
       >
         <p className="mb-3 text-body font-semibold text-navy-900">{label}</p>
         <Alert tone="amber" title="שימי לב">
-          האימון מתחיל בעוד פחות מ-{hours} שעות. אם תבטלי את ההרשמה הזו, האימון עדיין ייספר במכסה השבועית שלך.
+          האימון מתחיל בעוד פחות מ-{hours} שעות. אם תבטלי את ההרשמה הזו, האימון עדיין ייספר במכסה החודשית שלך.
         </Alert>
       </Modal>
     </article>

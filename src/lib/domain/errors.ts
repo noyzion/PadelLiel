@@ -15,7 +15,7 @@ export const ERROR_MESSAGES_HE = {
   REGISTRATION_CLOSED: 'ההרשמה לאימון זה סגורה.',
   SESSION_STARTED: 'האימון כבר התחיל.',
   SKILL_LEVEL_MISMATCH: 'האימון מיועד לרמה אחרת.',
-  NO_ALLOWANCE_REMAINING: 'ניצלת את כל האימונים השבועיים במנוי שלך.',
+  NO_ALLOWANCE_REMAINING: 'ניצלת את כל האימונים החודשיים במנוי שלך.',
   SESSION_FULL: 'האימון מלא.',
   SESSION_NOT_FULL: 'יש מקום פנוי באימון, אפשר להירשם ישירות.',
   ALREADY_BOOKED: 'את כבר רשומה לאימון הזה.',
@@ -31,6 +31,7 @@ export const ERROR_MESSAGES_HE = {
   ADJUSTMENT_ALREADY_APPLIED: 'האימון הזה כבר הוחזר למכסה.',
   SESSION_HAS_BOOKINGS: 'יש הרשמות לאימון. בטלי את האימון במקום זאת.',
   SESSION_WEEK_CHANGE_NOT_ALLOWED: 'אי אפשר להעביר אימון עם הרשמות לשבוע אחר. בטלי וצרי אימון חדש.',
+  SESSION_MONTH_CHANGE_NOT_ALLOWED: 'אי אפשר להעביר אימון עם הרשמות לחודש אחר. בטלי וצרי אימון חדש.',
   CAPACITY_BELOW_OCCUPANCY: 'הקיבולת קטנה ממספר הרשומות באימון.',
   PLAN_NOT_FOUND: 'המנוי לא נמצא.',
   ANOTHER_SUBSCRIPTION_ACTIVE: 'כבר קיים מנוי פעיל למתאמנת. החליפי מנוי במקום להפעיל ישן.',
@@ -53,7 +54,7 @@ export function blockReasonHe(reason: string | null): string | null {
   if (!reason) return null;
   switch (reason) {
     case 'NO_ALLOWANCE_REMAINING':
-      return 'הגעת למכסה השבועית של המנוי שלך';
+      return 'הגעת למכסה החודשית של המנוי שלך';
     case 'SKILL_LEVEL_MISMATCH':
       return 'האימון מיועד לרמה אחרת';
     case 'OVERLAPPING_BOOKING':

@@ -1,6 +1,6 @@
 import 'server-only';
 import type { Db } from '@/lib/supabase/server';
-import type { Allowance, CancelResult, MyBooking, ScheduleSession, WeeklyUsageRow } from '@/lib/domain/types';
+import type { Allowance, CancelResult, MyBooking, ScheduleSession, MonthlyUsageRow } from '@/lib/domain/types';
 import { rpc } from '../rpc';
 
 /**
@@ -16,17 +16,17 @@ export function getMyBookings(db: Db) {
   return rpc<MyBooking[]>(db, 'get_my_bookings');
 }
 
-/** The single, centralized weekly-allowance calculation. */
-export async function getAllowance(db: Db, memberId: string, weekStart: string): Promise<Allowance> {
-  const rows = await rpc<Allowance[]>(db, 'get_member_allowance', { p_member_id: memberId, p_week_start: weekStart });
+/** The single, centralized monthly-quota calculation (`monthStart` = any date in the month). */
+export async function getAllowance(db: Db, memberId: string, monthStart: string): Promise<Allowance> {
+  const rows = await rpc<Allowance[]>(db, 'get_member_allowance', { p_member_id: memberId, p_month_start: monthStart });
   return rows[0];
 }
 
-export function getWeeklyUsage(db: Db, memberId: string, fromWeek: string, toWeek: string) {
-  return rpc<WeeklyUsageRow[]>(db, 'get_member_weekly_usage', {
+export function getMonthlyUsage(db: Db, memberId: string, fromMonth: string, toMonth: string) {
+  return rpc<MonthlyUsageRow[]>(db, 'get_member_monthly_usage', {
     p_member_id: memberId,
-    p_from_week: fromWeek,
-    p_to_week: toWeek,
+    p_from_month: fromMonth,
+    p_to_month: toMonth,
   });
 }
 

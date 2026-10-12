@@ -17,12 +17,12 @@ import type { AppSettings, SubscriptionPlan } from '@/lib/domain/types';
 interface PlanDraft {
   id?: string;
   name: string;
-  weeklyLimit: number;
+  monthlyLimit: number;
   description: string;
   isActive: boolean;
 }
 
-const EMPTY_PLAN: PlanDraft = { name: '', weeklyLimit: 1, description: '', isActive: true };
+const EMPTY_PLAN: PlanDraft = { name: '', monthlyLimit: 4, description: '', isActive: true };
 
 export function PlanManager({ plans, memberCounts }: { plans: SubscriptionPlan[]; memberCounts: Record<string, number> }) {
   const [draft, setDraft] = useState<PlanDraft | null>(null);
@@ -50,7 +50,7 @@ export function PlanManager({ plans, memberCounts }: { plans: SubscriptionPlan[]
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="font-semibold">{p.name}</p>
-                <p className="text-small text-muted">{p.weekly_session_limit} אימונים בשבוע</p>
+                <p className="text-small text-muted">{p.monthly_session_limit} אימונים בחודש</p>
               </div>
               <Badge tone={p.is_active ? 'green' : 'neutral'}>{p.is_active ? 'פעילה' : 'לא פעילה'}</Badge>
             </div>
@@ -62,7 +62,7 @@ export function PlanManager({ plans, memberCounts }: { plans: SubscriptionPlan[]
                 variant="secondary"
                 onClick={() => {
                   setError(undefined);
-                  setDraft({ id: p.id, name: p.name, weeklyLimit: p.weekly_session_limit, description: p.description ?? '', isActive: p.is_active });
+                  setDraft({ id: p.id, name: p.name, monthlyLimit: p.monthly_session_limit, description: p.description ?? '', isActive: p.is_active });
                 }}
               >
                 עריכה
@@ -104,8 +104,8 @@ export function PlanManager({ plans, memberCounts }: { plans: SubscriptionPlan[]
               </p>
             ) : null}
             <Field label="שם התוכנית">{(p) => <Input {...p} value={draft.name} onChange={(e) => set('name', e.target.value)} maxLength={60} />}</Field>
-            <Field label="אימונים בשבוע" hint="חל על כל שבוע, ראשון עד שבת. אין צבירה בין שבועות.">
-              {(p) => <Input {...p} type="number" inputMode="numeric" min={1} max={14} value={draft.weeklyLimit} onChange={(e) => set('weeklyLimit', Number(e.target.value))} />}
+            <Field label="אימונים בחודש" hint="חל על כל חודש קלנדרי. המתאמנת בוחרת איך לחלק אותם לאורך החודש. אין צבירה בין חודשים.">
+              {(p) => <Input {...p} type="number" inputMode="numeric" min={1} max={31} value={draft.monthlyLimit} onChange={(e) => set('monthlyLimit', Number(e.target.value))} />}
             </Field>
             <Field label="תיאור (אופציונלי)">{(p) => <Input {...p} value={draft.description} onChange={(e) => set('description', e.target.value)} maxLength={200} />}</Field>
             <Checkbox label="התוכנית פעילה (אפשר לשייך אותה למתאמנות)" checked={draft.isActive} onChange={(e) => set('isActive', e.target.checked)} />

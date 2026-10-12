@@ -15,7 +15,7 @@ import { Modal } from '@/components/ui/modal';
 import { useServerAction } from '@/components/use-server-action';
 import { APPROVAL_LABEL_HE, APPROVAL_TONE } from '@/lib/domain/labels';
 import type { ApprovalStatus, SkillLevel, SubscriptionPlan } from '@/lib/domain/types';
-import { formatDateHe, formatWeekRangeHe } from '@/lib/time';
+import { formatDateHe, formatMonthHe } from '@/lib/time';
 
 /* ------------------------------------------------------------------ */
 /* Profile: approval, level, notes                                      */
@@ -105,7 +105,7 @@ export function MemberProfileEditor({
 export interface SubscriptionView {
   id: string;
   plan_name: string;
-  weekly_limit: number;
+  monthly_limit: number;
   is_active: boolean;
   starts_on: string;
   ends_on: string | null;
@@ -140,7 +140,7 @@ export function SubscriptionManager({
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-small">
             <div>
               <p className="font-semibold">
-                {s.plan_name} · {s.weekly_limit} בשבוע
+                {s.plan_name} · {s.monthly_limit} בחודש
               </p>
               <p className="text-caption text-muted">
                 מ-{formatDateHe(s.starts_on)}
@@ -200,7 +200,7 @@ export function SubscriptionManager({
                 .filter((pl) => pl.is_active)
                 .map((pl) => (
                   <option key={pl.id} value={pl.id}>
-                    {pl.name} ({pl.weekly_session_limit} בשבוע)
+                    {pl.name} ({pl.monthly_session_limit} בחודש)
                   </option>
                 ))}
             </Select>
@@ -218,7 +218,7 @@ export function SubscriptionManager({
           שמירת מנוי
         </Button>
         <p className="text-caption text-muted">
-          החלפת תוכנית באמצע שבוע לא מאפסת אימונים שכבר נספרו באותו שבוע. מנוי קודם נסגר ביום שלפני ההתחלה החדשה.
+          החלפת תוכנית באמצע חודש לא מאפסת אימונים שכבר נספרו באותו חודש. מנוי קודם נסגר ביום שלפני ההתחלה החדשה.
         </p>
       </form>
 
@@ -258,8 +258,8 @@ export function SubscriptionManager({
 /* Manual allowance adjustment                                          */
 /* ------------------------------------------------------------------ */
 
-export function AllowanceAdjustForm({ memberId, weeks }: { memberId: string; weeks: string[] }) {
-  const [weekStart, setWeekStart] = useState(weeks[0] ?? '');
+export function AllowanceAdjustForm({ memberId, months }: { memberId: string; months: string[] }) {
+  const [monthStart, setMonthStart] = useState(months[0] ?? '');
   const [delta, setDelta] = useState(1);
   const [reason, setReason] = useState('');
   const { pending, run } = useServerAction();
@@ -267,31 +267,31 @@ export function AllowanceAdjustForm({ memberId, weeks }: { memberId: string; wee
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="text-card font-semibold">התאמת מכסה ידנית</h2>
-      <p className="text-small text-muted">מוסיפה (או מורידה) אימונים למכסה של שבוע מסוים. ההתאמה נרשמת ביומן הפעולות.</p>
+      <p className="text-small text-muted">מוסיפה (או מורידה) אימונים למכסה של חודש מסוים. ההתאמה נרשמת ביומן הפעולות.</p>
       <form
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault();
-          run(() => adjustAllowanceAction({ memberId, weekStart, delta, reason }), {
+          run(() => adjustAllowanceAction({ memberId, monthStart, delta, reason }), {
             success: 'המכסה עודכנה',
             onSuccess: () => setReason(''),
           });
         }}
       >
         <div className="grid grid-cols-2 gap-3">
-          <Field label="שבוע">
+          <Field label="חודש">
             {(p) => (
-              <Select {...p} value={weekStart} onChange={(e) => setWeekStart(e.target.value)}>
-                {weeks.map((w) => (
-                  <option key={w} value={w}>
-                    {formatWeekRangeHe(w)}
+              <Select {...p} value={monthStart} onChange={(e) => setMonthStart(e.target.value)}>
+                {months.map((m) => (
+                  <option key={m} value={m}>
+                    {formatMonthHe(m)}
                   </option>
                 ))}
               </Select>
             )}
           </Field>
           <Field label="שינוי (+/−)">
-            {(p) => <Input {...p} type="number" inputMode="numeric" min={-14} max={14} value={delta} onChange={(e) => setDelta(Number(e.target.value))} required />}
+            {(p) => <Input {...p} type="number" inputMode="numeric" min={-31} max={31} value={delta} onChange={(e) => setDelta(Number(e.target.value))} required />}
           </Field>
         </div>
         <Field label="סיבה (חובה)">{(p) => <Input {...p} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} required />}</Field>

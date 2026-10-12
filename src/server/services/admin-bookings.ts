@@ -22,10 +22,10 @@ export function restoreAllowance(db: Db, bookingId: string, reason: string) {
   return rpc<string>(db, 'admin_restore_allowance', { p_booking_id: bookingId, p_reason: reason });
 }
 
-export function adjustAllowance(db: Db, p: { memberId: string; weekStart: string; delta: number; reason: string }) {
+export function adjustAllowance(db: Db, p: { memberId: string; monthStart: string; delta: number; reason: string }) {
   return rpc<string>(db, 'admin_adjust_allowance', {
     p_member_id: p.memberId,
-    p_week_start: p.weekStart,
+    p_month_start: p.monthStart,
     p_delta: p.delta,
     p_reason: p.reason,
   });

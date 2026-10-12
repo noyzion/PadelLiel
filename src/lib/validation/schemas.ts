@@ -105,12 +105,12 @@ export const restoreAllowanceSchema = z.object({
 
 export const adjustAllowanceSchema = z.object({
   memberId: uuid,
-  weekStart: dateString,
+  monthStart: dateString,
   delta: z.coerce
     .number()
     .int('מספר שלם')
-    .min(-14)
-    .max(14)
+    .min(-31)
+    .max(31)
     .refine((v) => v !== 0, 'ההתאמה לא יכולה להיות 0'),
   reason: z.string().trim().min(3, 'יש לציין סיבה').max(300),
 });
@@ -150,7 +150,7 @@ export const subscriptionValiditySchema = z
 export const planSchema = z.object({
   id: uuid.optional(),
   name: z.string().trim().min(2, 'יש להזין שם').max(60, 'השם ארוך מדי'),
-  weeklyLimit: z.coerce.number().int('מספר שלם').min(1, 'לפחות 1').max(14, 'עד 14'),
+  monthlyLimit: z.coerce.number().int('מספר שלם').min(1, 'לפחות 1').max(31, 'עד 31'),
   description: optionalText(200),
   isActive: z.boolean().default(true),
 });

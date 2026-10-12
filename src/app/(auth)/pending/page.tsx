@@ -24,7 +24,7 @@ export default async function PendingPage() {
             <Hourglass className="size-7" />
           </span>
         ) : (
-          <PadelRackets className="w-24 text-pink-200" />
+          <PadelRackets className="w-24 text-pink-500" />
         )}
         <h1 className="text-title font-semibold">{rejected ? 'הבקשה לא אושרה' : `תודה שהצטרפת${name ? `, ${name}` : ''}`}</h1>
       </div>

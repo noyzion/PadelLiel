@@ -17,15 +17,15 @@ export const metadata: Metadata = { title: 'ההרשמות שלי' };
 function statusNote(b: MyBooking, hours: string): string | null {
   switch (b.status) {
     case 'CANCELLED_EARLY':
-      return 'בוטל בזמן – לא נספר במכסה השבועית';
+      return 'בוטל בזמן – לא נספר במכסה החודשית';
     case 'CANCELLED_LATE':
       return b.counts_toward_allowance
-        ? `בוטל פחות מ-${hours} שעות לפני האימון – נספר במכסה השבועית`
+        ? `בוטל פחות מ-${hours} שעות לפני האימון – נספר במכסה החודשית`
         : 'בוטל מאוחר, אבל האימון בוטל ע״י המאמנת ולכן לא נספר';
     case 'CANCELLED_BY_COACH':
       return 'האימון או ההרשמה בוטלו ע״י המאמנת – לא נספר במכסה';
     case 'NO_SHOW':
-      return 'לא הגעת לאימון – נספר במכסה השבועית';
+      return 'לא הגעת לאימון – נספר במכסה החודשית';
     default:
       return null;
   }
@@ -47,7 +47,7 @@ function BookingCard({
   const note = statusNote(b, hours);
   const label = `${formatDateHe(b.session_date)} · ${formatTimeRange(b.start_time, b.end_time)}`;
   return (
-    <Card tone={highlight ? 'blue' : 'default'} className="flex flex-col gap-3 p-4">
+    <Card tone={highlight ? 'pink' : 'default'} className="flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="num text-card font-semibold text-navy-900">
@@ -104,7 +104,7 @@ export default async function MyBookingsPage() {
       ) : (
         <>
           <Alert tone="blue" title="מדיניות ביטול">
-            ביטול של לפחות {hours} שעות לפני האימון מחזיר אותו למכסה השבועית. ביטול מאוחר יותר משחרר את המקום, אבל האימון ממשיך להיספר במכסה.
+            ביטול של לפחות {hours} שעות לפני האימון מחזיר אותו למכסה החודשית. ביטול מאוחר יותר משחרר את המקום, אבל האימון ממשיך להיספר במכסה.
           </Alert>
           {sections.map((s) => (
             <section key={s.id} aria-labelledby={`sec-${s.id}`} className="flex flex-col gap-3">

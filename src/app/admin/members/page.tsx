@@ -8,7 +8,7 @@ import { SearchField } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { levelLabel } from '@/lib/domain/labels';
 import type { ApprovalStatus, MemberOverview } from '@/lib/domain/types';
-import { currentWeekStart } from '@/lib/time';
+import { currentMonthStart } from '@/lib/time';
 import { requireAdmin } from '@/server/auth';
 import { listMembers } from '@/server/services/admin-members';
 import { getSkillLevels } from '@/server/services/settings';
@@ -32,15 +32,15 @@ function SubscriptionBadge({ m }: { m: MemberOverview }) {
   );
 }
 
-function weeklyUsage(m: MemberOverview): string | null {
+function monthlyUsage(m: MemberOverview): string | null {
   return m.has_active_subscription ? `נוצלו ${m.used} · נותרו ${m.remaining}` : null;
 }
 
 export default async function AdminMembersPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
   const params = await searchParams;
   const { db } = await requireAdmin();
-  const weekStart = currentWeekStart();
-  const [members, levels] = await Promise.all([listMembers(db, weekStart), getSkillLevels(db)]);
+  const monthStart = currentMonthStart();
+  const [members, levels] = await Promise.all([listMembers(db, monthStart), getSkillLevels(db)]);
 
   const status = FILTERS.some((f) => f.value === params.status) ? (params.status as ApprovalStatus | 'all') : 'all';
   const q = (params.q ?? '').trim();
@@ -100,7 +100,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                     <ApprovalBadge status={m.approval_status} />
                     <SkillLevelBadge label={levelLabel(m.skill_level_code, levels)} />
                     <SubscriptionBadge m={m} />
-                    {weeklyUsage(m) ? <Badge tone="neutral">{weeklyUsage(m)}</Badge> : null}
+                    {monthlyUsage(m) ? <Badge tone="neutral">{monthlyUsage(m)}</Badge> : null}
                   </div>
                 </Card>
               </Link>
@@ -115,7 +115,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                 <Th>טלפון</Th>
                 <Th>רמה</Th>
                 <Th>מנוי</Th>
-                <Th>שימוש השבוע</Th>
+                <Th>שימוש החודש</Th>
                 <Th>סטטוס</Th>
               </Tr>
             </THead>
@@ -139,7 +139,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                   <Td>
                     <SubscriptionBadge m={m} />
                   </Td>
-                  <Td>{weeklyUsage(m) ?? '—'}</Td>
+                  <Td>{monthlyUsage(m) ?? '—'}</Td>
                   <Td>
                     <ApprovalBadge status={m.approval_status} />
                   </Td>

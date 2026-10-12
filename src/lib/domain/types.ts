@@ -34,7 +34,7 @@ export interface Profile {
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  weekly_session_limit: number;
+  monthly_session_limit: number;
   description: string | null;
   is_active: boolean;
 }
@@ -47,12 +47,13 @@ export interface MemberSubscription {
   starts_on: string;
   ends_on: string | null;
   created_at: string;
-  subscription_plans?: Pick<SubscriptionPlan, 'name' | 'weekly_session_limit'> | null;
+  subscription_plans?: Pick<SubscriptionPlan, 'name' | 'monthly_session_limit'> | null;
 }
 
-/** Weekly allowance as computed by `get_member_allowance`. The only source for these numbers. */
+/** Monthly session quota as computed by `get_member_allowance`. The only source for these numbers. */
 export interface Allowance {
-  week_start: string;
+  /** First day of the calendar month the numbers refer to. */
+  month_start: string;
   plan_id: string | null;
   plan_name: string | null;
   plan_limit: number;
@@ -63,8 +64,8 @@ export interface Allowance {
   has_active_subscription: boolean;
 }
 
-export interface WeeklyUsageRow {
-  week_start: string;
+export interface MonthlyUsageRow {
+  month_start: string;
   plan_name: string | null;
   effective_limit: number;
   used: number;
@@ -145,7 +146,7 @@ export interface MemberOverview {
   subscription_starts_on: string | null;
   subscription_ends_on: string | null;
   plan_name: string | null;
-  weekly_limit: number;
+  monthly_limit: number;
   adjustments: number;
   used: number;
   remaining: number;

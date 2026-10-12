@@ -24,7 +24,7 @@ export default async function AdminPlansPage() {
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title="תוכניות מנוי" description="כמה אימונים מתאמנת יכולה לקחת בכל שבוע (ראשון עד שבת)" />
-      <Alert tone="blue">התוכניות קובעות מכסה שבועית בלבד. אין תשלומים באפליקציה.</Alert>
+      <Alert tone="blue">התוכניות קובעות מכסה חודשית בלבד. אין תשלומים באפליקציה.</Alert>
       <PlanManager plans={plans} memberCounts={memberCounts} />
     </div>
   );

@@ -5,11 +5,14 @@ import {
   dayOfWeek,
   formatDateHe,
   formatInstantHe,
+  formatMonthHe,
   formatTimeRange,
   formatWeekRangeHe,
   isValidDateString,
+  monthStartOf,
   israelToday,
   parseWeekParam,
+  shiftMonth,
   shiftWeek,
   weekDates,
   weekEndOf,
@@ -50,6 +53,27 @@ describe('week arithmetic (Sunday–Saturday)', () => {
     expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
     expect(weekStartOf('2027-01-01')).toBe('2026-12-27');
     expect(dayOfWeek('2026-10-10')).toBe(6);
+  });
+});
+
+describe('month arithmetic (monthly session quota)', () => {
+  it('finds the first day of the month for any date', () => {
+    expect(monthStartOf('2026-11-01')).toBe('2026-11-01');
+    expect(monthStartOf('2026-11-30')).toBe('2026-11-01');
+    expect(monthStartOf('2028-02-29')).toBe('2028-02-01');
+    expect(() => monthStartOf('2026-02-31')).toThrow();
+  });
+
+  it('shifts months across year boundaries', () => {
+    expect(shiftMonth('2026-11-18', 1)).toBe('2026-12-01');
+    expect(shiftMonth('2026-12-01', 1)).toBe('2027-01-01');
+    expect(shiftMonth('2026-01-01', -1)).toBe('2025-12-01');
+    expect(shiftMonth('2026-03-01', -3)).toBe('2025-12-01');
+  });
+
+  it('formats the month in Hebrew', () => {
+    expect(formatMonthHe('2026-11-18')).toBe('נובמבר 2026');
+    expect(formatMonthHe('2027-01-01')).toBe('ינואר 2027');
   });
 });
 

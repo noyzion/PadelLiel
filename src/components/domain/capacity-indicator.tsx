@@ -18,7 +18,7 @@ export function CapacityIndicator({
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <span className="flex items-center gap-1" aria-hidden="true">
         {Array.from({ length: Math.min(capacity, 12) }, (_, i) => (
-          <span key={i} className={cn('size-2.5 rounded-full', i < taken ? 'bg-navy-900' : 'bg-navy-100')} />
+          <span key={i} className={cn('size-2.5 rounded-full', i < taken ? 'bg-pink-500' : 'bg-pink-100')} />
         ))}
       </span>
       <span className={cn('text-small', full ? 'font-semibold text-pink-700' : 'text-muted')}>

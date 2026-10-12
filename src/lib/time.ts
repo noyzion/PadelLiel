@@ -80,6 +80,44 @@ export function currentWeekStart(now: Date = new Date()): string {
   return weekStartOf(israelToday(now));
 }
 
+/** The first day of the calendar month containing `date` (the key of the monthly session quota). */
+export function monthStartOf(date: string): string {
+  toUtcDate(date); // validates
+  return `${date.slice(0, 7)}-01`;
+}
+
+/** Adds (or subtracts) whole calendar months to a month start. */
+export function shiftMonth(monthStart: string, months: number): string {
+  const dt = toUtcDate(monthStartOf(monthStart));
+  dt.setUTCMonth(dt.getUTCMonth() + months);
+  return fromUtcDate(dt);
+}
+
+export function currentMonthStart(now: Date = new Date()): string {
+  return monthStartOf(israelToday(now));
+}
+
+export const MONTH_NAMES_HE = [
+  'ינואר',
+  'פברואר',
+  'מרץ',
+  'אפריל',
+  'מאי',
+  'יוני',
+  'יולי',
+  'אוגוסט',
+  'ספטמבר',
+  'אוקטובר',
+  'נובמבר',
+  'דצמבר',
+] as const;
+
+/** "נובמבר 2026" for the month containing `date`. */
+export function formatMonthHe(date: string): string {
+  const [y, m] = monthStartOf(date).split('-').map(Number);
+  return `${MONTH_NAMES_HE[m - 1]} ${y}`;
+}
+
 /** Parses a user-supplied `?week=` value into a valid week start (falls back to the current week). */
 export function parseWeekParam(value: string | string[] | undefined, now: Date = new Date()): string {
   const raw = Array.isArray(value) ? value[0] : value;

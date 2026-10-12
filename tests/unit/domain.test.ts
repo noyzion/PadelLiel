@@ -125,7 +125,7 @@ describe('input validation', () => {
   });
 
   it('allowance adjustments need a non-zero delta and a reason', () => {
-    const base = { memberId: '11111111-1111-4111-8111-111111111111', weekStart: '2026-11-01', delta: 1, reason: 'פיצוי' };
+    const base = { memberId: '11111111-1111-4111-8111-111111111111', monthStart: '2026-11-01', delta: 1, reason: 'פיצוי' };
     expect(adjustAllowanceSchema.safeParse(base).success).toBe(true);
     expect(adjustAllowanceSchema.safeParse({ ...base, delta: 0 }).success).toBe(false);
     expect(adjustAllowanceSchema.safeParse({ ...base, reason: ' ' }).success).toBe(false);

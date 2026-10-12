@@ -251,7 +251,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
       <Modal
         open={Boolean(restoreFor)}
         onClose={() => setRestoreFor(null)}
-        title="החזרת אימון למכסה השבועית"
+        title="החזרת אימון למכסה החודשית"
         footer={
           <>
             <Button variant="secondary" onClick={() => setRestoreFor(null)}>ביטול
@@ -275,7 +275,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
         }
       >
         <p className="mb-3">
-          ל{restoreFor?.member?.full_name ?? ''} תתווסף התאמה של +1 למכסה באותו שבוע. סטטוס ההרשמה המקורי לא ישתנה, וההתאמה תתועד ביומן הפעולות.
+          ל{restoreFor?.member?.full_name ?? ''} תתווסף התאמה של +1 למכסה באותו חודש. סטטוס ההרשמה המקורי לא ישתנה, וההתאמה תתועד ביומן הפעולות.
         </p>
         <Field label="סיבה (חובה)">{(p) => <Input {...p} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} />}</Field>
       </Modal>
@@ -305,7 +305,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
         }
       >
         <p>
-          {removeFor?.member?.full_name} תוסר מהאימון, המקום יתפנה והאימון <strong>לא</strong> ייספר במכסה השבועית שלה.
+          {removeFor?.member?.full_name} תוסר מהאימון, המקום יתפנה והאימון <strong>לא</strong> ייספר במכסה החודשית שלה.
         </p>
       </Modal>
     </section>
@@ -374,7 +374,7 @@ export function AssignForm({
         <Button type="submit" loading={pending} disabled={!memberId || disabled || isFull} className="self-start">
           הוספה
         </Button>
-        <p className="text-caption text-muted">המכסה השבועית של המתאמנת והקיבולת נבדקות גם בשיבוץ ידני. אפשר להוסיף התאמה במכסה בפרופיל המתאמנת.</p>
+        <p className="text-caption text-muted">המכסה החודשית של המתאמנת והקיבולת נבדקות גם בשיבוץ ידני. אפשר להוסיף התאמה במכסה בפרופיל המתאמנת.</p>
       </form>
     </Card>
   );
