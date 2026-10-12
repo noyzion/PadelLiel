@@ -126,7 +126,15 @@ export class TestDb {
     const pool = new pg.Pool({ ...info, database: name, max: 30 });
     const db = new TestDb(name, adminPool, pool);
     await db.setNow(BASE_NOW);
+    // Production allows a single session at a time (one court). Most fixtures here deliberately put
+    // many sessions on the same date/time, so the guard is off by default and opted into per test file.
+    await db.setSingleCourt(false);
     return db;
+  }
+
+  /** Turns the "one court, no overlapping sessions" trigger on or off for this test database. */
+  async setSingleCourt(enforced: boolean) {
+    await this.sql(`alter table public.sessions ${enforced ? 'enable' : 'disable'} trigger sessions_single_court`);
   }
 
   async close() {

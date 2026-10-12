@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from 'react';
+import { PadelRacket } from '@/components/brand';
 import { cn } from '@/lib/cn';
 import { Spinner } from './spinner';
 
@@ -26,28 +27,69 @@ const sizes: Record<Size, string> = {
   lg: 'min-h-14 px-6 text-body',
 };
 
-export function buttonClasses(variant: Variant = 'primary', size: Size = 'md', className?: string) {
-  return cn(base, variants[variant], sizes[size], className);
+/**
+ * Optional racket flourish for wide call-to-action buttons. Each placement tilts the racket a
+ * different way so the buttons feel hand-placed rather than stamped. Use on full-width, filled
+ * buttons only (primary / accent); it is cropped by the button edge and never covers the label.
+ */
+export type RacketPlacement = 'end' | 'start' | 'corner';
+
+const racketPlacements: Record<RacketPlacement, { racket: string; ball: string | null }> = {
+  end: {
+    racket: 'end-4 -bottom-3 h-[4.5rem] -rotate-[32deg] group-hover:-rotate-[22deg]',
+    ball: 'end-[4.6rem] top-2.5',
+  },
+  start: {
+    racket: 'start-4 -bottom-3 h-[4.5rem] rotate-[32deg] group-hover:rotate-[22deg]',
+    ball: 'start-[4.6rem] top-2.5',
+  },
+  corner: {
+    racket: 'end-2 -bottom-7 h-24 -rotate-[48deg] group-hover:-rotate-[38deg]',
+    ball: null,
+  },
+};
+
+const racketColors: Partial<Record<Variant, { racket: string; ball: string }>> = {
+  primary: { racket: 'text-pink-200', ball: 'bg-pink-500' },
+  accent: { racket: 'text-white/80', ball: 'bg-white/70' },
+};
+
+function RacketFlourish({ variant, placement }: { variant: Variant; placement: RacketPlacement }) {
+  const colors = racketColors[variant];
+  if (!colors) return null;
+  const p = racketPlacements[placement];
+  return (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0">
+      <PadelRacket className={cn('absolute transition-transform duration-300', p.racket, colors.racket)} />
+      {p.ball ? <span className={cn('absolute size-3 rounded-full', p.ball, colors.ball)} /> : null}
+    </span>
+  );
+}
+
+export function buttonClasses(variant: Variant = 'primary', size: Size = 'md', className?: string, racket?: boolean) {
+  return cn(base, variants[variant], sizes[size], racket && 'group relative overflow-hidden', className);
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
   loading?: boolean;
+  racket?: RacketPlacement;
   children: ReactNode;
 }
 
-export function Button({ variant = 'primary', size = 'md', loading, disabled, className, children, ...props }: ButtonProps) {
+export function Button({ variant = 'primary', size = 'md', loading, disabled, racket, className, children, ...props }: ButtonProps) {
   return (
     <button
       type="button"
       {...props}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={buttonClasses(variant, size, className)}
+      className={buttonClasses(variant, size, className, Boolean(racket))}
     >
-      {loading ? <Spinner className="size-4" /> : null}
-      {children}
+      {racket ? <RacketFlourish variant={variant} placement={racket} /> : null}
+      {loading ? <Spinner className="relative size-4" /> : null}
+      {racket ? <span className="relative">{children}</span> : children}
     </button>
   );
 }
@@ -55,8 +97,14 @@ export function Button({ variant = 'primary', size = 'md', loading, disabled, cl
 interface ButtonLinkProps extends ComponentProps<typeof Link> {
   variant?: Variant;
   size?: Size;
+  racket?: RacketPlacement;
 }
 
-export function ButtonLink({ variant = 'primary', size = 'md', className, ...props }: ButtonLinkProps) {
-  return <Link {...props} className={buttonClasses(variant, size, className)} />;
+export function ButtonLink({ variant = 'primary', size = 'md', racket, className, children, ...props }: ButtonLinkProps) {
+  return (
+    <Link {...props} className={buttonClasses(variant, size, className, Boolean(racket))}>
+      {racket ? <RacketFlourish variant={variant} placement={racket} /> : null}
+      {racket ? <span className="relative">{children}</span> : children}
+    </Link>
+  );
 }

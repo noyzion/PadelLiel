@@ -26,17 +26,43 @@ export function VenueLogo({ size = 'md', className }: { size?: keyof typeof LOGO
   );
 }
 
-/** One racket, drawn upright with its grip crossing point at (0,0). Head dots follow a staggered grid. */
-function Racket() {
-  const cy = -58;
-  const rx = 31;
-  const ry = 42;
+const RACKET = { cy: -58, rx: 31, ry: 42 } as const;
+
+/** Staggered grid of holes inside the racket head. */
+function racketDots() {
+  const { cy, rx, ry } = RACKET;
   const dots: { x: number; y: number }[] = [];
   for (let row = 0, y = cy - ry + 12; y <= cy + ry - 14; row += 1, y += 8) {
     for (let x = -rx + 10 + (row % 2) * 4; x <= rx - 9; x += 8) {
       if ((x / (rx - 8)) ** 2 + ((y - cy) / (ry - 9)) ** 2 <= 1) dots.push({ x, y });
     }
   }
+  return dots;
+}
+
+/**
+ * A single tilted racket with real see-through holes (even-odd cut-outs), so it works on any
+ * background, e.g. the primary button. One flat colour via a text colour class. Decorative.
+ */
+export function PadelRacket({ className }: { className?: string }) {
+  const { cy, rx, ry } = RACKET;
+  const head = `M${-rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0z`;
+  const holes = racketDots()
+    .map((d) => `M${d.x - 2.2} ${d.y}a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0 -4.4 0z`)
+    .join('');
+  return (
+    <svg viewBox="-38 -104 76 142" className={cn('pointer-events-none', className)} aria-hidden="true">
+      <path d={head + holes} fill="currentColor" fillRule="evenodd" />
+      <rect x="-5" y="-17" width="10" height="38" rx="3" fill="currentColor" />
+      <rect x="-6.5" y="8" width="13" height="30" rx="3.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** One racket, drawn upright with its grip crossing point at (0,0). Head dots follow a staggered grid. */
+function Racket() {
+  const { cy, rx, ry } = RACKET;
+  const dots = racketDots();
   return (
     <g>
       <rect x="-5.5" y="-18" width="11" height="52" rx="3.5" fill="currentColor" />

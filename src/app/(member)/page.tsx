@@ -68,8 +68,8 @@ export default async function MemberHomePage() {
             )}
           </section>
 
-          <ButtonLink href="/schedule" size="lg" className="order-4 w-full lg:order-none">
-            למציאת אימון
+          <ButtonLink href="/schedule" size="lg" racket="end" className="order-4 w-full lg:order-none">
+            <span className="text-card font-bold">להרשמה לאימון</span>
           </ButtonLink>
 
           {available.length > 0 ? (

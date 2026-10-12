@@ -132,7 +132,7 @@ export function SessionCard({
         ) : null}
 
         {canBook ? (
-          <Button className="w-full" loading={pending} onClick={() => (session.is_late_window ? setLateBookOpen(true) : book(false))}>
+          <Button racket="start" className="w-full" loading={pending} onClick={() => (session.is_late_window ? setLateBookOpen(true) : book(false))}>
             להרשמה לאימון
           </Button>
         ) : null}
@@ -140,7 +140,7 @@ export function SessionCard({
         {canWait ? (
           <>
             <p className="text-small text-muted">האימון מלא. רוצה להיכנס לרשימת ההמתנה?</p>
-            <Button variant="accent" className="w-full" loading={pending} onClick={join}>
+            <Button variant="accent" racket="end" className="w-full" loading={pending} onClick={join}>
               הצטרפות לרשימת המתנה
             </Button>
           </>
