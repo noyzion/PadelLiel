@@ -9,11 +9,10 @@ describe('greetingHe (Israel local time)', () => {
     expect(israelHour(new Date('2026-12-01T22:30:00Z'))).toBe(0); // midnight, not 24
   });
 
-  it('picks the greeting by hour and only the morning one has the sun', () => {
-    expect(greetingHe(new Date('2026-12-01T05:00:00Z'))).toEqual({ text: 'בוקר טוב', emoji: '☀️' });
+  it('picks the greeting by hour', () => {
+    expect(greetingHe(new Date('2026-12-01T05:00:00Z'))).toEqual({ text: 'בוקר טוב' });
     expect(greetingHe(new Date('2026-12-01T11:00:00Z')).text).toBe('צהריים טובים');
     expect(greetingHe(new Date('2026-12-01T16:00:00Z')).text).toBe('ערב טוב');
     expect(greetingHe(new Date('2026-12-01T22:30:00Z')).text).toBe('לילה טוב');
-    expect(greetingHe(new Date('2026-12-01T11:00:00Z')).emoji).toBeNull();
   });
 });

@@ -60,7 +60,7 @@ export function NavLinks({
                   layout === 'inline' && 'gap-2 rounded-control px-4 py-2.5 text-small font-semibold',
                   layout === 'side' && 'gap-3 rounded-control px-4 py-3 text-small font-semibold',
                   layout === 'tabs' && (active ? 'text-navy-900' : 'text-muted'),
-                  layout !== 'tabs' && (active ? 'bg-navy-900 text-white' : 'text-navy-900 hover:bg-navy-50'),
+                  layout !== 'tabs' && (active ? 'bg-pink-100 text-navy-900' : 'text-muted hover:bg-navy-50 hover:text-navy-900'),
                 )}
               >
                 {layout === 'tabs' ? (
@@ -70,10 +70,10 @@ export function NavLinks({
                       active ? 'bg-pink-100 text-pink-700' : '',
                     )}
                   >
-                    <Icon className="size-6" aria-hidden="true" strokeWidth={1.9} />
+                    <Icon className="size-6" aria-hidden="true" strokeWidth={1.6} />
                   </span>
                 ) : (
-                  <Icon className="size-5" aria-hidden="true" strokeWidth={1.9} />
+                  <Icon className="size-5" aria-hidden="true" strokeWidth={1.6} />
                 )}
                 <span>{item.label}</span>
               </Link>

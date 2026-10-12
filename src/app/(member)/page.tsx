@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { CommunityBanner } from '@/components/member/community-banner';
 import { NextSessionCard } from '@/components/member/next-session-card';
 import { SessionPreview } from '@/components/member/session-preview';
 import { SubscriptionSummary } from '@/components/member/subscription-summary';
@@ -43,11 +42,9 @@ export default async function MemberHomePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-title font-bold sm:text-hero">
+        <h1 className="text-title font-semibold sm:text-hero">
           {greeting.text}
-          {firstName ? `, ${firstName}` : ''}
-          {greeting.emoji ? ` ${greeting.emoji}` : ''}
-        </h1>
+          {firstName ? `, ${firstName}` : ''}        </h1>
         <p className="mt-1 text-small text-muted">
           {profile.skill_level_code ? `רמת משחק: ${levelLabel(profile.skill_level_code, levels)}` : 'המאמנת עדיין לא הגדירה לך רמה'}
         </p>
@@ -66,7 +63,7 @@ export default async function MemberHomePage() {
             ) : (
               <Card className="flex flex-col gap-1 text-small text-muted">
                 <p className="text-card font-semibold text-navy-900">עוד לא נרשמת לאימון קרוב</p>
-                <p>בוחרות אימון בלוח ונפגשות על המגרש.</p>
+                <p>אפשר לבחור אימון בלוח האימונים.</p>
               </Card>
             )}
           </section>
@@ -77,7 +74,7 @@ export default async function MemberHomePage() {
 
           {available.length > 0 ? (
             <section aria-labelledby="this-week" className="order-5 flex flex-col gap-3 lg:order-none">
-              <SectionHeading id="this-week">נפגשות השבוע</SectionHeading>
+              <SectionHeading id="this-week">אימונים פנויים השבוע</SectionHeading>
               <div className="flex flex-col gap-2">
                 {available.map((s) => (
                   <SessionPreview key={s.id} session={s} levelLabel={levelLabel(s.skill_level_code, levels)} href={`/schedule?week=${week}`} />
@@ -89,9 +86,6 @@ export default async function MemberHomePage() {
 
         <div className="contents lg:flex lg:flex-col lg:gap-5">
           <div className="order-1 lg:order-none">
-            <CommunityBanner />
-          </div>
-          <div className="order-2 lg:order-none">
             <SubscriptionSummary allowance={thisWeek} title="האימונים שלי השבוע" cutoffHours={settings.cancellation_cutoff_hours} />
           </div>
           {nextWeek.has_active_subscription ? (

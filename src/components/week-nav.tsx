@@ -32,7 +32,7 @@ export function WeekNav({
         <ChevronRight className="size-6" aria-hidden="true" />
       </Link>
       <div className="min-w-0 text-center">
-        <p className="num truncate text-body font-bold text-navy-900">{formatWeekRangeHe(weekStart)}</p>
+        <p className="num truncate text-body font-semibold text-navy-900">{formatWeekRangeHe(weekStart)}</p>
         <p className="text-caption text-muted">
           {isCurrent ? (
             'השבוע'

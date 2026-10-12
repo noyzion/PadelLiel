@@ -1,6 +1,6 @@
 import { CircleCheck, Info, OctagonAlert, TriangleAlert } from 'lucide-react';
 import type { HTMLAttributes, ReactNode } from 'react';
-import { CourtPattern, PadelRackets } from '@/components/brand';
+import { PadelRackets } from '@/components/brand';
 import { cn } from '@/lib/cn';
 import type { Tone } from '@/lib/domain/labels';
 
@@ -8,13 +8,12 @@ import type { Tone } from '@/lib/domain/labels';
 /* Card                                                                 */
 /* ------------------------------------------------------------------ */
 
-type CardTone = 'default' | 'pink' | 'blue' | 'yellow';
+type CardTone = 'default' | 'pink' | 'blue';
 
 const cardTones: Record<CardTone, string> = {
   default: 'border-line bg-surface',
-  pink: 'border-pink-200 bg-pink-100',
+  pink: 'border-pink-200 bg-pink-50',
   blue: 'border-ocean-100 bg-ocean-50',
-  yellow: 'border-sun-200 bg-sun-100',
 };
 
 export function Card({ className, tone = 'default', ...props }: HTMLAttributes<HTMLDivElement> & { tone?: CardTone }) {
@@ -54,7 +53,7 @@ export function Badge({ tone = 'neutral', className, children }: { tone?: Tone; 
 
 const alertTones: Record<Tone, string> = {
   neutral: 'border-line bg-canvas text-ink',
-  rose: 'border-pink-200 bg-pink-100 text-ink',
+  rose: 'border-pink-200 bg-pink-50 text-ink',
   green: 'border-success-line bg-success-soft text-ink',
   amber: 'border-warning-line bg-warning-soft text-ink',
   red: 'border-danger-line bg-danger-soft text-ink',
@@ -94,7 +93,7 @@ export function Alert({
   return (
     <div
       role={tone === 'red' ? 'alert' : 'status'}
-      className={cn('flex gap-3 rounded-2xl border px-4 py-3 text-small', alertTones[tone], className)}
+      className={cn('flex gap-3 rounded-control border px-4 py-3 text-small', alertTones[tone], className)}
     >
       <Icon className={cn('mt-0.5 size-5 shrink-0', alertIconTones[tone])} aria-hidden="true" />
       <div className="min-w-0 leading-relaxed">
@@ -123,15 +122,14 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center gap-2 overflow-hidden rounded-card border border-dashed border-line-strong bg-surface px-6 py-10 text-center',
+        'flex flex-col items-center gap-2 rounded-card border border-line bg-surface px-6 py-12 text-center',
         className,
       )}
     >
-      <CourtPattern className="absolute -bottom-6 -start-6 w-40 text-ocean-100" />
-      <PadelRackets className="relative w-24" />
-      <p className="relative mt-1 text-card font-semibold text-navy-900">{title}</p>
-      {description ? <p className="relative max-w-sm text-small text-muted">{description}</p> : null}
-      {action ? <div className="relative mt-2">{action}</div> : null}
+      <PadelRackets className="mb-2 w-20 text-pink-200" />
+      <p className="text-card font-semibold text-navy-900">{title}</p>
+      {description ? <p className="max-w-sm text-small text-muted">{description}</p> : null}
+      {action ? <div className="mt-3">{action}</div> : null}
     </div>
   );
 }
@@ -151,7 +149,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         {eyebrow ? <p className="mb-1 text-caption font-semibold text-pink-700">{eyebrow}</p> : null}
-        <h1 className="text-title font-bold tracking-tight sm:text-hero">{title}</h1>
+        <h1 className="text-title font-semibold tracking-tight sm:text-hero">{title}</h1>
         {description ? <p className="mt-1 text-small text-muted">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -161,7 +159,7 @@ export function PageHeader({
 
 export function SectionHeading({ id, children, count }: { id?: string; children: ReactNode; count?: number }) {
   return (
-    <h2 id={id} className="text-card font-bold">
+    <h2 id={id} className="text-card font-semibold">
       {children}
       {count !== undefined ? <span className="ms-2 text-small font-medium text-muted">({count})</span> : null}
     </h2>
@@ -182,7 +180,7 @@ export function Stat({
   return (
     <div className={cn('rounded-2xl border p-4', tone === 'rose' ? 'border-pink-200 bg-pink-100' : 'border-line bg-surface')}>
       <p className="text-caption font-medium text-muted">{label}</p>
-      <p className="num mt-1 text-hero font-bold leading-none text-navy-900">{value}</p>
+      <p className="num mt-1 text-hero font-semibold leading-none text-navy-900">{value}</p>
       {hint ? <p className="mt-1.5 text-caption text-muted">{hint}</p> : null}
     </div>
   );

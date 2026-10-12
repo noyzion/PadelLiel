@@ -19,10 +19,10 @@ function WeekOccupancy({ title, stats }: { title: string; stats: WeekStats }) {
   return (
     <Card className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <h3 className="text-card font-bold">{title}</h3>
+        <h3 className="text-card font-semibold">{title}</h3>
         <span className="text-caption text-muted">{formatWeekRangeHe(stats.weekStart)}</span>
       </div>
-      <p className="num text-hero font-bold text-navy-900">{stats.occupancyPercent}%</p>
+      <p className="num text-hero font-semibold text-navy-900">{stats.occupancyPercent}%</p>
       <ProgressBar value={stats.occupied} max={Math.max(stats.capacity, 1)} label={`תפוסה ${title}`} />
       <p className="text-caption text-muted">
         {stats.occupied} מתוך {stats.capacity} מקומות · {stats.sessions} אימונים · {stats.fullSessions} מלאים · {stats.waiting} בהמתנה
@@ -48,7 +48,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={`${greeting.text}, ${COACH_NAME}${greeting.emoji ? ` ${greeting.emoji}` : ''}`}
+        title={`${greeting.text}, ${COACH_NAME}`}
         description="תמונת מצב של האימונים הקרובים"
         actions={
           <>

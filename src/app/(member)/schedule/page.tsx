@@ -28,7 +28,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="בואי לבחור את הבוקר שלך" description="לוח האימונים השבועי" />
+      <PageHeader title="לוח אימונים" description="בחרי אימון להרשמה" />
       <WeekNav basePath="/schedule" weekStart={weekStart} currentWeek={currentWeekStart()} />
 
       {!allowance.has_active_subscription ? (
@@ -47,11 +47,11 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
       )}
 
       {sessions.length === 0 ? (
-        <EmptyState title="עוד לא פורסמו אימונים לשבוע הזה" description="נתראה בקרוב על המגרש." />
+        <EmptyState title="עוד לא פורסמו אימונים לשבוע הזה" description="אימונים חדשים יופיעו כאן כשיפורסמו." />
       ) : (
         [...byDay.entries()].map(([date, daySessions]) => (
           <section key={date} aria-labelledby={`day-${date}`} className="flex flex-col gap-3">
-            <h2 id={`day-${date}`} className="flex items-baseline gap-2 text-card font-bold">
+            <h2 id={`day-${date}`} className="flex items-baseline gap-2 text-card font-semibold">
               <span>יום {weekdayNameHe(date)}</span>
               <span className="text-small font-medium text-muted">{formatDateHe(date).split(', ')[1]}</span>
             </h2>

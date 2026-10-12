@@ -175,7 +175,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
 
   return (
     <section aria-labelledby="roster" className="flex flex-col gap-3">
-      <h2 id="roster" className="text-card font-bold">
+      <h2 id="roster" className="text-card font-semibold">
         רשומות ({active.length})
       </h2>
       {active.length === 0 ? <p className="text-small text-muted">אין רשומות לאימון.</p> : null}
@@ -339,7 +339,7 @@ export function AssignForm({
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="text-card font-bold">הוספת מתאמנת לאימון</h2>
+      <h2 className="text-card font-semibold">הוספת מתאמנת לאימון</h2>
       {isFull ? (
         <Alert tone="amber">האימון מלא. אי אפשר לעבור את הקיבולת – אפשר להגדיל אותה בעריכת האימון.</Alert>
       ) : null}
@@ -391,7 +391,7 @@ export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: 
 
   return (
     <section aria-labelledby="waitlist" className="flex flex-col gap-3">
-      <h2 id="waitlist" className="text-card font-bold">
+      <h2 id="waitlist" className="text-card font-semibold">
         רשימת המתנה ({waiting.length})
       </h2>
       {waiting.length === 0 ? <p className="text-small text-muted">אין ממתינות.</p> : null}
@@ -402,7 +402,7 @@ export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: 
         {waiting.map((e) => (
           <Card key={e.entry_id} className="flex flex-wrap items-center justify-between gap-3 p-4">
             <div className="flex items-center gap-3">
-              <span className="grid size-8 place-items-center rounded-full bg-pink-100 text-small font-bold text-pink-700">{e.position}</span>
+              <span className="grid size-8 place-items-center rounded-full bg-pink-100 text-small font-semibold text-pink-700">{e.position}</span>
               <div>
                 <p className="font-semibold">{e.member?.full_name ?? '—'}</p>
                 <p className="text-caption text-muted">הצטרפה {formatInstantHe(e.joined_at)}</p>

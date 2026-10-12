@@ -1,6 +1,7 @@
-import { Hourglass, Sun } from 'lucide-react';
+import { Hourglass } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { PadelRackets } from '@/components/brand';
 import { LogoutButton } from '@/components/logout-button';
 import { Alert } from '@/components/ui/card';
 import { requireUser } from '@/server/auth';
@@ -18,13 +19,14 @@ export default async function PendingPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col items-center gap-3 text-center">
-        <span
-          className={`grid size-14 place-items-center rounded-full ${rejected ? 'bg-danger-soft text-danger' : 'bg-sun-100 text-navy-900'}`}
-          aria-hidden="true"
-        >
-          {rejected ? <Hourglass className="size-7" /> : <Sun className="size-7" />}
-        </span>
-        <h1 className="text-title font-bold">{rejected ? 'הבקשה לא אושרה' : `איזה כיף שהצטרפת${name ? `, ${name}` : ''}`}</h1>
+        {rejected ? (
+          <span className="grid size-14 place-items-center rounded-full bg-danger-soft text-danger" aria-hidden="true">
+            <Hourglass className="size-7" />
+          </span>
+        ) : (
+          <PadelRackets className="w-24 text-pink-200" />
+        )}
+        <h1 className="text-title font-semibold">{rejected ? 'הבקשה לא אושרה' : `תודה שהצטרפת${name ? `, ${name}` : ''}`}</h1>
       </div>
 
       {rejected ? (

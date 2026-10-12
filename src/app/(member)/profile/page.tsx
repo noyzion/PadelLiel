@@ -31,13 +31,13 @@ export default async function ProfilePage() {
       <Card className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
           <span
-            className="grid size-16 shrink-0 place-items-center rounded-full bg-navy-900 text-hero font-bold text-white"
+            className="grid size-16 shrink-0 place-items-center rounded-full bg-pink-100 text-hero font-semibold text-pink-700"
             aria-hidden="true"
           >
             {initial || '·'}
           </span>
           <div className="min-w-0">
-            <h1 className="truncate text-title font-bold">{profile.full_name || 'הפרופיל שלי'}</h1>
+            <h1 className="truncate text-title font-semibold">{profile.full_name || 'הפרופיל שלי'}</h1>
             <p className="truncate text-small text-muted" dir="ltr">
               {profile.email}
             </p>

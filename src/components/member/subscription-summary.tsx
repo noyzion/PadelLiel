@@ -11,7 +11,7 @@ export function WeeklyUsageProgress({ used, total }: { used: number; total: numb
   return (
     <div className="flex gap-1.5" aria-hidden="true">
       {Array.from({ length: segments }, (_, i) => (
-        <span key={i} className={cn('h-3 flex-1 rounded-chip', i < filled ? 'bg-navy-900' : 'bg-navy-100')} />
+        <span key={i} className={cn('h-2 flex-1 rounded-chip', i < filled ? 'bg-navy-900' : 'bg-navy-100')} />
       ))}
     </div>
   );
@@ -49,7 +49,7 @@ export function SubscriptionSummary({
           <p className="text-small font-semibold text-navy-900">{title}</p>
           <p className="num text-caption text-muted">{formatWeekRangeHe(allowance.week_start)}</p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-chip bg-navy-900 px-3 py-1 text-caption font-semibold text-white">
+        <span className="inline-flex items-center gap-1.5 rounded-chip border border-pink-200 bg-pink-50 px-3 py-1 text-caption font-semibold text-pink-700">
           <CalendarCheck className="size-3.5" aria-hidden="true" />
           {allowance.plan_name}
         </span>
@@ -57,7 +57,7 @@ export function SubscriptionSummary({
 
       <div>
         <p className="text-small text-muted">אימונים בשבוע הזה</p>
-        <p className="num text-hero font-bold leading-tight text-navy-900">
+        <p className="num text-hero font-semibold leading-tight text-navy-900">
           {used} <span className="text-card font-medium text-muted">מתוך {limit}</span>
         </p>
       </div>

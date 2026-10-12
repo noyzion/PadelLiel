@@ -13,7 +13,7 @@ export function SessionPreview({ session, levelLabel, href }: { session: Schedul
       className="group flex items-center justify-between gap-3 rounded-card border border-line bg-surface p-4 shadow-soft transition-colors duration-150 hover:border-navy-900/40"
     >
       <div className="min-w-0">
-        <p className="num text-card font-bold text-navy-900">
+        <p className="num text-card font-semibold text-navy-900">
           <bdi>{formatTimeRange(session.start_time, session.end_time)}</bdi>
         </p>
         <p className="text-small text-muted">

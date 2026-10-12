@@ -22,7 +22,7 @@ export function SessionRow({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="num text-card font-bold text-navy-900">
+          <p className="num text-card font-semibold text-navy-900">
             <bdi>{formatTimeRange(session.start_time, session.end_time)}</bdi>
           </p>
           {showDate ? <p className="text-small text-muted">{formatDateHe(session.session_date)}</p> : null}

@@ -22,13 +22,13 @@ export function NextSessionCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-small font-semibold text-ocean-700">{formatDateHe(booking.session_date)}</p>
-          <p className="num mt-1 text-hero font-bold leading-none text-navy-900">
+          <p className="num mt-1 text-hero font-semibold leading-none text-navy-900">
             <bdi>{formatTimeRange(booking.start_time, booking.end_time)}</bdi>
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <SkillLevelBadge label={levelLabel} />
-          <Badge tone="green">את רשומה!</Badge>
+          <Badge tone="green">את רשומה</Badge>
         </div>
       </div>
       <p className="flex items-center gap-2 text-small text-muted">

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Brand, VenueLine, VenueLogo } from '@/components/brand';
+import { Brand } from '@/components/brand';
 import { LogoutButton } from '@/components/logout-button';
 import { NavLinks, type NavItem } from '@/components/nav-links';
 
@@ -14,15 +14,11 @@ export function AppShell({ nav, children }: { nav: NavItem[]; children: ReactNod
         <div className="mx-auto flex h-16 max-w-[68.75rem] items-center justify-between gap-4 px-4 sm:px-6">
           <Brand />
           <NavLinks items={nav} layout="inline" className="hidden md:block" />
-          <div className="flex items-center gap-3">
-            <VenueLogo size="sm" className="hidden sm:block" />
-            <LogoutButton />
-          </div>
+          <LogoutButton />
         </div>
       </header>
       <main id="main" className="mx-auto max-w-[68.75rem] px-4 py-6 sm:px-6 md:py-8">
         {children}
-        <VenueLine className="mt-10 justify-center border-t border-line pt-6" />
       </main>
       <NavLinks
         items={nav}

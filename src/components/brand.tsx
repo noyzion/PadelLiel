@@ -26,6 +26,46 @@ export function VenueLogo({ size = 'md', className }: { size?: keyof typeof LOGO
   );
 }
 
+/** One racket, drawn upright with its grip crossing point at (0,0). Head dots follow a staggered grid. */
+function Racket() {
+  const cy = -58;
+  const rx = 31;
+  const ry = 42;
+  const dots: { x: number; y: number }[] = [];
+  for (let row = 0, y = cy - ry + 12; y <= cy + ry - 14; row += 1, y += 8) {
+    for (let x = -rx + 10 + (row % 2) * 4; x <= rx - 9; x += 8) {
+      if ((x / (rx - 8)) ** 2 + ((y - cy) / (ry - 9)) ** 2 <= 1) dots.push({ x, y });
+    }
+  }
+  return (
+    <g>
+      <rect x="-5.5" y="-18" width="11" height="52" rx="3.5" fill="currentColor" />
+      <rect x="-6.5" y="2" width="13" height="30" rx="3" fill="currentColor" />
+      <path d="M-6.5 10h13M-6.5 17h13M-6.5 24h13" stroke="var(--color-surface)" strokeWidth="1.4" />
+      <ellipse cx="0" cy={cy} rx={rx} ry={ry} fill="currentColor" />
+      {dots.map((d) => (
+        <circle key={`${d.x}-${d.y}`} cx={d.x} cy={d.y} r="2.2" fill="var(--color-surface)" />
+      ))}
+    </g>
+  );
+}
+
+/**
+ * Crossed padel rackets, one flat colour (set it with a text colour class). A quiet accent for
+ * empty and waiting states only: never in navigation, headers or the auth screens. Decorative.
+ */
+export function PadelRackets({ className }: { className?: string }) {
+  return (
+    <svg viewBox="20 50 160 138" className={cn('pointer-events-none', className)} aria-hidden="true">
+      <g transform="translate(100 150) rotate(-36)">
+        <Racket />
+      </g>
+      <g transform="translate(100 150) rotate(36)">
+        <Racket />
+      </g>
+    </svg>
+  );
+}
 /** Logo plus wordmark. `stacked` centres everything (auth screens). */
 export function Brand({
   href = '/',

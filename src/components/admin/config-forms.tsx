@@ -1,5 +1,6 @@
 'use client';
 
+import { X } from 'lucide-react';
 import { useState } from 'react';
 import { savePlanAction, saveSettingsAction } from '@/app/admin/actions';
 import { Button } from '@/components/ui/button';
@@ -151,7 +152,7 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
       ) : null}
 
       <Card className="flex flex-col gap-4">
-        <h2 className="text-card font-bold">מדיניות ביטולים</h2>
+        <h2 className="text-card font-semibold">מדיניות ביטולים</h2>
         <Field
           label="שעות לפני האימון לביטול ללא חיוב"
           hint="ביטול עד המועד הזה מחזיר את האימון למכסה. ביטול אחריו משחרר את המקום אבל האימון נשאר נספר. משפיע על ביטולים עתידיים בלבד."
@@ -161,7 +162,7 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <h2 className="text-card font-bold">ברירות מחדל ליצירת אימונים</h2>
+        <h2 className="text-card font-semibold">ברירות מחדל ליצירת אימונים</h2>
         <Field label="קיבולת ברירת מחדל">
           {(p) => <Input {...p} type="number" inputMode="numeric" min={1} max={50} value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />}
         </Field>
@@ -182,7 +183,7 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
                 disabled={slots.length <= 1}
                 onClick={() => setSlots((list) => list.filter((_, idx) => idx !== i))}
               >
-                ✕
+                <X className="size-5" aria-hidden="true" />
               </Button>
             </div>
           ))}

@@ -52,7 +52,7 @@ export function Modal({
         <div className="flex max-h-[85dvh] flex-col">
           <div className="overflow-y-auto p-6 pb-4">
             <div className="flex items-start justify-between gap-3">
-              <h2 id={titleId} className="text-card font-bold">
+              <h2 id={titleId} className="text-card font-semibold">
                 {title}
               </h2>
               <button

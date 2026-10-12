@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'סיסמה חדשה' };
 export default function ResetPasswordPage() {
   return (
     <>
-      <h1 className="mb-5 text-title font-bold">בחירת סיסמה חדשה</h1>
+      <h1 className="mb-5 text-title font-semibold">בחירת סיסמה חדשה</h1>
       <ResetPasswordForm />
     </>
   );

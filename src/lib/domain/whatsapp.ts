@@ -13,12 +13,12 @@ export function buildWeeklyWhatsAppMessage(params: {
   const end = weekEndOf(params.weekStart);
   const hours = formatHours(params.cancellationCutoffHours ?? 8);
   return [
-    'היי בנות! 🎾',
+    'היי בנות,',
     `האימונים לשבוע ${formatDayMonth(start)}–${formatDayMonth(end)} פורסמו.`,
     'אפשר להירשם לאימונים, לבטל ולהצטרף לרשימת המתנה דרך הקישור:',
     params.bookingUrl,
     '',
-    `תזכורת: ביטול עד ${hours} שעות לפני האימון מחזיר את האימון למכסה השבועית. 💗`,
+    `תזכורת: ביטול עד ${hours} שעות לפני האימון מחזיר את האימון למכסה השבועית.`,
   ].join('\n');
 }
 

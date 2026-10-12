@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Brand, VenueLogo } from '@/components/brand';
+import { Brand } from '@/components/brand';
 import { LogoutButton } from '@/components/logout-button';
 import { NavLinks, type NavItem } from '@/components/nav-links';
 
@@ -16,7 +16,6 @@ export function AdminShell({ nav, name, children }: { nav: NavItem[]; name: stri
           <NavLinks items={nav} layout="side" />
         </div>
         <div className="flex flex-col gap-3 border-t border-line pt-4">
-          <VenueLogo size="md" className="mx-2" />
           <p className="px-2 text-small text-muted">
             מחוברת: <span className="font-semibold text-navy-900">{name}</span>
           </p>

@@ -24,7 +24,7 @@ function AllowanceSummary({ title, allowance }: { title: string; allowance: Allo
       <p className="text-caption font-medium text-muted">{title}</p>
       {allowance.has_active_subscription ? (
         <>
-          <p className="text-title font-bold tabular-nums">
+          <p className="text-title font-semibold tabular-nums">
             {allowance.used} / {allowance.effective_limit}
           </p>
           <ProgressBar value={allowance.used} max={allowance.effective_limit} label={title} />

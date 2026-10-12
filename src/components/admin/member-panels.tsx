@@ -44,7 +44,7 @@ export function MemberProfileEditor({
   return (
     <Card className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-card font-bold">פרטים וסטטוס</h2>
+        <h2 className="text-card font-semibold">פרטים וסטטוס</h2>
         <Badge tone={APPROVAL_TONE[approval]}>{APPROVAL_LABEL_HE[approval]}</Badge>
       </div>
 
@@ -132,7 +132,7 @@ export function SubscriptionManager({
 
   return (
     <Card className="flex flex-col gap-4">
-      <h2 className="text-card font-bold">מנוי</h2>
+      <h2 className="text-card font-semibold">מנוי</h2>
 
       {subscriptions.length === 0 ? <p className="text-small text-muted">אין מנוי. בלי מנוי פעיל אי אפשר להירשם לאימונים.</p> : null}
       <ul className="flex flex-col divide-y divide-line">
@@ -266,7 +266,7 @@ export function AllowanceAdjustForm({ memberId, weeks }: { memberId: string; wee
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="text-card font-bold">התאמת מכסה ידנית</h2>
+      <h2 className="text-card font-semibold">התאמת מכסה ידנית</h2>
       <p className="text-small text-muted">מוסיפה (או מורידה) אימונים למכסה של שבוע מסוים. ההתאמה נרשמת ביומן הפעולות.</p>
       <form
         className="flex flex-col gap-3"

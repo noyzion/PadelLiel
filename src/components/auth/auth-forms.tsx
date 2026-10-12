@@ -59,7 +59,7 @@ export function RegisterForm() {
 
   if (state.success === 'confirm_email') {
     return (
-      <Alert tone="green" title="כמעט סיימנו!">
+      <Alert tone="green" title="כמעט סיימנו">
         שלחנו לך אימייל לאישור הכתובת. לאחר האישור תוכלי להתחבר, והמאמנת תאשר את הצטרפותך לקהילה.
       </Alert>
     );

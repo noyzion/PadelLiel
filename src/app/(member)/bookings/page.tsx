@@ -50,7 +50,7 @@ function BookingCard({
     <Card tone={highlight ? 'blue' : 'default'} className="flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="num text-card font-bold text-navy-900">
+          <p className="num text-card font-semibold text-navy-900">
             <bdi>{formatTimeRange(b.start_time, b.end_time)}</bdi>
           </p>
           <p className="text-small text-muted">{formatDateHe(b.session_date)}</p>

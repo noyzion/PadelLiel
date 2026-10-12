@@ -24,7 +24,7 @@ export function WhatsAppPanel({ message, link }: { message: string; link: string
   return (
     <Card tone="blue" className="flex flex-col gap-3">
       <div>
-        <h2 className="text-card font-bold">הודעת וואטסאפ לקבוצה</h2>
+        <h2 className="text-card font-semibold">הודעת וואטסאפ לקבוצה</h2>
         <p className="text-small text-muted">אפשר לערוך את הנוסח, להעתיק ולהדביק בקבוצה.</p>
       </div>
       <Textarea

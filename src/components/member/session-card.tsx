@@ -45,7 +45,7 @@ export function SessionCard({
       const result = await bookSessionAction({ sessionId: session.id, ackLatePolicy: ack });
       if (result.ok) {
         setLateBookOpen(false);
-        toast.success('יש! את בפנים 🎾');
+        toast.success('נרשמת לאימון');
       } else if (result.code === 'LATE_POLICY_ACK_REQUIRED') {
         setLateBookOpen(true);
       } else {
@@ -84,7 +84,7 @@ export function SessionCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="num text-hero font-bold leading-none text-navy-900">
+          <p className="num text-title font-semibold leading-none text-navy-900">
             <bdi>{formatTimeRange(session.start_time, session.end_time)}</bdi>
           </p>
           <p className="mt-1.5 text-small font-medium text-muted">{formatDateHe(session.session_date)}</p>
@@ -95,7 +95,7 @@ export function SessionCard({
           {isBooked ? (
             <Badge tone="green">
               <Check className="size-3.5" aria-hidden="true" />
-              את רשומה!
+              את רשומה
             </Badge>
           ) : null}
         </div>

@@ -146,11 +146,11 @@ export function israelHour(now: Date = new Date()): number {
   return Number(hour) % 24;
 }
 
-/** Time-aware Hebrew greeting. Only the morning greeting carries the sun. */
-export function greetingHe(now: Date = new Date()): { text: string; emoji: string | null } {
+/** Time-aware Hebrew greeting. */
+export function greetingHe(now: Date = new Date()): { text: string } {
   const hour = israelHour(now);
-  if (hour >= 5 && hour < 12) return { text: 'בוקר טוב', emoji: '☀️' };
-  if (hour >= 12 && hour < 17) return { text: 'צהריים טובים', emoji: null };
-  if (hour >= 17 && hour < 21) return { text: 'ערב טוב', emoji: null };
-  return { text: 'לילה טוב', emoji: null };
+  if (hour >= 5 && hour < 12) return { text: 'בוקר טוב' };
+  if (hour >= 12 && hour < 17) return { text: 'צהריים טובים' };
+  if (hour >= 17 && hour < 21) return { text: 'ערב טוב' };
+  return { text: 'לילה טוב' };
 }
