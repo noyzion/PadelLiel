@@ -6,7 +6,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { Card, SectionHeading } from '@/components/ui/card';
 import { levelLabel } from '@/lib/domain/labels';
 import { nowMs } from '@/lib/now';
-import { currentMonthStart, currentWeekStart, greetingHe, shiftMonth } from '@/lib/time';
+import { currentMonthStart, currentWeekStart, greetingHe } from '@/lib/time';
 import { requireMember } from '@/server/auth';
 import { getAllowance, getMyBookings, getWeekSchedule } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
@@ -18,9 +18,8 @@ export default async function MemberHomePage() {
   const week = currentWeekStart();
   const month = currentMonthStart();
 
-  const [thisMonth, nextMonth, bookings, settings, levels, weekSessions] = await Promise.all([
+  const [thisMonth, bookings, settings, levels, weekSessions] = await Promise.all([
     getAllowance(db, userId, month),
-    getAllowance(db, userId, shiftMonth(month, 1)),
     getMyBookings(db),
     getSettings(db),
     getSkillLevels(db),
@@ -89,11 +88,6 @@ export default async function MemberHomePage() {
           <div className="order-1 lg:order-none">
             <SubscriptionSummary allowance={thisMonth} title="האימונים שלי החודש" cutoffHours={settings.cancellation_cutoff_hours} />
           </div>
-          {nextMonth.has_active_subscription ? (
-            <div className="order-6 lg:order-none">
-              <SubscriptionSummary allowance={nextMonth} title="החודש הבא" cutoffHours={settings.cancellation_cutoff_hours} />
-            </div>
-          ) : null}
         </div>
       </div>
     </div>

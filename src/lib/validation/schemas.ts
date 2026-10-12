@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { slotsOverlap } from '@/lib/domain/schedule-generator';
 import { isValidDateString } from '@/lib/time';
 
 /** Runtime validation for every untrusted input that reaches a server action. */
@@ -62,6 +63,7 @@ export const sessionFormSchema = z
   })
   .refine((v) => v.end > v.start, { path: ['end'], message: 'שעת הסיום חייבת להיות אחרי שעת ההתחלה' });
 
+// One court: every time slot is a single session with a single level, and slots cannot overlap.
 export const bulkCreateSchema = z.object({
   weekStart: dateString,
   weekdays: z.array(z.number().int().min(0).max(6)).min(1, 'בחרי לפחות יום אחד').max(7),
@@ -72,8 +74,9 @@ export const bulkCreateSchema = z.object({
         .refine((v) => v.end > v.start, 'שעת הסיום חייבת להיות אחרי שעת ההתחלה'),
     )
     .min(1, 'בחרי לפחות שעה אחת')
-    .max(12),
-  levels: z.array(levelCode).min(1, 'בחרי לפחות רמה אחת').max(10),
+    .max(12)
+    .refine((slots) => !slotsOverlap(slots), 'יש רק מגרש אחד, אי אפשר ליצור אימונים חופפים'),
+  level: levelCode,
   capacity: z.coerce.number().int().min(1, 'לפחות 1').max(50, 'עד 50'),
 });
 

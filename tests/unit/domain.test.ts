@@ -53,7 +53,7 @@ describe('error mapping', () => {
 });
 
 describe('weekly schedule generator', () => {
-  it('expands weekdays × slots × levels into draft rows with no hardcoded days', () => {
+  it('expands weekdays × slots into one draft row per slot (a single court, no parallel levels)', () => {
     const rows = generateWeekSessions({
       weekStart: '2026-11-04', // any day of the week is normalised to its Sunday
       weekdays: [1, 3, 1],
@@ -61,10 +61,11 @@ describe('weekly schedule generator', () => {
         { start: '07:00', end: '08:00' },
         { start: '08:00', end: '09:00' },
       ],
-      levels: ['beginner', 'advanced'],
+      level: 'beginner',
       capacity: 4,
     });
-    expect(rows).toHaveLength(2 * 2 * 2);
+    expect(rows).toHaveLength(2 * 2);
+    expect(new Set(rows.map((r) => `${r.session_date} ${r.start_time}`)).size).toBe(rows.length); // no two sessions at once
     expect(rows[0]).toEqual({
       session_date: '2026-11-02',
       start_time: '07:00',
@@ -81,7 +82,7 @@ describe('weekly schedule generator', () => {
       weekStart: '2026-11-01',
       weekdays: [-1, 7, 2.5, 0],
       slots: [{ start: '07:00', end: '08:00' }],
-      levels: ['beginner'],
+      level: 'beginner',
       capacity: 4,
     });
     expect(rows.map((r) => r.session_date)).toEqual(['2026-11-01']);
@@ -117,11 +118,22 @@ describe('input validation', () => {
     expect(sessionFormSchema.safeParse({ ...base, start: '7:00' }).success).toBe(false);
   });
 
-  it('bulk creation needs at least one day, slot and level', () => {
-    const base = { weekStart: '2026-11-01', weekdays: [1], slots: [{ start: '07:00', end: '08:00' }], levels: ['beginner'], capacity: 4 };
+  it('bulk creation needs at least one day and slot, one level, and no overlapping slots', () => {
+    const base = { weekStart: '2026-11-01', weekdays: [1], slots: [{ start: '07:00', end: '08:00' }], level: 'beginner', capacity: 4 };
     expect(bulkCreateSchema.safeParse(base).success).toBe(true);
     expect(bulkCreateSchema.safeParse({ ...base, weekdays: [] }).success).toBe(false);
     expect(bulkCreateSchema.safeParse({ ...base, slots: [{ start: '09:00', end: '08:00' }] }).success).toBe(false);
+    expect(bulkCreateSchema.safeParse({ ...base, levels: ['beginner'], level: undefined }).success).toBe(false);
+    const backToBack = [
+      { start: '07:00', end: '08:00' },
+      { start: '08:00', end: '09:00' },
+    ];
+    expect(bulkCreateSchema.safeParse({ ...base, slots: backToBack }).success).toBe(true);
+    const overlapping = [
+      { start: '07:00', end: '08:00' },
+      { start: '07:30', end: '08:30' },
+    ];
+    expect(bulkCreateSchema.safeParse({ ...base, slots: overlapping }).success).toBe(false);
   });
 
   it('allowance adjustments need a non-zero delta and a reason', () => {

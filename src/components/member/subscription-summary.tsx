@@ -1,4 +1,4 @@
-import { CalendarCheck } from 'lucide-react';
+﻿import { CalendarCheck } from 'lucide-react';
 import { Alert, Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
 import type { Allowance } from '@/lib/domain/types';
@@ -75,46 +75,5 @@ export function SubscriptionSummary({
         </p>
       )}
     </Card>
-  );
-}
-
-/**
- * Compact quota tracker for the schedule page. It stays visible under the header while she scrolls
- * through sessions, with one bar per month the viewed week touches (a week can straddle two months).
- * Display only: eligibility of each session is decided by the database (`block_reason`).
- */
-export function MonthlyQuotaTracker({ allowances }: { allowances: Allowance[] }) {
-  const active = allowances.filter((a) => a.has_active_subscription);
-  const inactive = allowances.filter((a) => !a.has_active_subscription);
-  const several = allowances.length > 1;
-
-  return (
-    <div className="flex flex-col gap-3">
-      {inactive.map((a) => (
-        <Alert key={a.month_start} tone="amber" title={several ? `אין מנוי פעיל · ${formatMonthHe(a.month_start)}` : 'אין מנוי פעיל לחודש הזה'}>
-          אפשר לראות את האימונים, אבל ההרשמה דורשת מנוי פעיל. פני לצוות שלנו.
-        </Alert>
-      ))}
-
-      {active.length > 0 ? (
-        <section
-          aria-label="האימונים שלי החודש"
-          className="sticky top-[4.5rem] z-20 flex flex-col gap-3 rounded-card border border-line bg-surface/95 p-3 shadow-soft backdrop-blur sm:flex-row sm:gap-6 sm:px-4"
-        >
-          {active.map((a) => (
-            <div key={a.month_start} className="min-w-0 flex-1">
-              <div className="mb-1.5 flex items-baseline justify-between gap-2">
-                <p className="truncate text-small font-semibold text-navy-900">{formatMonthHe(a.month_start)}</p>
-                <p className="num whitespace-nowrap text-small text-muted">
-                  <strong className="text-card font-semibold text-navy-900">{a.used}</strong> מתוך {a.effective_limit}
-                  {a.remaining === 0 ? ' · המכסה מולאה' : ` · נותרו ${a.remaining}`}
-                </p>
-              </div>
-              <MonthlyUsageProgress used={a.used} total={a.effective_limit} />
-            </div>
-          ))}
-        </section>
-      ) : null}
-    </div>
   );
 }

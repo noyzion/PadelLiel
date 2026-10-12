@@ -29,6 +29,7 @@ export const ERROR_MESSAGES_HE = {
   ALREADY_ON_WAITLIST: 'את כבר ברשימת ההמתנה לאימון זה.',
   WAITLIST_ENTRY_NOT_FOUND: 'הרישום לרשימת ההמתנה לא נמצא.',
   ADJUSTMENT_ALREADY_APPLIED: 'האימון הזה כבר הוחזר למכסה.',
+  SESSION_OVERLAP: 'יש רק מגרש אחד, ולכן כבר קיים אימון חופף בשעות האלה.',
   SESSION_HAS_BOOKINGS: 'יש הרשמות לאימון. בטלי את האימון במקום זאת.',
   SESSION_WEEK_CHANGE_NOT_ALLOWED: 'אי אפשר להעביר אימון עם הרשמות לשבוע אחר. בטלי וצרי אימון חדש.',
   SESSION_MONTH_CHANGE_NOT_ALLOWED: 'אי אפשר להעביר אימון עם הרשמות לחודש אחר. בטלי וצרי אימון חדש.',

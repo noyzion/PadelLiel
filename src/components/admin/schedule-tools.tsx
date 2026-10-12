@@ -9,7 +9,7 @@ import {
 import { SessionForm } from '@/components/admin/session-form';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/card';
-import { Checkbox, Field, Input } from '@/components/ui/form';
+import { Checkbox, Field, Input, Select } from '@/components/ui/form';
 import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { useServerAction } from '@/components/use-server-action';
@@ -143,7 +143,7 @@ function BulkCreateModal({
   const [weekdays, setWeekdays] = useState<number[]>([]);
   const [slots, setSlots] = useState<Slot[]>(defaultSlots);
   const [selectedSlots, setSelectedSlots] = useState<number[]>(defaultSlots.map((_, i) => i));
-  const [selectedLevels, setSelectedLevels] = useState<string[]>(levels[0] ? [levels[0].code] : []);
+  const [level, setLevel] = useState<string>(levels[0]?.code ?? '');
   const [capacity, setCapacity] = useState(defaultCapacity);
   const [custom, setCustom] = useState<Slot>({ start: '18:00', end: '19:00' });
   const [error, setError] = useState<string>();
@@ -160,7 +160,7 @@ function BulkCreateModal({
           weekStart,
           weekdays,
           slots: selectedSlots.map((i) => slots[i]),
-          levels: selectedLevels,
+          level,
           capacity,
         }),
       {
@@ -240,17 +240,18 @@ function BulkCreateModal({
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend className="mb-1 text-small font-semibold text-navy-900">רמות (אימון נפרד לכל רמה)</legend>
-          {levels.map((l) => (
-            <Checkbox
-              key={l.code}
-              label={l.label_he}
-              checked={selectedLevels.includes(l.code)}
-              onChange={() => setSelectedLevels((s) => toggle(s, l.code))}
-            />
-          ))}
-        </fieldset>
+        <Field label="רמה">
+          {(p) => (
+            <Select {...p} value={level} onChange={(e) => setLevel(e.target.value)}>
+              {levels.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label_he}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+        <p className="-mt-3 text-caption text-muted">יש מגרש אחד בלבד, לכן בכל שעה נוצר אימון אחד. אפשר לשנות את הרמה של אימון בודד אחרי היצירה.</p>
 
         <Field label="קיבולת לכל אימון">
           {(p) => <Input {...p} type="number" min={1} max={50} inputMode="numeric" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />}

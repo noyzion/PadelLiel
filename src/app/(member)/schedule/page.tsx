@@ -1,28 +1,23 @@
 import type { Metadata } from 'next';
 import { SessionCard } from '@/components/member/session-card';
-import { MonthlyQuotaTracker } from '@/components/member/subscription-summary';
 import { EmptyState, PageHeader } from '@/components/ui/card';
 import { WeekNav } from '@/components/week-nav';
 import { levelLabel } from '@/lib/domain/labels';
 import type { ScheduleSession } from '@/lib/domain/types';
-import { currentWeekStart, formatDateHe, monthStartOf, parseWeekParam, weekEndOf, weekdayNameHe } from '@/lib/time';
+import { currentWeekStart, formatDateHe, parseWeekParam, weekdayNameHe } from '@/lib/time';
 import { requireMember } from '@/server/auth';
-import { getAllowance, getWeekSchedule } from '@/server/services/booking';
+import { getWeekSchedule } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
 
 export const metadata: Metadata = { title: 'לוח אימונים' };
 
 export default async function SchedulePage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const params = await searchParams;
-  const { db, userId } = await requireMember();
+  const { db } = await requireMember();
   const weekStart = parseWeekParam(params.week);
 
-  // The quota is monthly; a week can touch two months, so show each month it touches.
-  const months = [...new Set([monthStartOf(weekStart), monthStartOf(weekEndOf(weekStart))])];
-
-  const [sessions, allowances, settings, levels] = await Promise.all([
+  const [sessions, settings, levels] = await Promise.all([
     getWeekSchedule(db, weekStart),
-    Promise.all(months.map((m) => getAllowance(db, userId, m))),
     getSettings(db),
     getSkillLevels(db),
   ]);
@@ -34,8 +29,6 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
     <div className="flex flex-col gap-5">
       <PageHeader title="לוח אימונים" description="בחרי אימון להרשמה" />
       <WeekNav basePath="/schedule" weekStart={weekStart} currentWeek={currentWeekStart()} />
-
-      <MonthlyQuotaTracker allowances={allowances} />
 
       {sessions.length === 0 ? (
         <EmptyState title="עוד לא פורסמו אימונים לשבוע הזה" description="אימונים חדשים יופיעו כאן כשיפורסמו." />
