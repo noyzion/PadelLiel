@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Assistant } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { ToastProvider } from '@/components/ui/toast';
 import './globals.css';
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           דלגי לתוכן
         </a>
         <ToastProvider>{children}</ToastProvider>
+        <Analytics />
       </body>
     </html>
   );
