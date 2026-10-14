@@ -5,6 +5,8 @@ import { createClient, type Db } from '@/lib/supabase/server';
 import { AppError } from '@/lib/domain/errors';
 import type { Profile } from '@/lib/domain/types';
 
+const PROFILE_COLUMNS = 'id, role, full_name, phone, email, approval_status, skill_level_code, created_at';
+
 export interface AuthContext {
   db: Db;
   userId: string;
@@ -18,7 +20,8 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   const userId = data?.claims?.sub;
   if (!userId) return null;
 
-  const { data: profile } = await db.from('profiles').select('*').eq('id', userId).maybeSingle();
+  // Explicit columns: `admin_notes` is private to staff and not readable by the signed-in trainee.
+  const { data: profile } = await db.from('profiles').select(PROFILE_COLUMNS).eq('id', userId).maybeSingle();
   if (!profile) return null;
   return { db, userId, profile: profile as Profile };
 });
@@ -51,6 +54,8 @@ export async function actionContext(role: 'member' | 'admin' | 'any' = 'any'): P
   if (role === 'admin' && (ctx.profile.role !== 'admin' || ctx.profile.approval_status !== 'approved')) {
     throw new AppError('NOT_AUTHORIZED');
   }
-  if (role === 'member' && ctx.profile.role !== 'trainee') throw new AppError('NOT_AUTHORIZED');
+  if (role === 'member' && (ctx.profile.role !== 'trainee' || ctx.profile.approval_status !== 'approved')) {
+    throw new AppError('NOT_AUTHORIZED');
+  }
   return ctx;
 }

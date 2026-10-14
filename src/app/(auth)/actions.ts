@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { getAppUrl } from '@/lib/env';
+import { safeNext } from '@/lib/safe-redirect';
 import { createClient } from '@/lib/supabase/server';
 import {
   firstIssueMessage,
@@ -14,12 +15,6 @@ import {
 export interface AuthFormState {
   error?: string;
   success?: 'confirm_email' | 'reset_sent' | 'password_updated';
-}
-
-/** Only same-site relative paths are allowed as post-login destinations (prevents open redirects). */
-function safeNext(value: FormDataEntryValue | null): string {
-  const next = typeof value === 'string' ? value : '';
-  return next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/';
 }
 
 export async function loginAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {

@@ -302,6 +302,40 @@ export function israelEndOfDay(iso: string): Date {
   return israelLocalToInstant(`${addDays(israelDateOf(iso), 1)}T00:00`)!;
 }
 
+/** The first instant of the Israel calendar day after the given `YYYY-MM-DD` date. */
+export function israelEndOfDate(date: string): Date {
+  return israelLocalToInstant(`${addDays(date, 1)}T00:00`)!;
+}
+
+/** Midday on an Israel calendar date: a stable instant on that date (never near a day boundary). */
+export function israelNoonOf(date: string): Date {
+  return israelLocalToInstant(`${date}T12:00`)!;
+}
+
+/**
+ * The "when" of an event whose clock time is not known yet (a date, or a date range), for display.
+ *   single day: date = "יום רביעי, 25 בנובמבר 2026"
+ *   range:      date = "11-15 באוקטובר 2026" (same month) or "28 באוקטובר - 2 בנובמבר 2026"
+ * There is never a time: none was provided, and none is invented.
+ */
+export function formatEventDatesHe(
+  dateStart: string,
+  dateEnd: string | null,
+  compact = false,
+): { date: string; time: null } {
+  const start = israelNoonOf(dateStart).toISOString();
+  if (!dateEnd || dateEnd === dateStart) {
+    return { date: compact ? formatEventDayCompactHe(start) : formatEventDateHe(start), time: null };
+  }
+  const end = israelNoonOf(dateEnd).toISOString();
+  const sameMonth = dateStart.slice(0, 7) === dateEnd.slice(0, 7);
+  const year = compact ? '' : ` ${dateEnd.slice(0, 4)}`;
+  const range = sameMonth
+    ? `${formatEventDayNumberHe(start)}-${formatEventDayMonthHe(end)}`
+    : `${formatEventDayMonthHe(start)} - ${formatEventDayMonthHe(end)}`;
+  return { date: `${range}${year}`, time: null };
+}
+
 /**
  * The "when" of an event for display (`compact` drops the year, for cards).
  *   same day / no end: date = "יום שני, 2 בנובמבר 2026", time = "18:30-20:00" (or "18:30")

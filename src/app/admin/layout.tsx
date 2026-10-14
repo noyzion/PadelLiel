@@ -1,5 +1,6 @@
 import type { NavItem } from '@/components/nav-links';
 import { AdminShell } from '@/components/shell/admin-shell';
+import { COACH_NAME } from '@/lib/brand';
 import { requireAdmin } from '@/server/auth';
 
 const NAV: NavItem[] = [
@@ -12,9 +13,9 @@ const NAV: NavItem[] = [
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { profile } = await requireAdmin();
+  await requireAdmin();
   return (
-    <AdminShell nav={NAV} name={profile.full_name || 'מאמנת'}>
+    <AdminShell nav={NAV} name={COACH_NAME}>
       {children}
     </AdminShell>
   );

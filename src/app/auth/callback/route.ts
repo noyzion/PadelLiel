@@ -1,10 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
+import { safeNext } from '@/lib/safe-redirect';
 import { createClient } from '@/lib/supabase/server';
-
-function safeNext(value: string | null): string {
-  return value && value.startsWith('/') && !value.startsWith('//') && !value.includes('\\') ? value : '/';
-}
 
 /** Completes e-mail confirmation / password-recovery links sent by Supabase Auth. */
 export async function GET(request: NextRequest) {

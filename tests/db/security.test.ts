@@ -104,6 +104,52 @@ describe('profiles', () => {
   });
 });
 
+describe('security hardening', () => {
+  it('admin_notes are private: trainees cannot read them (not even their own); staff use the RPC', async () => {
+    const admin = await db.createAdmin();
+    const m = await db.createMember();
+    await admin.call('admin_update_member', { p_member_id: m.userId, p_patch: JSON.stringify({ admin_notes: 'private remark' }) });
+
+    await expect(m.query('select admin_notes from public.profiles where id = $1', [m.userId])).rejects.toThrow(/permission denied/);
+    await expect(m.query('select * from public.profiles where id = $1', [m.userId])).rejects.toThrow(/permission denied/);
+    // The columns the app needs are still readable.
+    const own = await m.query('select id, role, full_name, phone, email, approval_status, skill_level_code from public.profiles');
+    expect(own.rows).toHaveLength(1);
+
+    await expect(m.call('admin_get_member_notes', { p_member_id: m.userId })).rejects.toMatchObject(code('NOT_AUTHORIZED'));
+    expect(await admin.call('admin_get_member_notes', { p_member_id: m.userId })).toBe('private remark');
+    await expect(admin.call('admin_get_member_notes', { p_member_id: admin.userId })).rejects.toMatchObject(code('MEMBER_NOT_FOUND'));
+  });
+
+  it('profile text has database-level length limits', async () => {
+    const m = await db.createMember();
+    await expect(m.query('update public.profiles set full_name = $2 where id = $1', [m.userId, 'x'.repeat(121)])).rejects.toThrow(/profiles_full_name_length/);
+    await expect(m.query('update public.profiles set phone = $2 where id = $1', [m.userId, '1'.repeat(41)])).rejects.toThrow(/profiles_phone_length/);
+    await m.query('update public.profiles set full_name = $2, phone = $3 where id = $1', [m.userId, 'x'.repeat(120), '1'.repeat(40)]);
+  });
+
+  it('pending / rejected users cannot see the schedule', async () => {
+    const pending = await db.createMember({ approved: false, level: null });
+    const approved = await db.createMember();
+    const session = await db.createSession({ date: '2026-11-03', start: '10:00', end: '11:00' });
+
+    expect((await pending.query('select id from public.sessions where id = $1', [session])).rowCount).toBe(0);
+    expect((await approved.query('select id from public.sessions where id = $1', [session])).rowCount).toBe(1);
+    await expect(pending.rpc('get_week_schedule', { p_week_start: '2026-11-01' })).rejects.toMatchObject(code('NOT_AUTHORIZED'));
+    expect((await approved.rpc('get_week_schedule', { p_week_start: '2026-11-01' })).length).toBeGreaterThan(0);
+  });
+
+  it('every SECURITY DEFINER function pins pg_temp last in its search_path', async () => {
+    const r = await db.sql(
+      `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.prosecdef
+         and p.proname <> 'app_now' -- replaced by the test clock in these tests only
+         and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c = 'search_path=public, pg_temp')`,
+    );
+    expect(r.rows).toEqual([]);
+  });
+});
+
 describe('private data isolation', () => {
   it("trainees cannot read other trainees' bookings, subscriptions, adjustments or waitlist rows", async () => {
     const admin = await db.createAdmin();

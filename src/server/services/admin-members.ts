@@ -66,6 +66,8 @@ export interface AdjustmentRow {
 
 export interface MemberDetail {
   profile: Profile;
+  /** Staff-only notes (not readable by the trainee herself; fetched through an admin-only RPC). */
+  adminNotes: string;
   subscriptions: (MemberSubscription & { plan_name: string; monthly_limit: number })[];
   thisMonth: Allowance;
   nextMonth: Allowance;
@@ -76,9 +78,15 @@ export interface MemberDetail {
 
 export async function getMemberDetail(db: Db, memberId: string, currentMonth: string): Promise<MemberDetail | null> {
   const profile = unwrap(
-    await db.from('profiles').select('*').eq('id', memberId).eq('role', 'trainee').maybeSingle(),
+    await db
+      .from('profiles')
+      .select('id, role, full_name, phone, email, approval_status, skill_level_code, created_at')
+      .eq('id', memberId)
+      .eq('role', 'trainee')
+      .maybeSingle(),
   ) as Profile | null;
   if (!profile) return null;
+  const adminNotes = (await rpc<string | null>(db, 'admin_get_member_notes', { p_member_id: memberId })) ?? '';
 
   const nextMonthStart = shiftMonth(currentMonth, 1);
   const [subs, plans, thisMonth, nextMonth, usage, bookings, adjustments] = await Promise.all([
@@ -113,6 +121,7 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
 
   return {
     profile,
+    adminNotes,
     subscriptions: (unwrap(subs) as MemberSubscription[]).map((s) => ({
       ...s,
       plan_name: planById.get(s.plan_id)?.name ?? '-',

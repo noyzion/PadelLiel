@@ -49,7 +49,7 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
   const [detail, plans, levels] = await Promise.all([getMemberDetail(db, id, month), listPlans(db), getSkillLevels(db)]);
   if (!detail) notFound();
 
-  const { profile, subscriptions, thisMonth, nextMonth, usage, bookings, adjustments } = detail;
+  const { profile, adminNotes, subscriptions, thisMonth, nextMonth, usage, bookings, adjustments } = detail;
   const adjustMonths = [month, shiftMonth(month, 1), shiftMonth(month, -1), shiftMonth(month, -2)];
   const nowIso = new Date().toISOString();
   const upcoming = bookings.filter((b) => b.status === 'CONFIRMED' && b.session && b.session.starts_at >= nowIso);
@@ -75,7 +75,7 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
           memberId={profile.id}
           approval={profile.approval_status}
           level={profile.skill_level_code}
-          notes={profile.admin_notes ?? ''}
+          notes={adminNotes}
           levels={levels}
         />
         <SubscriptionManager

@@ -27,7 +27,6 @@ export interface Profile {
   email: string | null;
   approval_status: ApprovalStatus;
   skill_level_code: string | null;
-  admin_notes: string | null;
   created_at: string;
 }
 

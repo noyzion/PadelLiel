@@ -32,13 +32,14 @@ function WeekOccupancy({ title, stats }: { title: string; stats: WeekStats }) {
 }
 
 export default async function AdminDashboardPage() {
-  const { db, profile } = await requireAdmin();
+  const { db } = await requireAdmin();
   const week = currentWeekStart();
   const [data, levels] = await Promise.all([getDashboard(db, week), getSkillLevels(db)]);
 
   const now = nowMs();
   const greeting = greetingHe(new Date(now));
-  const firstName = profile.full_name?.trim().split(/\s+/)[0] || COACH_NAME;
+  // Staff are always addressed as the team, regardless of the name on their profile.
+  const displayName = COACH_NAME;
   const upcoming = [...data.thisWeek, ...data.nextWeek]
     .filter((s) => s.status === 'PUBLISHED' && new Date(s.starts_at).getTime() > now)
     .slice(0, 8);
@@ -49,7 +50,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={`${greeting.text}, ${firstName}`}
+        title={`${greeting.text}, ${displayName}`}
         description="תמונת מצב של האימונים הקרובים"
         actions={
           <>

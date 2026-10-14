@@ -105,6 +105,8 @@ plans → settings (cutoff hours, default capacity and time slots) → audit log
 
 **Community events:** the trainee tab **אירועים בקהילה** (`/events`) lists published events (upcoming first, then **אירועי עבר**) and opens each one for its full details. It is purely informational: no registration, RSVP, payments or notifications, and it never touches the monthly quota.
 
+**Event preview:** staff see an event exactly as trainees do through a **תצוגה מקדימה** button, marked with a "תצוגה מקדימה" badge. In the create/edit form it previews the unsaved values in the browser only (nothing is saved or published, and the existing event is untouched), with actions to go back to editing or to save and publish. From the events list, `/admin/events/[id]/preview` previews a saved draft or published event (admin-only, read-only). Drafts are never exposed to trainees, even by direct URL: `/events/[id]` only loads published events and the database policies hide drafts. Both previews render the same `EventDetails` component as the trainee page.
+
 ## Repository layout
 
 ```
