@@ -122,6 +122,44 @@ describe('EventDetails (shared by the trainee page and the admin previews)', () 
   });
 });
 
+describe('previewing a date-only draft (admins can preview drafts that have no time yet)', () => {
+  const dateOnly: EventPreviewInput = { ...input, startsAt: '2026-10-11', endsAt: '2026-10-15' };
+
+  it('builds a draft with the date range, no times, and the end of the last day as its end', () => {
+    const r = buildPreviewEvent(dateOnly, 'DRAFT', null);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.event).toMatchObject({
+      status: 'DRAFT',
+      starts_at: null,
+      ends_at: null,
+      date_start: '2026-10-11',
+      date_end: '2026-10-15',
+      // 2026-10-16 00:00 Israel (UTC+3)
+      effective_ends_at: '2026-10-15T21:00:00.000Z',
+    });
+  });
+
+  it('cannot be previewed as a published event: publishing needs a start time', () => {
+    expect(buildPreviewEvent(dateOnly, 'PUBLISHED', null)).toEqual({ ok: false, message: 'כדי לפרסם אירוע יש להוסיף שעת התחלה' });
+  });
+
+  it('renders the date range and no time row, with the same component as the trainee page', () => {
+    const r = buildPreviewEvent(dateOnly, 'DRAFT', null);
+    if (!r.ok) throw new Error(r.message);
+    const out = renderToStaticMarkup(createElement(EventDetails, { event: r.event, past: false }));
+    expect(out).toContain('11-15 באוקטובר 2026');
+    expect(out).not.toContain('שעת התחלה');
+    expect(out).not.toContain('שעות');
+    expect(out).toContain('בוקר פאדל וקפה');
+  });
+
+  it('a timed preview is unchanged', () => {
+    const r = buildPreviewEvent(input, 'DRAFT', null);
+    expect(r.ok && r.event).toMatchObject({ date_start: null, date_end: null, starts_at: '2026-11-02T16:30:00.000Z' });
+  });
+});
+
 describe('preview wiring and access control (source guards)', () => {
   const root = path.join(__dirname, '..', '..', 'src');
   const read = (...p: string[]) => fs.readFileSync(path.join(root, ...p), 'utf8');

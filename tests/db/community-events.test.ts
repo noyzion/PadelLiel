@@ -289,7 +289,10 @@ describe('invalid data is rejected by the database', () => {
   it('rejects an invalid timestamp and a missing start', async () => {
     const admin = await db.createAdmin();
     await expect(admin.query("insert into public.community_events (title, starts_at) values ('אירוע בדיקה', 'not-a-date')")).rejects.toThrow(/invalid input syntax/);
-    await expect(admin.query("insert into public.community_events (title, starts_at) values ('אירוע בדיקה', null)")).rejects.toThrow(/not-null/);
+    // starts_at is nullable only for a date-only draft; with no date either, the row has no "when" at all.
+    await expect(admin.query("insert into public.community_events (title, starts_at) values ('אירוע בדיקה', null)")).rejects.toMatchObject({
+      constraint: 'community_events_when_exclusive',
+    });
   });
 
   it('rejects bad titles, locations, descriptions and statuses', async () => {
@@ -403,8 +406,8 @@ describe('events are independent of training', () => {
     );
     expect(cols.rows.map((c) => c.column_name)).toEqual(
       [
-        'cover_image', 'created_at', 'created_by', 'description', 'effective_ends_at', 'ends_at',
-        'id', 'location', 'starts_at', 'status', 'title', 'updated_at',
+        'cover_image', 'created_at', 'created_by', 'date_end', 'date_start', 'description', 'effective_ends_at', 'ends_at',
+        'id', 'import_key', 'location', 'starts_at', 'status', 'title', 'updated_at',
       ].sort(),
     );
     const tables = await db.sql(

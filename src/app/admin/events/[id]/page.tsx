@@ -35,8 +35,9 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
       initial={{
         title: event.title,
         description: event.description,
-        startsAt: instantToIsraelLocal(event.starts_at),
-        endsAt: event.ends_at ? instantToIsraelLocal(event.ends_at) : '',
+        // A date-only draft (no clock time yet) opens with just its date(s); no time is filled in.
+        startsAt: event.starts_at ? instantToIsraelLocal(event.starts_at) : (event.date_start ?? ''),
+        endsAt: event.ends_at ? instantToIsraelLocal(event.ends_at) : (event.date_end ?? ''),
         location: event.location,
         status: event.status,
         imageUrl: event.image_url,

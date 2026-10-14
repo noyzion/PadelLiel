@@ -9,7 +9,16 @@ import { useServerAction } from '@/components/use-server-action';
 import type { EventStatus } from '@/lib/domain/events';
 
 /** Publishes a draft or takes a published event back to draft (it disappears from trainees immediately). */
-export function PublishToggleButton({ eventId, status }: { eventId: string; status: EventStatus }) {
+export function PublishToggleButton({
+  eventId,
+  status,
+  blockedReason,
+}: {
+  eventId: string;
+  status: EventStatus;
+  /** Why publishing is not possible yet (e.g. no start time); the button is then disabled and explains it. */
+  blockedReason?: string;
+}) {
   const { pending, run } = useServerAction();
   const publishing = status === 'DRAFT';
   return (
@@ -17,6 +26,8 @@ export function PublishToggleButton({ eventId, status }: { eventId: string; stat
       size="sm"
       variant={publishing ? 'primary' : 'secondary'}
       loading={pending}
+      disabled={publishing && Boolean(blockedReason)}
+      title={publishing ? blockedReason : undefined}
       onClick={() =>
         run(() => setEventStatusAction({ eventId, status: publishing ? 'PUBLISHED' : 'DRAFT' }), {
           success: publishing ? 'האירוע פורסם' : 'פרסום האירוע בוטל',

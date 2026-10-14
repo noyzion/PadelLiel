@@ -2,8 +2,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { splitParagraphs, type EventView } from '@/lib/domain/events';
-import { formatEventDayNumberHe, formatEventMonthHe, formatEventWhenHe } from '@/lib/time';
+import { eventAnchor, eventWhenHe, splitParagraphs, type EventView } from '@/lib/domain/events';
+import { formatEventDayNumberHe, formatEventMonthHe } from '@/lib/time';
 
 /** Photo of the event, or (without one) the date set in plain typography on a soft blush panel. */
 export function EventCover({
@@ -35,8 +35,8 @@ export function EventCover({
         />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className={cn('num font-semibold leading-none text-navy-900', small ? 'text-title' : 'text-[3rem]')}>{formatEventDayNumberHe(event.starts_at)}</span>
-          <span className={cn('mt-1 font-medium text-pink-700', small ? 'text-caption' : 'text-body')}>{formatEventMonthHe(event.starts_at)}</span>
+          <span className={cn('num font-semibold leading-none text-navy-900', small ? 'text-title' : 'text-[3rem]')}>{formatEventDayNumberHe(eventAnchor(event))}</span>
+          <span className={cn('mt-1 font-medium text-pink-700', small ? 'text-caption' : 'text-body')}>{formatEventMonthHe(eventAnchor(event))}</span>
         </div>
       )}
     </div>
@@ -48,7 +48,7 @@ export function EventCover({
  * "לפרטים נוספים" link. The whole card is clickable (the link is stretched over it).
  */
 export function EventCard({ event, past = false }: { event: EventView; past?: boolean }) {
-  const when = formatEventWhenHe(event.starts_at, event.ends_at, true);
+  const when = eventWhenHe(event, true);
   const teaser = splitParagraphs(event.description)[0] ?? '';
 
   return (

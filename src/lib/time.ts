@@ -329,6 +329,12 @@ export function formatEventDatesHe(
   }
   const end = israelNoonOf(dateEnd).toISOString();
   const sameMonth = dateStart.slice(0, 7) === dateEnd.slice(0, 7);
+  if (!compact && dateStart.slice(0, 4) !== dateEnd.slice(0, 4)) {
+    return {
+      date: `${formatEventDayMonthHe(start)} ${dateStart.slice(0, 4)} - ${formatEventDayMonthHe(end)} ${dateEnd.slice(0, 4)}`,
+      time: null,
+    };
+  }
   const year = compact ? '' : ` ${dateEnd.slice(0, 4)}`;
   const range = sameMonth
     ? `${formatEventDayNumberHe(start)}-${formatEventDayMonthHe(end)}`

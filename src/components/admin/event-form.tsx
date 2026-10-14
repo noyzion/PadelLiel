@@ -33,7 +33,7 @@ function splitLocal(value: string): [string, string] {
 export interface EventFormInitial {
   title: string;
   description: string;
-  /** `datetime-local` values in Israel time. */
+  /** `datetime-local` values in Israel time; a bare `YYYY-MM-DD` when only the date is known (date-only draft). */
   startsAt: string;
   endsAt: string;
   location: string;
@@ -64,6 +64,8 @@ export function EventForm({
     title: initial.title,
     description: initial.description,
     date: startDate,
+    // Only for an event that spans several days. Empty = the event ends the same day.
+    endDate: initialEndDate && initialEndDate !== startDate ? initialEndDate : '',
     startTime,
     endTime,
     location: initial.location,
@@ -121,13 +123,16 @@ export function EventForm({
     setImageError(undefined);
   }
 
-  /** The `datetime-local` values (Israel time) behind the date and the two time fields. */
+  /**
+   * The values (Israel time) behind the date, end date and the two time fields: `datetime-local` values when
+   * a time was entered, a bare date when it was not (an unfinished draft; the server refuses to publish it).
+   * A time is never made up.
+   */
   function composeDateTimes() {
-    // An existing event that spans several days keeps its end date as long as the date isn't changed.
-    const endDate = initialEndDate && initialEndDate !== startDate && values.date === startDate ? initialEndDate : values.date;
+    const endDate = values.endDate && values.endDate !== values.date ? values.endDate : '';
     return {
-      startsAt: `${values.date}T${values.startTime}`,
-      endsAt: values.endTime ? `${endDate}T${values.endTime}` : '',
+      startsAt: values.startTime ? `${values.date}T${values.startTime}` : values.date,
+      endsAt: values.endTime ? `${endDate || values.date}T${values.endTime}` : endDate,
     };
   }
 
@@ -194,12 +199,15 @@ export function EventForm({
         {(p) => <Input {...p} value={values.title} onChange={(e) => set('title', e.target.value)} maxLength={EVENT_TITLE_MAX} required />}
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <Field label="תאריך" hint="לפי שעון ישראל">
           {(p) => <Input {...p} type="date" value={values.date} onChange={(e) => set('date', e.target.value)} required />}
         </Field>
-        <Field label="שעת התחלה">
-          {(p) => <Input {...p} type="time" value={values.startTime} onChange={(e) => set('startTime', e.target.value)} required />}
+        <Field label="תאריך סיום (אופציונלי)" hint="רק לאירוע שנמשך כמה ימים">
+          {(p) => <Input {...p} type="date" value={values.endDate} min={values.date || undefined} onChange={(e) => set('endDate', e.target.value)} />}
+        </Field>
+        <Field label="שעת התחלה" hint="אפשר להשאיר ריק בטיוטה. נדרשת כדי לפרסם.">
+          {(p) => <Input {...p} type="time" value={values.startTime} onChange={(e) => set('startTime', e.target.value)} />}
         </Field>
         <Field label="שעת סיום (אופציונלי)">
           {(p) => <Input {...p} type="time" value={values.endTime} onChange={(e) => set('endTime', e.target.value)} />}

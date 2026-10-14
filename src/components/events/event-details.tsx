@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { EventCover } from '@/components/events/event-card';
 import { Badge } from '@/components/ui/card';
-import { splitParagraphs, type EventView } from '@/lib/domain/events';
-import { formatEventWhenHe } from '@/lib/time';
+import { eventWhenHe, splitParagraphs, type EventView } from '@/lib/domain/events';
 
 /**
  * The event details exactly as trainees see them. Shared by the trainee page (`/events/[id]`) and the
@@ -22,7 +21,7 @@ export function EventDetails({
   before?: ReactNode;
   preloadImage?: boolean;
 }) {
-  const when = formatEventWhenHe(event.starts_at, event.ends_at);
+  const when = eventWhenHe(event);
   const paragraphs = splitParagraphs(event.description);
 
   return (

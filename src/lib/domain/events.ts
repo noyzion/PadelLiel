@@ -1,4 +1,5 @@
 import { VENUE_NAME } from '@/lib/brand';
+import { formatEventDatesHe, formatEventWhenHe, israelNoonOf } from '@/lib/time';
 
 /**
  * Community events: an informational noticeboard. Nothing here knows about sessions, bookings,
@@ -14,15 +15,22 @@ export interface CommunityEvent {
   description: string;
   /** Storage object path inside the `event-images` bucket, or null. */
   cover_image: string | null;
-  starts_at: string;
+  /** Start instant. Null only for a date-only DRAFT (see `date_start`); a published event always has one. */
+  starts_at: string | null;
   ends_at: string | null;
+  /** Israel calendar date of a DRAFT whose clock time is not known yet (null when `starts_at` is set). */
+  date_start: string | null;
+  /** Last calendar date of a multi-day date-only DRAFT (null for a single day). */
+  date_end: string | null;
   location: string;
   status: EventStatus;
+  /** Stable key of the annual-calendar import (null for events created by hand). Set once, never changed. */
+  import_key: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
-  /** End of the event (or end of its Israel calendar day when it has no end time). Generated column. */
-  effective_ends_at: string;
+  /** End of the event (or end of its last Israel calendar day when it has no end time). Generated column. */
+  effective_ends_at: string | null;
 }
 
 /** An event plus the public URL of its cover image (resolved by the server). */
@@ -103,5 +111,25 @@ export function splitParagraphs(text: string): string[] {
 
 /** Whether the event is over, judged by the generated `effective_ends_at`. Display only. */
 export function isEventPast(event: Pick<CommunityEvent, 'effective_ends_at'>, nowMs: number): boolean {
-  return new Date(event.effective_ends_at).getTime() <= nowMs;
+  return event.effective_ends_at !== null && new Date(event.effective_ends_at).getTime() <= nowMs;
+}
+
+/** Whether the event only has a date (no clock time yet). Only drafts can be like this. */
+export function isDateOnlyEvent(event: Pick<CommunityEvent, 'starts_at' | 'date_start'>): boolean {
+  return event.starts_at === null && event.date_start !== null;
+}
+
+/** The "when" of an event for display: date (or date range) and, when known, the time. `time` is null for date-only drafts. */
+export function eventWhenHe(
+  event: Pick<CommunityEvent, 'starts_at' | 'ends_at' | 'date_start' | 'date_end'>,
+  compact = false,
+): { date: string; time: string | null } {
+  if (event.starts_at) return formatEventWhenHe(event.starts_at, event.ends_at, compact);
+  return formatEventDatesHe(event.date_start ?? '1970-01-01', event.date_end, compact);
+}
+
+/** An instant on the event's first day: for ordering and for showing the day number. */
+export function eventAnchor(event: Pick<CommunityEvent, 'starts_at' | 'date_start'>): string {
+  if (event.starts_at) return event.starts_at;
+  return israelNoonOf(event.date_start ?? '1970-01-01').toISOString();
 }

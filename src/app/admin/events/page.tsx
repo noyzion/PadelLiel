@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { EventRow } from '@/components/admin/event-row';
 import { ButtonLink } from '@/components/ui/button';
 import { Alert, PageHeader, SectionHeading } from '@/components/ui/card';
-import { isEventPast, type EventView } from '@/lib/domain/events';
+import { eventAnchor, isEventPast, type EventView } from '@/lib/domain/events';
 import { nowMs } from '@/lib/now';
 import { requireAdmin } from '@/server/auth';
 import { listAllEvents } from '@/server/services/events';
@@ -33,10 +33,11 @@ export default async function AdminEventsPage() {
   const events = await listAllEvents(db);
   const now = nowMs();
 
-  const drafts = events.filter((e) => e.status === 'DRAFT');
+  // Drafts read like a calendar: earliest date first.
+  const drafts = events.filter((e) => e.status === 'DRAFT').sort((a, b) => eventAnchor(a).localeCompare(eventAnchor(b)));
   const published = events.filter((e) => e.status === 'PUBLISHED');
   // Upcoming: nearest first. Past: newest first (the list arrives newest first).
-  const upcoming = published.filter((e) => !isEventPast(e, now)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  const upcoming = published.filter((e) => !isEventPast(e, now)).sort((a, b) => eventAnchor(a).localeCompare(eventAnchor(b)));
   const past = published.filter((e) => isEventPast(e, now));
 
   return (
@@ -44,7 +45,14 @@ export default async function AdminEventsPage() {
       <PageHeader
         title="אירועים בקהילה"
         description="הודעות על אירועים במרכז הטניס, שהמתאמנות רואות בלשונית ״אירועים בקהילה״"
-        actions={<ButtonLink href="/admin/events/new">אירוע חדש</ButtonLink>}
+        actions={
+          <>
+            <ButtonLink href="/admin/events/import" variant="secondary">
+              ייבוא אירועי שנה
+            </ButtonLink>
+            <ButtonLink href="/admin/events/new">אירוע חדש</ButtonLink>
+          </>
+        }
       />
       <Alert tone="blue">
         האירועים הם הודעות לקריאה בלבד: אין הרשמה, תשלום או רשימת משתתפות, והם לא משפיעים על מכסת האימונים.

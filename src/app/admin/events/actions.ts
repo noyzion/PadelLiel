@@ -3,10 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { AppError } from '@/lib/domain/errors';
 import { checkEventImage } from '@/lib/domain/events';
-import { eventIdSchema, eventSaveSchema, eventStatusSchema } from '@/lib/validation/schemas';
-import { israelLocalToInstant } from '@/lib/time';
+import { isEventImportEnabled } from '@/lib/env';
+import { eventIdSchema, eventImportSchema, eventSaveSchema, eventStatusSchema } from '@/lib/validation/schemas';
+import { eventWhenColumns, parseEventWhen } from '@/lib/domain/event-when';
 import { actionContext } from '@/server/auth';
 import { parseInput, runAction, type ActionResult } from '@/server/action';
+import { applyAnnualImport, type ImportResult } from '@/server/services/event-import';
 import { createEvent, deleteEvent, setEventStatus, updateEvent, type ImageUpload } from '@/server/services/events';
 
 // Community events are informational only (no registration, RSVP, capacity, ...). Staff = approved admins:
@@ -47,11 +49,13 @@ export async function saveEventAction(form: FormData): Promise<ActionResult<{ id
     });
     const image = await readImage(form);
 
+    // Timed (needed to publish) or, for an unfinished draft, a date / date range with no clock time.
+    const when = parseEventWhen(data.startsAt, data.endsAt, data.status === 'PUBLISHED');
+    if (!when.ok) throw new AppError('INVALID_INPUT', { userMessage: when.message });
     const input = {
       title: data.title,
       description: data.description,
-      startsAt: israelLocalToInstant(data.startsAt)!.toISOString(),
-      endsAt: data.endsAt ? israelLocalToInstant(data.endsAt)!.toISOString() : null,
+      ...eventWhenColumns(when.when),
       location: data.location,
       status: data.status,
     };
@@ -65,6 +69,26 @@ export async function saveEventAction(form: FormData): Promise<ActionResult<{ id
     }
     refresh();
     return { id };
+  });
+}
+
+/**
+ * Writes the annual community events as DRAFTS. Guarded three times: the caller must be an approved admin, the server
+ * operator must have enabled the import (ALLOW_EVENT_IMPORT=1), and the admin must type the confirmation phrase.
+ * Only creates missing drafts: existing events are never changed, and nothing is published.
+ */
+export async function importAnnualEventsAction(input: unknown): Promise<ActionResult<ImportResult>> {
+  return runAction(async () => {
+    const { db } = await actionContext('admin');
+    parseInput(eventImportSchema, input);
+    if (!isEventImportEnabled()) {
+      throw new AppError('NOT_AUTHORIZED', {
+        userMessage: 'הייבוא כבוי בסביבה זו. הגדירי ALLOW_EVENT_IMPORT=1 בשרת, ורק לאחר אישור מפורש.',
+      });
+    }
+    const result = await applyAnnualImport(db);
+    refresh();
+    return result;
   });
 }
 

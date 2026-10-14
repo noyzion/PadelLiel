@@ -4,6 +4,7 @@ import { PublishToggleButton } from '@/components/admin/event-actions';
 import { PreviewBar } from '@/components/admin/preview-bar';
 import { EventDetails } from '@/components/events/event-details';
 import { ButtonLink } from '@/components/ui/button';
+import { WHEN_PUBLISH_NEEDS_START } from '@/lib/domain/event-when';
 import { isEventPast } from '@/lib/domain/events';
 import { nowMs } from '@/lib/now';
 import { requireAdmin } from '@/server/auth';
@@ -36,7 +37,13 @@ export default async function PreviewEventPage({ params }: { params: Promise<{ i
         <ButtonLink href={`/admin/events/${event.id}`} variant="secondary" size="sm">
           חזרה לעריכה
         </ButtonLink>
-        {published ? null : <PublishToggleButton eventId={event.id} status="DRAFT" />}
+        {published ? null : (
+          <PublishToggleButton
+            eventId={event.id}
+            status="DRAFT"
+            blockedReason={event.starts_at ? undefined : WHEN_PUBLISH_NEEDS_START}
+          />
+        )}
       </PreviewBar>
       <EventDetails event={event} past={isEventPast(event, nowMs())} />
     </div>

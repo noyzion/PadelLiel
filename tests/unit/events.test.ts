@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { eventWhenColumns, parseEventWhen } from '@/lib/domain/event-when';
 import {
   EVENT_IMAGE_MAX_BYTES,
   checkEventImage,
+  eventAnchor,
+  eventWhenHe,
+  isDateOnlyEvent,
   isEventPast,
   sniffImageType,
   splitParagraphs,
 } from '@/lib/domain/events';
 import {
+  formatEventDatesHe,
   formatEventDateHe,
   formatEventTimeHe,
   formatEventWhenHe,
@@ -183,5 +188,83 @@ describe('event text and status helpers', () => {
     expect(isEventPast({ effective_ends_at: '2026-11-02T11:59:59Z' }, now)).toBe(true);
     expect(isEventPast({ effective_ends_at: '2026-11-02T12:00:00Z' }, now)).toBe(true);
     expect(isEventPast({ effective_ends_at: '2026-11-02T12:00:01Z' }, now)).toBe(false);
+  });
+});
+
+describe('date-only drafts (no clock time yet)', () => {
+  const draft = {
+    title: 'פאדל ויוגה',
+    description: '',
+    startsAt: '2026-11-25',
+    endsAt: '',
+    location: 'מרכז הטניס כוכב יאיר',
+    status: 'DRAFT' as const,
+  };
+  const message = (input: unknown) => {
+    const r = eventFormSchema.safeParse(input);
+    return r.success ? null : r.error.issues[0].message;
+  };
+
+  it('lets a draft be saved with just a date, or a date range, and no time', () => {
+    expect(eventFormSchema.safeParse(draft).success).toBe(true);
+    expect(eventFormSchema.safeParse({ ...draft, startsAt: '2026-10-11', endsAt: '2026-10-15' }).success).toBe(true);
+    expect(eventSaveSchema.safeParse({ ...draft, id: '3f2b8a52-1f4e-4d0b-9a55-1d1b2c0d9e11' }).success).toBe(true);
+  });
+
+  it('refuses to publish without a start time, and still needs the description', () => {
+    expect(message({ ...draft, status: 'PUBLISHED', description: 'פרטים' })).toBe('כדי לפרסם אירוע יש להוסיף שעת התחלה');
+    // a timed event publishes as before
+    expect(eventFormSchema.safeParse({ ...draft, startsAt: '2026-11-25T07:00', status: 'PUBLISHED', description: 'פרטים' }).success).toBe(true);
+    expect(message({ ...draft, startsAt: '2026-11-25T07:00', status: 'PUBLISHED', description: '' })).toBe('כדי לפרסם אירוע יש להוסיף תיאור');
+  });
+
+  it('keeps the date range rules: forward only, and no end time without a start time', () => {
+    expect(message({ ...draft, startsAt: '2026-10-11', endsAt: '2026-10-11' })).toBe('תאריך הסיום חייב להיות אחרי תאריך ההתחלה');
+    expect(message({ ...draft, startsAt: '2026-10-11', endsAt: '2026-10-10' })).toBe('תאריך הסיום חייב להיות אחרי תאריך ההתחלה');
+    expect(message({ ...draft, endsAt: '2026-11-25T09:00' })).toBe('יש להזין שעת התחלה לפני שעת סיום');
+  });
+
+  it('a multi-day timed event needs an end time (a bare end date is not enough)', () => {
+    expect(message({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27' })).toBe('באירוע רב־יומי יש להזין גם שעת סיום');
+    expect(eventFormSchema.safeParse({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27T12:00' }).success).toBe(true);
+  });
+
+  it('still rejects impossible dates', () => {
+    expect(message({ ...draft, startsAt: '2026-02-30' })).toBe('תאריך או שעה לא תקינים');
+    expect(message({ ...draft, startsAt: '2026-11-25', endsAt: '2026-13-01' })).toBe('תאריך או שעה לא תקינים');
+  });
+
+  it('describes a date or a date range without ever showing a time', () => {
+    expect(formatEventDatesHe('2026-11-25', null)).toEqual({ date: 'יום רביעי, 25 בנובמבר 2026', time: null });
+    expect(formatEventDatesHe('2026-11-25', null, true)).toEqual({ date: 'יום רביעי, 25 בנובמבר', time: null });
+    expect(formatEventDatesHe('2026-10-11', '2026-10-15')).toEqual({ date: '11-15 באוקטובר 2026', time: null });
+    expect(formatEventDatesHe('2026-10-28', '2026-11-02').date).toBe('28 באוקטובר - 2 בנובמבר 2026');
+    expect(formatEventDatesHe('2026-12-30', '2027-01-02').date).toBe('30 בדצמבר 2026 - 2 בינואר 2027');
+  });
+
+  it('eventWhenHe picks the right description for timed and date-only events', () => {
+    const base = { date_start: null, date_end: null, starts_at: null, ends_at: null };
+    expect(eventWhenHe({ ...base, starts_at: '2026-11-02T16:30:00Z' })).toEqual({ date: 'יום שני, 2 בנובמבר 2026', time: '18:30' });
+    expect(eventWhenHe({ ...base, date_start: '2026-10-11', date_end: '2026-10-15' }, true).time).toBeNull();
+  });
+
+  it('knows whether an event is date-only, and orders it by its date', () => {
+    expect(isDateOnlyEvent({ starts_at: null, date_start: '2026-11-25' })).toBe(true);
+    expect(isDateOnlyEvent({ starts_at: '2026-11-02T16:30:00Z', date_start: null })).toBe(false);
+    expect(eventAnchor({ starts_at: null, date_start: '2026-11-25' }).startsWith('2026-11-25')).toBe(true);
+    expect(eventAnchor({ starts_at: '2026-11-02T16:30:00Z', date_start: null })).toBe('2026-11-02T16:30:00Z');
+    expect(isEventPast({ effective_ends_at: null }, Date.now())).toBe(false);
+  });
+
+  it('resolves a typed value into exactly one kind of "when" (the other columns are null)', () => {
+    const timed = parseEventWhen('2026-11-02T18:30', '2026-11-02T20:00', true);
+    expect(timed.ok && eventWhenColumns(timed.when)).toEqual({
+      startsAt: '2026-11-02T16:30:00.000Z',
+      endsAt: '2026-11-02T18:00:00.000Z',
+      dateStart: null,
+      dateEnd: null,
+    });
+    const dated = parseEventWhen('2026-10-11', '2026-10-15', false);
+    expect(dated.ok && eventWhenColumns(dated.when)).toEqual({ startsAt: null, endsAt: null, dateStart: '2026-10-11', dateEnd: '2026-10-15' });
   });
 });

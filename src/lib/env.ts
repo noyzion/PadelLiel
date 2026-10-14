@@ -35,6 +35,14 @@ export function requireSupabaseConfig(): SupabaseConfig {
   return config;
 }
 
+/**
+ * Safety switch for the annual-events import: writing is refused unless the server operator sets
+ * `ALLOW_EVENT_IMPORT=1`. The dry-run (read-only) needs no switch. Never a NEXT_PUBLIC_ variable.
+ */
+export function isEventImportEnabled(): boolean {
+  return process.env.ALLOW_EVENT_IMPORT?.trim() === '1';
+}
+
 /** Public base URL of the app (used for e-mail redirects and the WhatsApp message). */
 export function getAppUrl(): string {
   return (process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:3000').replace(/\/+$/, '');
