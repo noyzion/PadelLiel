@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 
 // 48px tall, 16px text (prevents iOS zoom-on-focus), 3:1 border contrast.
 const controlBase =
-  'w-full rounded-control border border-control bg-surface px-4 min-h-12 text-body text-ink placeholder:text-muted/80 ' +
+  'w-full min-w-0 max-w-full rounded-control border border-control bg-surface px-4 min-h-12 text-body text-ink placeholder:text-muted/80 ' +
   'transition-colors duration-150 hover:border-navy-900/60 focus-visible:border-navy-900 focus-visible:outline-3 ' +
   'disabled:border-line disabled:bg-canvas disabled:text-muted aria-[invalid=true]:border-danger';
 
@@ -26,7 +26,7 @@ export function Field({
   const id = useId();
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
       <label htmlFor={id} className="text-small font-semibold text-navy-900">
         {label}
       </label>

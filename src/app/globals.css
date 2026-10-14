@@ -155,6 +155,22 @@
     backdrop-filter: blur(2px);
     animation: fade-in 160ms ease-out;
   }
+  /* Mobile browsers (iOS Safari especially) give date/time inputs an intrinsic width
+     that ignores the grid column and makes neighbouring fields overlap. */
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
+    min-width: 0;
+    max-width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: start;
+  }
+  input[type='date']::-webkit-date-and-time-value,
+  input[type='time']::-webkit-date-and-time-value {
+    text-align: start;
+    min-width: 0;
+  }
   /* Keep times, dates and numbers readable inside RTL text. */
   bdi,
   .num {
