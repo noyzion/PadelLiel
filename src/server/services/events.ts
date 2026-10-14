@@ -12,6 +12,7 @@ import {
   type EventStatus,
   type EventView,
 } from '@/lib/domain/events';
+import { currentMonthStart, israelLocalToInstant, shiftMonth } from '@/lib/time';
 import { unwrap } from '../rpc';
 
 /**
@@ -29,31 +30,48 @@ function toView(db: Db, event: CommunityEvent): EventView {
 
 /* ------------------------------ trainee reads ------------------------------ */
 
-/** Published events that have not ended yet, nearest first. */
-export async function listUpcomingEvents(db: Db, now: Date): Promise<EventView[]> {
-  const rows = unwrap(
-    await db
-      .from('community_events')
-      .select('*')
-      .eq('status', 'PUBLISHED')
-      .gt('effective_ends_at', now.toISOString())
-      .order('starts_at', { ascending: true })
-      .order('id'),
-  ) as CommunityEvent[];
+/** The Israel calendar month containing `now`, as a half-open instant range [from, to). */
+export function currentMonthRange(now: Date): { from: Date; to: Date } {
+  const monthStart = currentMonthStart(now);
+  return {
+    from: israelLocalToInstant(`${monthStart}T00:00`)!,
+    to: israelLocalToInstant(`${shiftMonth(monthStart, 1)}T00:00`)!,
+  };
+}
+
+/**
+ * Published events that have not ended yet, nearest first.
+ * With `range`, only events that start before the range ends (i.e. are part of that month).
+ */
+export async function listUpcomingEvents(db: Db, now: Date, range?: { from: Date; to: Date }): Promise<EventView[]> {
+  let query = db
+    .from('community_events')
+    .select('*')
+    .eq('status', 'PUBLISHED')
+    .gt('effective_ends_at', now.toISOString());
+  if (range) query = query.lt('starts_at', range.to.toISOString());
+  const rows = unwrap(await query.order('starts_at', { ascending: true }).order('id')) as CommunityEvent[];
   return rows.map((e) => toView(db, e));
 }
 
-/** Published events that already ended, newest first. They are never deleted automatically. */
-export async function listPastEvents(db: Db, now: Date, limit = 60): Promise<EventView[]> {
+/**
+ * Published events that already ended, newest first. They are never deleted automatically.
+ * With `range`, only events that ended within that month.
+ */
+export async function listPastEvents(
+  db: Db,
+  now: Date,
+  limit = 60,
+  range?: { from: Date; to: Date },
+): Promise<EventView[]> {
+  let query = db
+    .from('community_events')
+    .select('*')
+    .eq('status', 'PUBLISHED')
+    .lte('effective_ends_at', now.toISOString());
+  if (range) query = query.gte('effective_ends_at', range.from.toISOString());
   const rows = unwrap(
-    await db
-      .from('community_events')
-      .select('*')
-      .eq('status', 'PUBLISHED')
-      .lte('effective_ends_at', now.toISOString())
-      .order('starts_at', { ascending: false })
-      .order('id')
-      .limit(limit),
+    await query.order('starts_at', { ascending: false }).order('id').limit(limit),
   ) as CommunityEvent[];
   return rows.map((e) => toView(db, e));
 }
