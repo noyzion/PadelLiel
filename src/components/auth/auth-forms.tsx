@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   forgotPasswordAction,
   loginAction,
   registerAction,
   resetPasswordAction,
+  resetPasswordWithCodeAction,
   type AuthFormState,
 } from '@/app/(auth)/actions';
 import { Button } from '@/components/ui/button';
@@ -91,15 +92,39 @@ export function RegisterForm() {
   );
 }
 
+function ResetWithCodeForm({ email, onRestart }: { email: string; onRestart: () => void }) {
+  const [state, action] = useActionState(resetPasswordWithCodeAction, initial);
+  return (
+    <form action={action} className="flex flex-col gap-4" noValidate>
+      <Alert tone="green" title="נשלח">
+        אם הכתובת רשומה אצלנו, נשלח אליה קוד לאיפוס הסיסמה. הזיני את הקוד ובחרי סיסמה חדשה.
+      </Alert>
+      {state.error ? <Alert tone="red">{state.error}</Alert> : null}
+      <input type="hidden" name="email" value={email} />
+      <Field label="קוד מהאימייל">
+        {(p) => <Input {...p} name="code" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength={8} required className="text-start tracking-widest" />}
+      </Field>
+      <Field label="סיסמה חדשה" hint="לפחות 8 תווים">
+        {(p) => <Input {...p} name="password" type="password" autoComplete="new-password" dir="ltr" minLength={8} required className="text-start" />}
+      </Field>
+      <Submit>עדכון סיסמה</Submit>
+      <button
+        type="button"
+        onClick={onRestart}
+        className="text-center text-small font-medium text-navy-900 underline underline-offset-4"
+      >
+        שליחת קוד חדש
+      </button>
+    </form>
+  );
+}
+
 export function ForgotPasswordForm() {
   const [state, action] = useActionState(forgotPasswordAction, initial);
+  const [dismissed, setDismissed] = useState<AuthFormState | null>(null);
 
-  if (state.success === 'reset_sent') {
-    return (
-      <Alert tone="green" title="נשלח">
-        אם הכתובת רשומה אצלנו, נשלח אליה קישור לאיפוס הסיסמה.
-      </Alert>
-    );
+  if (state.success === 'reset_sent' && state.email && dismissed !== state) {
+    return <ResetWithCodeForm email={state.email} onRestart={() => setDismissed(state)} />;
   }
 
   return (

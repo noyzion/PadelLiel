@@ -43,6 +43,14 @@ export const registerSchema = z.object({
 
 export const forgotPasswordSchema = z.object({ email: emailSchema });
 export const resetPasswordSchema = z.object({ password: passwordSchema });
+export const resetPasswordWithCodeSchema = z.object({
+  email: emailSchema,
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6,8}$/, 'יש להזין את הקוד שנשלח באימייל'),
+  password: passwordSchema,
+});
 
 export const profileUpdateSchema = z.object({
   fullName: z.string().trim().min(2, 'יש להזין שם מלא').max(80, 'השם ארוך מדי'),

@@ -10,11 +10,14 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  resetPasswordWithCodeSchema,
 } from '@/lib/validation/schemas';
 
 export interface AuthFormState {
   error?: string;
   success?: 'confirm_email' | 'reset_sent' | 'password_updated';
+  /** E-mail the reset code was requested for (kept so the second step can reuse it). */
+  email?: string;
 }
 
 export async function loginAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
@@ -66,11 +69,40 @@ export async function forgotPasswordAction(_prev: AuthFormState, formData: FormD
   if (!parsed.success) return { error: firstIssueMessage(parsed.error) };
 
   const supabase = await createClient();
-  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${getAppUrl()}/auth/callback?next=/reset-password`,
-  });
+  // No redirect link: the recovery e-mail carries a one-time code ({{ .Token }}) that the user
+  // types into the site, so it works regardless of the deployment URL / e-mail link scanners.
+  await supabase.auth.resetPasswordForEmail(parsed.data.email);
   // Always report success so the form can't be used to discover which e-mails are registered.
-  return { success: 'reset_sent' };
+  return { success: 'reset_sent', email: parsed.data.email };
+}
+
+export async function resetPasswordWithCodeAction(
+  _prev: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const email = typeof formData.get('email') === 'string' ? String(formData.get('email')) : undefined;
+  const parsed = resetPasswordWithCodeSchema.safeParse({
+    email: formData.get('email'),
+    code: formData.get('code'),
+    password: formData.get('password'),
+  });
+  if (!parsed.success) return { error: firstIssueMessage(parsed.error), success: 'reset_sent', email };
+
+  const supabase = await createClient();
+  const { error: verifyError } = await supabase.auth.verifyOtp({
+    email: parsed.data.email,
+    token: parsed.data.code,
+    type: 'recovery',
+  });
+  if (verifyError) {
+    return { error: 'הקוד שגוי או שפג תוקפו. בקשי קוד חדש.', success: 'reset_sent', email: parsed.data.email };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) {
+    return { error: 'לא הצלחנו לעדכן את הסיסמה. נסי סיסמה אחרת.', success: 'reset_sent', email: parsed.data.email };
+  }
+  redirect('/');
 }
 
 export async function resetPasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
