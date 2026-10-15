@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react';
+import { CalendarPlus, MapPin } from 'lucide-react';
 import type { Metadata } from 'next';
 import { BookingStatusBadge, SkillLevelBadge } from '@/components/domain/badges';
 import { CancelBookingButton } from '@/components/member/cancel-booking';
@@ -65,6 +65,16 @@ function BookingCard({
         {VENUE_NAME}
       </p>
       {note ? <p className="text-small text-muted">{note}</p> : null}
+      {b.status === 'CONFIRMED' && b.session_status === 'PUBLISHED' ? (
+        // A plain link (not next/link): it downloads a file, so it must never be prefetched.
+        <a
+          href={`/bookings/${b.booking_id}/calendar`}
+          className="inline-flex min-h-10 items-center gap-2 self-start rounded-control px-2 text-small font-semibold text-ocean-700 hover:bg-ocean-50 focus-visible:outline-3"
+        >
+          <CalendarPlus className="size-4" aria-hidden="true" />
+          הוספה ליומן
+        </a>
+      ) : null}
       {b.can_cancel ? (
         <div className="flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-caption text-muted">

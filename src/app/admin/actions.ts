@@ -26,7 +26,14 @@ import {
 import { actionContext } from '@/server/auth';
 import { parseInput, runAction, type ActionResult } from '@/server/action';
 import { adjustAllowance, assignBooking, promoteWaitlistEntry, removeWaitlistEntry, restoreAllowance, setBookingStatus } from '@/server/services/admin-bookings';
-import { assignSubscription, deleteMember, setSubscriptionActive, setSubscriptionValidity, updateMember } from '@/server/services/admin-members';
+import {
+  assignSubscription,
+  deleteMember,
+  resetMemberPassword,
+  setSubscriptionActive,
+  setSubscriptionValidity,
+  updateMember,
+} from '@/server/services/admin-members';
 import { savePlan } from '@/server/services/admin-plans';
 import {
   cancelSession,
@@ -208,6 +215,15 @@ export async function deleteMemberAction(input: unknown): Promise<ActionResult> 
     const { db } = await actionContext('admin');
     await deleteMember(db, memberId);
     refresh();
+  });
+}
+
+/** Returns the temporary password once, for the coach to hand over in person or on a call. Never revalidates or logs it. */
+export async function resetMemberPasswordAction(input: unknown): Promise<ActionResult<{ password: string }>> {
+  return runAction(async () => {
+    const { memberId } = parseInput(memberIdSchema, input);
+    const { db } = await actionContext('admin');
+    return { password: await resetMemberPassword(db, memberId) };
   });
 }
 

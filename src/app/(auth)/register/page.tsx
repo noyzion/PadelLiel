@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'הצטרפות לקהילה' };
 export default function RegisterPage() {
   return (
     <>
-      <AuthHeading title="הצטרפות לקהילה">שם, טלפון וסיסמה, וזהו. אין צורך באימייל.</AuthHeading>
+      <AuthHeading title="הצטרפות לקהילה" />
       <RegisterForm />
     </>
   );

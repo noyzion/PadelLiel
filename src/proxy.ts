@@ -64,6 +64,10 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+// Not behind the login: the service worker and web-app manifest (fetched by the browser without page context),
+// and the notification dispatcher, which authenticates itself with its own bearer secret.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|sw\\.js$|manifest\\.webmanifest$|api/notifications/dispatch$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
 };

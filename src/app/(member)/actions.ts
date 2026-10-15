@@ -6,6 +6,7 @@ import type { CancelResult } from '@/lib/domain/types';
 import {
   bookSessionSchema,
   cancelBookingSchema,
+  changePasswordSchema,
   entryIdSchema,
   profileUpdateSchema,
   sessionIdSchema,
@@ -55,6 +56,57 @@ export async function leaveWaitlistAction(input: { entryId: string }): Promise<A
     const { db } = await actionContext('member');
     await leaveWaitlist(db, entryId);
     refresh();
+  });
+}
+
+/**
+ * A signed-in trainee sets her own password. This is also the last step of a coach reset: the temporary password
+ * she was given is the "current" one here. The current password is checked first, so a phone left unlocked is not
+ * enough to take over the account. Other devices are signed out afterwards.
+ */
+export async function changePasswordAction(input: { currentPassword: string; newPassword: string }): Promise<ActionResult> {
+  return runAction(async () => {
+    const { currentPassword, newPassword } = parseInput(changePasswordSchema, input);
+    const { db } = await actionContext('member');
+
+    // The identity comes from the auth server (not from the form), so only her own login can be verified.
+    const { data: auth } = await db.auth.getUser();
+    const user = auth.user;
+    if (!user) throw new AppError('NOT_AUTHENTICATED');
+    const credentials = user.phone
+      ? { phone: user.phone, password: currentPassword }
+      : user.email
+        ? { email: user.email, password: currentPassword }
+        : null;
+    if (!credentials) throw new AppError('INTERNAL');
+
+    const verified = await db.auth.signInWithPassword(credentials);
+    if (verified.error) {
+      if (verified.error.status === 429 || verified.error.code === 'over_request_rate_limit') {
+        throw new AppError('INVALID_INPUT', { userMessage: 'בוצעו יותר מדי ניסיונות. נסי שוב בעוד כמה דקות.' });
+      }
+      throw new AppError('INVALID_INPUT', { userMessage: 'הסיסמה הנוכחית שגויה.' });
+    }
+
+    // `current_password` is also required by the project when "Require current password" is switched on.
+    const { error } = await db.auth.updateUser({ password: newPassword, current_password: currentPassword });
+    if (error) {
+      if (error.code === 'weak_password') {
+        const leaked = 'reasons' in error && Array.isArray(error.reasons) && error.reasons.includes('pwned');
+        throw new AppError('INVALID_INPUT', {
+          userMessage: leaked
+            ? 'הסיסמה הזו מופיעה ברשימות סיסמאות שדלפו. בחרי סיסמה אחרת.'
+            : 'הסיסמה חלשה מדי. בחרי סיסמה ארוכה וייחודית יותר.',
+        });
+      }
+      if (error.code === 'same_password') {
+        throw new AppError('INVALID_INPUT', { userMessage: 'הסיסמה החדשה חייבת להיות שונה מהנוכחית.' });
+      }
+      throw new AppError('INTERNAL', { cause: error });
+    }
+
+    // Anyone else still signed in with the old password (another phone, or someone who found it) is signed out.
+    await db.auth.signOut({ scope: 'others' });
   });
 }
 

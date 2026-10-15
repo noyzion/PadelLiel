@@ -6,12 +6,22 @@ create role authenticated nologin;
 create role service_role  nologin bypassrls;
 
 create schema auth;
+-- Supabase installs its extensions (pgcrypto...) here.
+create schema extensions;
 
 create table auth.users (
   id                  uuid primary key default gen_random_uuid(),
   email               text,
   phone               text, -- Supabase keeps a phone sign-up's number here, without the leading "+"
+  encrypted_password  text,
+  updated_at          timestamptz,
   raw_user_meta_data  jsonb not null default '{}'::jsonb
+);
+
+-- Signed-in devices. Supabase also keeps refresh tokens, which go with their session.
+create table auth.sessions (
+  id       uuid primary key default gen_random_uuid(),
+  user_id  uuid not null references auth.users (id) on delete cascade
 );
 
 -- Same contract as Supabase: the caller's id comes from the JWT claim `sub`.

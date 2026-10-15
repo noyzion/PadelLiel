@@ -7,7 +7,7 @@ import { getAuditLog } from '@/server/services/dashboard';
 
 export const metadata: Metadata = { title: 'יומן פעולות' };
 
-const OPERATION_HE: Record<string, string> = { insert: 'נוצר', update: 'עודכן', delete: 'נמחק' };
+const OPERATION_HE: Record<string, string> = { insert: 'נוצר', update: 'עודכן', delete: 'נמחק', reset_password: 'סיסמה אופסה' };
 const ENTITY_HE: Record<string, string> = {
   profiles: 'מתאמנת',
   subscription_plans: 'תוכנית מנוי',

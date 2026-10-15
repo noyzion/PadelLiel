@@ -59,6 +59,17 @@ export const profileUpdateSchema = z.object({
   phone: phone.optional(),
 });
 
+/** A signed-in trainee choosing her own password: she must know the current one (it may be the temporary one from the coach). */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'יש להזין את הסיסמה הנוכחית').max(72, 'הסיסמה ארוכה מדי'),
+    newPassword: passwordSchema,
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, {
+    path: ['newPassword'],
+    message: 'הסיסמה החדשה חייבת להיות שונה מהנוכחית',
+  });
+
 export const bookSessionSchema = z.object({ sessionId: uuid, ackLatePolicy: z.boolean().default(false) });
 export const cancelBookingSchema = z.object({ bookingId: uuid, confirmLate: z.boolean().default(false) });
 export const sessionIdSchema = z.object({ sessionId: uuid });

@@ -1,7 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { AllowanceAdjustForm, DeleteMemberCard, MemberProfileEditor, SubscriptionManager } from '@/components/admin/member-panels';
+import {
+  AllowanceAdjustForm,
+  DeleteMemberCard,
+  MemberProfileEditor,
+  ResetPasswordCard,
+  SubscriptionManager,
+} from '@/components/admin/member-panels';
 import { BackLink } from '@/components/admin/session-panels';
 import { BookingStatusBadge } from '@/components/domain/badges';
 import { Badge, Card, PageHeader, ProgressBar, SectionHeading } from '@/components/ui/card';
@@ -157,6 +163,8 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
           </Card>
         </section>
       ) : null}
+
+      <ResetPasswordCard memberId={profile.id} memberName={profile.full_name} />
 
       <DeleteMemberCard memberId={profile.id} memberName={profile.full_name} hasHistory={bookings.length > 0 || adjustments.length > 0} />
     </div>

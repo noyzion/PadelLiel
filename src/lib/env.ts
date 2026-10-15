@@ -55,3 +55,44 @@ export function getAppUrl(): string {
   if (vercelHost) return `https://${vercelHost.replace(/^https?:\/\//, '').replace(/\/+$/, '')}`;
   return 'http://localhost:3000';
 }
+
+/**
+ * The coach's WhatsApp number (an Israeli mobile, any common format). Public by design: it is where a trainee who
+ * forgot her password is sent. Optional; without it the "forgot password" page just says to contact the coach.
+ */
+export function getCoachWhatsAppNumber(): string | null {
+  return process.env.NEXT_PUBLIC_COACH_WHATSAPP?.trim() || null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Web Push + notification dispatcher                                   */
+/* ------------------------------------------------------------------ */
+
+/** VAPID public key: public by design (the browser needs it to subscribe). Null = Push not configured. */
+export function getVapidPublicKey(): string | null {
+  return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() || null;
+}
+
+export interface PushServerConfig {
+  publicKey: string;
+  privateKey: string;
+  /** `mailto:` or https URL identifying the sender to push services. */
+  subject: string;
+}
+
+/** Server-only. The VAPID private key must never be a NEXT_PUBLIC_ variable. */
+export function getPushServerConfig(): PushServerConfig | null {
+  const publicKey = getVapidPublicKey();
+  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
+  if (!publicKey || !privateKey) return null;
+  return { publicKey, privateKey, subject: process.env.VAPID_SUBJECT?.trim() || 'mailto:admin@example.com' };
+}
+
+/**
+ * Shared secret that authorises the notification dispatcher (the HTTP route AND the database functions it calls;
+ * the database stores only its SHA-256). At least 32 characters. Never a NEXT_PUBLIC_ variable.
+ */
+export function getDispatcherSecret(): string | null {
+  const secret = process.env.NOTIFICATION_DISPATCH_SECRET?.trim();
+  return secret && secret.length >= 32 ? secret : null;
+}

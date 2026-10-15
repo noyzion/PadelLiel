@@ -28,7 +28,7 @@ function Submit({ children }: { children: React.ReactNode }) {
 }
 
 /** A password box with a show/hide switch (typing a password on a phone without seeing it is the top cause of typos). */
-function PasswordInput({
+export function PasswordInput({
   id,
   name = 'password',
   autoComplete,

@@ -6,6 +6,7 @@ import {
   adjustAllowanceAction,
   assignSubscriptionAction,
   deleteMemberAction,
+  resetMemberPasswordAction,
   setSubscriptionActiveAction,
   setSubscriptionValidityAction,
   updateMemberAction,
@@ -114,6 +115,106 @@ export function MemberProfileEditor({
           שמירה
         </Button>
       </form>
+    </Card>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Reset password                                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * For a trainee who forgot her password and contacted the coach. The temporary password exists only in this
+ * component's memory: it is shown once and gone when the dialog closes.
+ */
+export function ResetPasswordCard({ memberId, memberName }: { memberId: string; memberName: string }) {
+  const toast = useToast();
+  const { pending, run } = useServerAction();
+  const [confirming, setConfirming] = useState(false);
+  const [password, setPassword] = useState<string | null>(null);
+
+  const copy = async () => {
+    if (!password) return;
+    try {
+      await navigator.clipboard.writeText(password);
+      toast.success('הסיסמה הועתקה');
+    } catch {
+      toast.error('לא הצלחנו להעתיק. אפשר לסמן את הסיסמה ולהעתיק ידנית.');
+    }
+  };
+
+  return (
+    <Card className="flex flex-col gap-3">
+      <h2 className="text-card font-semibold">איפוס סיסמה</h2>
+      <p className="text-small text-muted">
+        אם המתאמנת שכחה את הסיסמה ופנתה אלייך: אחרי שוידאת שזו באמת היא, אפשר ליצור לה סיסמה זמנית ולמסור אותה בשיחה או באופן אישי.
+      </p>
+      <Button variant="secondary" size="sm" className="self-start" onClick={() => setConfirming(true)}>
+        איפוס סיסמה
+      </Button>
+
+      <Modal
+        open={confirming}
+        onClose={() => {
+          if (!pending) setConfirming(false);
+        }}
+        title="לאפס את הסיסמה?"
+        footer={
+          <>
+            <Button variant="secondary" disabled={pending} onClick={() => setConfirming(false)}>
+              ביטול
+            </Button>
+            <Button
+              loading={pending}
+              onClick={() =>
+                run(() => resetMemberPasswordAction({ memberId }), {
+                  onSuccess: (data) => {
+                    setConfirming(false);
+                    setPassword(data.password);
+                  },
+                  onError: (message) => {
+                    setConfirming(false);
+                    toast.error(message);
+                  },
+                })
+              }
+            >
+              יצירת סיסמה זמנית
+            </Button>
+          </>
+        }
+      >
+        <p className="text-body">
+          הסיסמה הנוכחית של {memberName} תתבטל, והיא תנותק מכל המכשירים. ודאי שזו באמת היא לפני שאת ממשיכה.
+        </p>
+      </Modal>
+
+      <Modal
+        open={password !== null}
+        onClose={() => setPassword(null)}
+        title="הסיסמה הזמנית"
+        footer={
+          <>
+            <Button variant="secondary" onClick={copy}>
+              העתקה
+            </Button>
+            <Button onClick={() => setPassword(null)}>סיום</Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-body">
+            מסרי את הסיסמה ל{memberName} בשיחה או באופן אישי, ולא בהודעה שנשארת. היא תופיע רק עכשיו, ואחרי הסגירה אי אפשר לראות אותה שוב.
+          </p>
+          <p
+            dir="ltr"
+            className="select-all rounded-control border border-line bg-canvas px-4 py-3 text-center font-mono text-title font-semibold tracking-widest"
+          >
+            {password}
+          </p>
+          <p className="text-small text-muted">בקשי ממנה להיכנס ומיד לשנות לסיסמה משלה: פרופיל, ואז &quot;שינוי סיסמה&quot;.</p>
+        </div>
+      </Modal>
     </Card>
   );
 }

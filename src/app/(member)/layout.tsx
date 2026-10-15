@@ -1,6 +1,10 @@
+import { NotificationBell } from '@/components/notifications/notification-bell';
+import { ServiceWorkerRegistrar } from '@/components/notifications/sw-registrar';
 import type { NavItem } from '@/components/nav-links';
 import { AppShell } from '@/components/shell/app-shell';
+import { getVapidPublicKey } from '@/lib/env';
 import { requireMember } from '@/server/auth';
+import { getUnreadCount } from '@/server/services/notifications';
 
 const NAV: NavItem[] = [
   { href: '/', label: 'בית', icon: 'home', exact: true },
@@ -11,6 +15,12 @@ const NAV: NavItem[] = [
 ];
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
-  await requireMember();
-  return <AppShell nav={NAV}>{children}</AppShell>;
+  const { db } = await requireMember();
+  const unread = await getUnreadCount(db);
+  return (
+    <AppShell nav={NAV} headerActions={<NotificationBell initialUnread={unread} />}>
+      <ServiceWorkerRegistrar enabled={Boolean(getVapidPublicKey())} />
+      {children}
+    </AppShell>
+  );
 }

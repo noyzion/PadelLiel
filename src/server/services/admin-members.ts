@@ -27,6 +27,14 @@ export async function deleteMember(db: Db, memberId: string) {
   await rpc<null>(db, 'admin_delete_member', { p_member_id: memberId });
 }
 
+/**
+ * Replaces a trainee's password with a random temporary one and signs her out everywhere. The temporary password
+ * is returned exactly once: it is never stored in readable form, logged or audited.
+ */
+export function resetMemberPassword(db: Db, memberId: string) {
+  return rpc<string>(db, 'admin_reset_member_password', { p_member_id: memberId });
+}
+
 export function assignSubscription(
   db: Db,
   p: { memberId: string; planId: string; startsOn?: string; endsOn?: string },

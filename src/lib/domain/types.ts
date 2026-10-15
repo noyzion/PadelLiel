@@ -175,3 +175,37 @@ export interface AppSettings {
   default_capacity: number;
   default_time_slots: { start: string; end: string }[];
 }
+
+export type NotificationType =
+  | 'booking_confirmed'
+  | 'training_reminder'
+  | 'cancellation_deadline'
+  | 'session_cancelled'
+  | 'schedule_published';
+
+/** A row of the trainee's in-app notification center. */
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  destination_url: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationPreferences {
+  push_enabled: boolean;
+  training_reminders: boolean;
+  cancellation_deadline_reminders: boolean;
+  booking_updates: boolean;
+  weekly_schedule: boolean;
+}
+
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  push_enabled: true,
+  training_reminders: true,
+  cancellation_deadline_reminders: true,
+  booking_updates: true,
+  weekly_schedule: true,
+};

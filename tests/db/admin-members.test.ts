@@ -128,3 +128,78 @@ describe('inactive and deleted trainees', () => {
     await expect(admin.call('admin_delete_member', { p_member_id: other.userId })).rejects.toMatchObject({ message: 'MEMBER_NOT_FOUND' });
   });
 });
+
+describe('admin_reset_member_password', () => {
+  const passwordHash = async (id: string) =>
+    (await db.sql<{ encrypted_password: string | null }>('select encrypted_password from auth.users where id = $1', [id])).rows[0]
+      .encrypted_password;
+
+  it('sets a random temporary password, returns it once, and stores only a bcrypt hash that matches it', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember({ name: 'Forgot' });
+    const before = await passwordHash(member.userId);
+
+    const password = await admin.call<string>('admin_reset_member_password', { p_member_id: member.userId });
+
+    expect(password).toMatch(/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{10}$/);
+    const hash = await passwordHash(member.userId);
+    expect(hash).not.toBe(before);
+    expect(hash).toMatch(/^\$2[aby]\$10\$/);
+    expect(hash).not.toContain(password);
+    const matches = await db.sql<{ ok: boolean }>('select extensions.crypt($1, $2) = $2 as ok', [password, hash]);
+    expect(matches.rows[0].ok).toBe(true);
+
+    // Every reset is a new password.
+    const second = await admin.call<string>('admin_reset_member_password', { p_member_id: member.userId });
+    expect(second).not.toBe(password);
+  });
+
+  it('signs the trainee out of every device', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember();
+    const other = await db.createMember();
+    await db.sql('insert into auth.sessions (user_id) values ($1), ($1), ($2)', [member.userId, other.userId]);
+
+    await admin.call('admin_reset_member_password', { p_member_id: member.userId });
+
+    const mine = await db.sql('select 1 from auth.sessions where user_id = $1', [member.userId]);
+    const theirs = await db.sql('select 1 from auth.sessions where user_id = $1', [other.userId]);
+    expect(mine.rowCount).toBe(0);
+    expect(theirs.rowCount).toBe(1);
+  });
+
+  it('is audited, without ever recording the password', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember();
+
+    const password = await admin.call<string>('admin_reset_member_password', { p_member_id: member.userId });
+
+    const audit = await db.sql<{ actor_id: string; details: unknown }>(
+      "select actor_id, details from public.audit_logs where action = 'reset_password:profiles' and entity_id = $1",
+      [member.userId],
+    );
+    expect(audit.rowCount).toBe(1);
+    expect(audit.rows[0].actor_id).toBe(admin.userId);
+    expect(JSON.stringify(audit.rows[0])).not.toContain(password);
+  });
+
+  it('only an admin can reset, and never an admin account or a stranger', async () => {
+    const admin = await db.createAdmin();
+    const otherAdmin = await db.createAdmin('Other Admin');
+    const member = await db.createMember();
+    const victim = await db.createMember();
+    const victimBefore = await passwordHash(victim.userId);
+
+    await expect(member.call('admin_reset_member_password', { p_member_id: victim.userId })).rejects.toMatchObject({
+      message: 'NOT_AUTHORIZED',
+    });
+    await expect(admin.call('admin_reset_member_password', { p_member_id: otherAdmin.userId })).rejects.toMatchObject({
+      message: 'MEMBER_NOT_FOUND',
+    });
+    await expect(
+      admin.call('admin_reset_member_password', { p_member_id: '00000000-0000-4000-8000-000000000000' }),
+    ).rejects.toMatchObject({ message: 'MEMBER_NOT_FOUND' });
+    expect(await passwordHash(victim.userId)).toBe(victimBefore);
+  });
+});
+
