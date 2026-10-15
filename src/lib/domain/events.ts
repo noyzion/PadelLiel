@@ -15,12 +15,12 @@ export interface CommunityEvent {
   description: string;
   /** Storage object path inside the `event-images` bucket, or null. */
   cover_image: string | null;
-  /** Start instant. Null only for a date-only DRAFT (see `date_start`); a published event always has one. */
+  /** Start instant. Null when only a date is known (see `date_start`) or when there is no date yet (a draft). */
   starts_at: string | null;
   ends_at: string | null;
-  /** Israel calendar date of a DRAFT whose clock time is not known yet (null when `starts_at` is set). */
+  /** Israel calendar date of an event whose clock time is not known (null when `starts_at` is set). */
   date_start: string | null;
-  /** Last calendar date of a multi-day date-only DRAFT (null for a single day). */
+  /** Last calendar date of a multi-day event without a clock time (null for a single day). */
   date_end: string | null;
   location: string;
   status: EventStatus;
@@ -31,6 +31,8 @@ export interface CommunityEvent {
   updated_at: string;
   /** End of the event (or end of its last Israel calendar day when it has no end time). Generated column. */
   effective_ends_at: string | null;
+  /** The start time, or the start of the first day when there is no time. Sort / month-filter key. Generated column. */
+  effective_starts_at: string | null;
 }
 
 /** An event plus the public URL of its cover image (resolved by the server). */
@@ -114,22 +116,37 @@ export function isEventPast(event: Pick<CommunityEvent, 'effective_ends_at'>, no
   return event.effective_ends_at !== null && new Date(event.effective_ends_at).getTime() <= nowMs;
 }
 
-/** Whether the event only has a date (no clock time yet). Only drafts can be like this. */
+/** Shown instead of a time for an event that has a date but no time yet. Never replaced by an invented hour. */
+export const EVENT_TIME_TBA_HE = 'השעה תפורסם בהמשך';
+/** Admin-only: shown for a draft that has no date at all. */
+export const EVENT_DATE_TBA_HE = 'טרם נקבע תאריך';
+
+/** Whether the event has a date (or a date range) but no clock time. Draft or published. */
 export function isDateOnlyEvent(event: Pick<CommunityEvent, 'starts_at' | 'date_start'>): boolean {
   return event.starts_at === null && event.date_start !== null;
 }
 
-/** The "when" of an event for display: date (or date range) and, when known, the time. `time` is null for date-only drafts. */
+/** Whether the event has no date at all. Such an event is always a draft. */
+export function isUndatedEvent(event: Pick<CommunityEvent, 'starts_at' | 'date_start'>): boolean {
+  return event.starts_at === null && event.date_start === null;
+}
+
+/**
+ * The "when" of an event for display: date (or date range) and, when known, the time.
+ * `time` is null when there is no time; callers show `EVENT_TIME_TBA_HE` for date-only events.
+ */
 export function eventWhenHe(
   event: Pick<CommunityEvent, 'starts_at' | 'ends_at' | 'date_start' | 'date_end'>,
   compact = false,
 ): { date: string; time: string | null } {
   if (event.starts_at) return formatEventWhenHe(event.starts_at, event.ends_at, compact);
-  return formatEventDatesHe(event.date_start ?? '1970-01-01', event.date_end, compact);
+  if (event.date_start) return formatEventDatesHe(event.date_start, event.date_end, compact);
+  return { date: EVENT_DATE_TBA_HE, time: null };
 }
 
-/** An instant on the event's first day: for ordering and for showing the day number. */
+/** An instant on the event's first day: for ordering and for showing the day number. Undated events sort last. */
 export function eventAnchor(event: Pick<CommunityEvent, 'starts_at' | 'date_start'>): string {
   if (event.starts_at) return event.starts_at;
-  return israelNoonOf(event.date_start ?? '1970-01-01').toISOString();
+  if (event.date_start) return israelNoonOf(event.date_start).toISOString();
+  return '9999-12-31T00:00:00.000Z';
 }

@@ -39,7 +39,8 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const weekStart = showNextWeek ? nextWeek : thisWeek;
   const sessions = showNextWeek ? nextWeekSessions : thisWeekSessions;
 
-  const today = israelToday(new Date(nowMs()));
+  const now = nowMs();
+  const today = israelToday(new Date(now));
   const dates = weekDates(weekStart);
 
   const days: DayTab[] = dates.map((date) => {
@@ -57,6 +58,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
           session={session}
           levelLabel={levelLabel(session.skill_level_code, levels)}
           cutoffHours={settings.cancellation_cutoff_hours}
+          nowMs={now}
         />
       )),
     };

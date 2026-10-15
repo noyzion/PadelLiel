@@ -38,9 +38,9 @@ async function makeEvent(f: EventFixture = {}): Promise<string> {
 
 /** Exactly what the trainee pages query (see src/server/services/events.ts). */
 const upcomingSql = `select id, title from public.community_events
-  where status = 'PUBLISHED' and effective_ends_at > $1 order by starts_at asc, id`;
+  where status = 'PUBLISHED' and effective_ends_at > $1 order by effective_starts_at asc, id`;
 const pastSql = `select id, title from public.community_events
-  where status = 'PUBLISHED' and effective_ends_at <= $1 order by starts_at desc, id`;
+  where status = 'PUBLISHED' and effective_ends_at <= $1 order by effective_starts_at desc, id`;
 
 async function asAnon(sql: string) {
   const client = await db.pool.connect();
@@ -286,13 +286,15 @@ describe('invalid data is rejected by the database', () => {
     });
   });
 
-  it('rejects an invalid timestamp and a missing start', async () => {
+  it('rejects an invalid timestamp; an event with no date at all is a draft and can never be published', async () => {
     const admin = await db.createAdmin();
     await expect(admin.query("insert into public.community_events (title, starts_at) values ('אירוע בדיקה', 'not-a-date')")).rejects.toThrow(/invalid input syntax/);
-    // starts_at is nullable only for a date-only draft; with no date either, the row has no "when" at all.
-    await expect(admin.query("insert into public.community_events (title, starts_at) values ('אירוע בדיקה', null)")).rejects.toMatchObject({
-      constraint: 'community_events_when_exclusive',
-    });
+    // No date at all: fine as a draft (the default status)...
+    await expect(admin.query("insert into public.community_events (title, starts_at) values ('אירוע בדיקה', null)")).resolves.toBeTruthy();
+    // ...but never published.
+    await expect(
+      admin.query("insert into public.community_events (title, description, starts_at, status) values ('אירוע בדיקה', 'פרטים', null, 'PUBLISHED')"),
+    ).rejects.toMatchObject({ constraint: 'community_events_published_has_date' });
   });
 
   it('rejects bad titles, locations, descriptions and statuses', async () => {
@@ -406,7 +408,7 @@ describe('events are independent of training', () => {
     );
     expect(cols.rows.map((c) => c.column_name)).toEqual(
       [
-        'cover_image', 'created_at', 'created_by', 'date_end', 'date_start', 'description', 'effective_ends_at', 'ends_at',
+        'cover_image', 'created_at', 'created_by', 'date_end', 'date_start', 'description', 'effective_ends_at', 'effective_starts_at', 'ends_at',
         'id', 'import_key', 'location', 'starts_at', 'status', 'title', 'updated_at',
       ].sort(),
     );

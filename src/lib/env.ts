@@ -43,7 +43,15 @@ export function isEventImportEnabled(): boolean {
   return process.env.ALLOW_EVENT_IMPORT?.trim() === '1';
 }
 
-/** Public base URL of the app (used for e-mail redirects and the WhatsApp message). */
+/**
+ * Public base URL of the app (used for e-mail redirects and the WhatsApp message).
+ * `NEXT_PUBLIC_APP_URL` wins. When it is missing on Vercel, the deployment's own domain is used, so confirmation and
+ * password-reset e-mails never point at localhost in production. Plain localhost is only the local-development default.
+ */
 export function getAppUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:3000').replace(/\/+$/, '');
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (configured) return configured.replace(/\/+$/, '');
+  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() || process.env.VERCEL_URL?.trim();
+  if (vercelHost) return `https://${vercelHost.replace(/^https?:\/\//, '').replace(/\/+$/, '')}`;
+  return 'http://localhost:3000';
 }

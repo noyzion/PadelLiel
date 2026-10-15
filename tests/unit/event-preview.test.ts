@@ -56,7 +56,7 @@ describe('buildPreviewEvent (unsaved form values -> the event trainees would see
     expect(message({ endsAt: '2026-11-02T18:30' })).toBe('שעת הסיום חייבת להיות אחרי שעת ההתחלה');
     expect(message({ endsAt: '2026-11-02T09:00' })).toBe('שעת הסיום חייבת להיות אחרי שעת ההתחלה');
     expect(message({ startsAt: '2026-02-30T10:00' })).toBe('תאריך או שעה לא תקינים');
-    expect(message({ startsAt: '' })).toBe('תאריך או שעה לא תקינים');
+    expect(message({ startsAt: '' }, 'PUBLISHED')).toBe('כדי לפרסם אירוע יש להוסיף תאריך');
     expect(message({ title: ' ' })).toBe('יש להזין כותרת');
     expect(message({ location: '' })).toBe('יש להזין מיקום');
   });
@@ -140,18 +140,57 @@ describe('previewing a date-only draft (admins can preview drafts that have no t
     });
   });
 
-  it('cannot be previewed as a published event: publishing needs a start time', () => {
-    expect(buildPreviewEvent(dateOnly, 'PUBLISHED', null)).toEqual({ ok: false, message: 'כדי לפרסם אירוע יש להוסיף שעת התחלה' });
+  it('can be previewed as a published event: a time is not needed to publish', () => {
+    const r = buildPreviewEvent(dateOnly, 'PUBLISHED', null);
+    expect(r.ok).toBe(true);
+    expect(r.ok && r.event).toMatchObject({
+      status: 'PUBLISHED',
+      starts_at: null,
+      ends_at: null,
+      date_start: '2026-10-11',
+      date_end: '2026-10-15',
+      effective_starts_at: '2026-10-10T21:00:00.000Z', // 2026-10-11 00:00 Israel (UTC+3)
+      effective_ends_at: '2026-10-15T21:00:00.000Z',
+    });
+    // a published date-only event still needs its description
+    expect(buildPreviewEvent({ ...dateOnly, description: '' }, 'PUBLISHED', null)).toEqual({
+      ok: false,
+      message: 'כדי לפרסם אירוע יש להוסיף תיאור',
+    });
   });
 
-  it('renders the date range and no time row, with the same component as the trainee page', () => {
-    const r = buildPreviewEvent(dateOnly, 'DRAFT', null);
+  it('renders the date range and "the time will be announced", never an invented time', () => {
+    for (const status of ['DRAFT', 'PUBLISHED'] as const) {
+      const r = buildPreviewEvent(dateOnly, status, null);
+      if (!r.ok) throw new Error(r.message);
+      const out = renderToStaticMarkup(createElement(EventDetails, { event: r.event, past: false }));
+      expect(out).toContain('11-15 באוקטובר 2026');
+      expect(out).toContain('השעה תפורסם בהמשך');
+      expect(out).not.toContain('שעת התחלה');
+      expect(out).not.toContain('שעות');
+      expect(out).not.toMatch(/\d{1,2}:\d{2}/);
+      expect(out).toContain('בוקר פאדל וקפה');
+    }
+  });
+
+  it('a timed event never shows the "time will be announced" text', () => {
+    const r = buildPreviewEvent(input, 'PUBLISHED', null);
     if (!r.ok) throw new Error(r.message);
     const out = renderToStaticMarkup(createElement(EventDetails, { event: r.event, past: false }));
-    expect(out).toContain('11-15 באוקטובר 2026');
-    expect(out).not.toContain('שעת התחלה');
-    expect(out).not.toContain('שעות');
-    expect(out).toContain('בוקר פאדל וקפה');
+    expect(out).not.toContain('השעה תפורסם בהמשך');
+    expect(out).toContain('18:30-20:00');
+  });
+
+  it('a draft with no date at all can be previewed as a draft, and cannot be published', () => {
+    const undated: EventPreviewInput = { ...input, startsAt: '', endsAt: '' };
+    const r = buildPreviewEvent(undated, 'DRAFT', null);
+    expect(r.ok).toBe(true);
+    expect(r.ok && r.event).toMatchObject({ status: 'DRAFT', starts_at: null, ends_at: null, date_start: null, date_end: null });
+    expect(buildPreviewEvent(undated, 'PUBLISHED', null)).toEqual({ ok: false, message: 'כדי לפרסם אירוע יש להוסיף תאריך' });
+    if (r.ok) {
+      const out = renderToStaticMarkup(createElement(EventDetails, { event: r.event, past: false }));
+      expect(out).toContain('טרם נקבע תאריך');
+    }
   });
 
   it('a timed preview is unchanged', () => {

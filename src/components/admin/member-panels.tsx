@@ -1,9 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   adjustAllowanceAction,
   assignSubscriptionAction,
+  deleteMemberAction,
   setSubscriptionActiveAction,
   setSubscriptionValidityAction,
   updateMemberAction,
@@ -12,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge, Card } from '@/components/ui/card';
 import { Field, Input, Select, Textarea } from '@/components/ui/form';
 import { Modal } from '@/components/ui/modal';
+import { useToast } from '@/components/ui/toast';
 import { useServerAction } from '@/components/use-server-action';
 import { APPROVAL_LABEL_HE, APPROVAL_TONE } from '@/lib/domain/labels';
 import type { ApprovalStatus, SkillLevel, SubscriptionPlan } from '@/lib/domain/types';
@@ -50,11 +53,20 @@ export function MemberProfileEditor({
 
       <div className="flex flex-wrap gap-2">
         {approval !== 'approved' ? (
-          <Button size="sm" loading={pending} onClick={() => setApproval('approved', 'המתאמנת אושרה')}>
-            אישור
+          <Button
+            size="sm"
+            loading={pending}
+            onClick={() => setApproval('approved', approval === 'inactive' ? 'המתאמנת הופעלה מחדש' : 'המתאמנת אושרה')}
+          >
+            {approval === 'inactive' ? 'הפעלה מחדש' : 'אישור'}
           </Button>
         ) : null}
-        {approval !== 'rejected' ? (
+        {approval === 'approved' ? (
+          <Button size="sm" variant="secondary" loading={pending} onClick={() => setApproval('inactive', 'המתאמנת הוגדרה כלא פעילה')}>
+            הגדרה כלא פעילה
+          </Button>
+        ) : null}
+        {approval === 'pending' ? (
           <Button size="sm" variant="secondary" loading={pending} onClick={() => setApproval('rejected', 'הבקשה נדחתה')}>
             דחייה
           </Button>
@@ -65,6 +77,14 @@ export function MemberProfileEditor({
           </Button>
         ) : null}
       </div>
+      {approval === 'inactive' ? (
+        <p className="text-small text-muted">מתאמנת לא פעילה לא יכולה להיכנס לאפליקציה או להירשם לאימונים. כל הנתונים וההיסטוריה נשמרים.</p>
+      ) : null}
+      {approval === 'approved' ? (
+        <p className="text-caption text-muted">
+          הגדרה כלא פעילה לא מבטלת אימונים קרובים שהיא כבר רשומה אליהם. את אלה אפשר להסיר מעמוד האימון.
+        </p>
+      ) : null}
 
       <form
         className="flex flex-col gap-3"
@@ -99,6 +119,68 @@ export function MemberProfileEditor({
 }
 
 /* ------------------------------------------------------------------ */
+/* Delete                                                               */
+/* ------------------------------------------------------------------ */
+
+export function DeleteMemberCard({ memberId, memberName, hasHistory }: { memberId: string; memberName: string; hasHistory: boolean }) {
+  const router = useRouter();
+  const toast = useToast();
+  const { pending, run } = useServerAction();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Card className="flex flex-col gap-3">
+      <h2 className="text-card font-semibold">מחיקת מתאמנת</h2>
+      {hasHistory ? (
+        <p className="text-small text-muted">
+          למתאמנת יש היסטוריית אימונים או התאמות מכסה, ולכן אי אפשר למחוק אותה. כדי להסיר אותה מהשימוש, הגדירי אותה כלא פעילה.
+        </p>
+      ) : (
+        <p className="text-small text-muted">מוחקת את החשבון, המנוי ורישומי ההמתנה של המתאמנת. אי אפשר לשחזר.</p>
+      )}
+      <Button variant="danger" size="sm" className="self-start" disabled={hasHistory} onClick={() => setOpen(true)}>
+        מחיקה
+      </Button>
+
+      <Modal
+        open={open}
+        onClose={() => {
+          if (!pending) setOpen(false);
+        }}
+        title="למחוק את המתאמנת?"
+        footer={
+          <>
+            <Button variant="secondary" disabled={pending} onClick={() => setOpen(false)}>
+              ביטול
+            </Button>
+            <Button
+              variant="danger"
+              loading={pending}
+              onClick={() =>
+                run(() => deleteMemberAction({ memberId }), {
+                  success: 'המתאמנת נמחקה',
+                  onSuccess: () => router.replace('/admin/members'),
+                  onError: (message) => {
+                    setOpen(false);
+                    toast.error(message);
+                  },
+                })
+              }
+            >
+              מחיקה סופית
+            </Button>
+          </>
+        }
+      >
+        <p className="text-body">
+          {memberName} תימחק לצמיתות, כולל החשבון והמנוי שלה. לא ניתן לשחזר.
+        </p>
+      </Modal>
+    </Card>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Subscription                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -107,6 +189,8 @@ export interface SubscriptionView {
   plan_name: string;
   monthly_limit: number;
   is_active: boolean;
+  /** Replaced by a newer subscription (still in force until its end date). */
+  superseded: boolean;
   starts_on: string;
   ends_on: string | null;
 }
@@ -148,7 +232,7 @@ export function SubscriptionManager({
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={s.is_active ? 'green' : 'neutral'}>{s.is_active ? 'פעיל' : 'מושבת'}</Badge>
+              <Badge tone={s.is_active ? 'green' : 'neutral'}>{s.is_active ? 'פעיל' : s.superseded ? 'הוחלף' : 'מושבת'}</Badge>
               <Button
                 size="sm"
                 variant="ghost"

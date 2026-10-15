@@ -38,12 +38,14 @@ export const APPROVAL_LABEL_HE: Record<ApprovalStatus, string> = {
   pending: 'ממתינה לאישור',
   approved: 'מאושרת',
   rejected: 'נדחתה',
+  inactive: 'לא פעילה',
 };
 
 export const APPROVAL_TONE: Record<ApprovalStatus, Tone> = {
   pending: 'amber',
   approved: 'green',
   rejected: 'red',
+  inactive: 'neutral',
 };
 
 export const WAITLIST_STATUS_LABEL_HE: Record<WaitlistStatus, string> = {

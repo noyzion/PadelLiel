@@ -19,6 +19,8 @@ message with the booking link to copy/share.
 | Against a **live Supabase project**: Auth e-mail flows, PostgREST RPC argument shapes, `.select()` behaviour, RLS through PostgREST | **NOT verified** - no Supabase credentials were available while building. Follow the first-run checklist below. |
 | In-browser UI behaviour (modals, dialogs, RTL layout on devices) | **NOT verified** - no browser automation was run |
 
+The annual-events import (`/admin/events/import`) and the date-only draft migration are verified against the embedded PostgreSQL only (RLS, grants, constraints, idempotency, preserved edits). They have **NOT** been run against a live Supabase project: the migration has not been applied there, and PostgREST behaviour for the new columns (including the "column does not exist" detection before the migration) is unverified.
+
 Community-event image upload (Supabase Storage API, `next/image` with the Supabase host, browser-side image downscaling) is likewise **NOT verified** against a live project or a browser; the storage RLS policies are tested against a stub of the `storage` schema.
 
 "The DB tests use a stub of Supabase's `auth` and `storage` schemas (`auth.users`, `auth.uid()`, `storage.buckets/objects`), not Supabase itself.
@@ -43,12 +45,14 @@ Without `.env.local` the app redirects every page to `/setup`, which explains wh
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | same page (publishable / anon key) | public. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is accepted as a fallback name |
 | `NEXT_PUBLIC_APP_URL` | your deployed URL (`http://localhost:3000` locally) | used in auth e-mail links and the WhatsApp message |
 
+| `ALLOW_EVENT_IMPORT` | server only (optional) | set to `1` to let `/admin/events/import` write the annual events. Leave unset otherwise; the dry-run works without it. Never a `NEXT_PUBLIC_` variable |
+
 The Supabase `service_role` key is **never** used or needed. Do not commit `.env.local`.
 
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events) using the SQL Editor.
+2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events → date-only event drafts → subscription future-start fix) using the SQL Editor. **`20261015000013_subscription_future_start.sql`** fixes a plan scheduled for a future date blocking the member's bookings until it starts (it adds `member_subscriptions.superseded` and replaces four functions; no booking or allowance data changes). **Review `20261014000012_community_events_date_only_drafts.sql` before applying it to a live project** (it makes `community_events.starts_at` nullable, adds `date_start`, `date_end`, `import_key` and the `effective_starts_at` column, and rebuilds `effective_ends_at`; it changes no existing row's data). **Apply it before deploying the app version that uses it**; the previous app version keeps working after it.
    The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (once / twice / three times a week = 4 / 8 / 13 sessions per month) and default settings (8h cutoff, capacity 4, 07:00-08:00 and 08:00-09:00).
 3. **Authentication → URL Configuration**
    - Site URL: your app URL (e.g. `https://padel-liel.vercel.app`).
@@ -91,6 +95,7 @@ This is the only manual SQL step. Everything else is done from the admin screens
 | `npm run lint` | ESLint |
 | `npm test` | unit + DB tests |
 | `npm run test:unit` | pure TypeScript tests (fast) |
+| `npm run events:import:dry-run` | offline dry run of the annual-events import: validates `data/padelliel_annual_events_2026_2027.json` and prints the 12 planned drafts. No database connection, writes nothing |
 | `npm run test:db` | SQL tests against an embedded PostgreSQL 18 - no Docker or Supabase needed (first run downloads the Postgres binary) |
 
 ## Using the app
@@ -106,6 +111,18 @@ plans → settings (cutoff hours, default capacity and time slots) → audit log
 **Community events:** the trainee tab **אירועים בקהילה** (`/events`) lists published events (upcoming first, then **אירועי עבר**) and opens each one for its full details. It is purely informational: no registration, RSVP, payments or notifications, and it never touches the monthly quota.
 
 **Event preview:** staff see an event exactly as trainees do through a **תצוגה מקדימה** button, marked with a "תצוגה מקדימה" badge. In the create/edit form it previews the unsaved values in the browser only (nothing is saved or published, and the existing event is untouched), with actions to go back to editing or to save and publish. From the events list, `/admin/events/[id]/preview` previews a saved draft or published event (admin-only, read-only). Drafts are never exposed to trainees, even by direct URL: `/events/[id]` only loads published events and the database policies hide drafts. Both previews render the same `EventDetails` component as the trainee page.
+
+**Annual events import (drafts, admin only):** `/admin/events/import` (button **ייבוא אירועי שנה** on the events page) loads the 12 community events from `data/padelliel_annual_events_2026_2027.json` as **drafts**. The flyer gives dates only, so the drafts are *date-only* (a date, or the Oct 11-15 range) with no start time and no image; nothing is invented, and nothing is published automatically.
+- **Dry run first:** the page (read-only) lists the 12 planned drafts and any existing events they match. `npm run events:import:dry-run` prints the same plan offline.
+- **Writing needs three things:** an approved admin, `ALLOW_EVENT_IMPORT=1` on the server, and typing the confirmation phrase. It only INSERTs missing drafts: events that already exist (same `import_key`, or the same title on the same date) are skipped and never changed, so re-running is safe and staff edits are kept. A draft the staff deleted is created again on the next run.
+- **Publishing without a time:** an event is always in exactly one of these states (the database enforces it, not just the form):
+  1. published with a date and time (`starts_at`, optional `ends_at`);
+  2. published with a date and **no time** (`date_start`);
+  3. published multi-day, start and end date, **no hours** (`date_start` + `date_end`);
+  4. a draft with date-only information (same columns as 2 and 3);
+  5. no date at all: allowed **only as a draft**; publishing it is refused by the form, the service and the database.
+
+  Publishing always needs a date and a description, never a time. Trainees see **"השעה תפורסם בהמשך"** where the time would be; no time is ever invented. A date-only event stays *upcoming* until the **end of its last calendar day in Asia/Jerusalem** (it moves to *past* at 00:00 Israel time on the following day, DST-safe), and a timed event moves at its end time as before. Two generated columns do this in the database: `effective_ends_at` (the end of the event) and `effective_starts_at` (its start, or Israel midnight of the first day for a date-only event); trainee lists sort and filter by them. A timed event with a start time but only an end *date* is refused: multi-day events with hours need an end time, otherwise leave the times out. Admins can preview drafts at any time; trainees see an event only after it is published individually (RLS unchanged).
 
 ## Repository layout
 

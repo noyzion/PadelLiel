@@ -2,7 +2,7 @@ import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type { Db } from '@/lib/supabase/server';
 import { AppError, toAppError } from '@/lib/domain/errors';
-import { WHEN_PUBLISH_NEEDS_START } from '@/lib/domain/event-when';
+import { WHEN_PUBLISH_NEEDS_DATE } from '@/lib/domain/event-when';
 import {
   EVENT_IMAGE_BUCKET,
   eventAnchor,
@@ -49,8 +49,9 @@ export async function listUpcomingEvents(db: Db, now: Date, range?: { from: Date
     .select('*')
     .eq('status', 'PUBLISHED')
     .gt('effective_ends_at', now.toISOString());
-  if (range) query = query.lt('starts_at', range.to.toISOString());
-  const rows = unwrap(await query.order('starts_at', { ascending: true }).order('id')) as CommunityEvent[];
+  // effective_starts_at = the start time, or the start of the first day for an event with a date but no time.
+  if (range) query = query.lt('effective_starts_at', range.to.toISOString());
+  const rows = unwrap(await query.order('effective_starts_at', { ascending: true }).order('id')) as CommunityEvent[];
   return rows.map((e) => toView(db, e));
 }
 
@@ -71,7 +72,7 @@ export async function listPastEvents(
     .lte('effective_ends_at', now.toISOString());
   if (range) query = query.gte('effective_ends_at', range.from.toISOString());
   const rows = unwrap(
-    await query.order('starts_at', { ascending: false }).order('id').limit(limit),
+    await query.order('effective_starts_at', { ascending: false }).order('id').limit(limit),
   ) as CommunityEvent[];
   return rows.map((e) => toView(db, e));
 }
@@ -105,8 +106,8 @@ export interface EventInput {
   title: string;
   description: string;
   /**
-   * The "when", from `eventWhenColumns`: either ISO instants (timed) or calendar dates (date-only draft,
-   * no clock time). The kind that is not used is null; the database enforces exactly one.
+   * The "when", from `eventWhenColumns`: ISO instants (timed), calendar dates (a date or range with no
+   * clock time), or all null (undated draft). The unused columns are null; the database enforces it.
    */
   startsAt: string | null;
   endsAt: string | null;
@@ -207,9 +208,9 @@ export async function setEventStatus(db: Db, id: string, status: EventStatus): P
   if (status === 'PUBLISHED' && !existing.description.trim()) {
     throw new AppError('INVALID_INPUT', { userMessage: 'כדי לפרסם אירוע יש להוסיף תיאור' });
   }
-  // A date-only draft (no clock time yet) cannot be published; the database refuses it too.
-  if (status === 'PUBLISHED' && !existing.starts_at) {
-    throw new AppError('INVALID_INPUT', { userMessage: WHEN_PUBLISH_NEEDS_START });
+  // An event needs a date to be published (a time is optional); the database refuses it too.
+  if (status === 'PUBLISHED' && !existing.starts_at && !existing.date_start) {
+    throw new AppError('INVALID_INPUT', { userMessage: WHEN_PUBLISH_NEEDS_DATE });
   }
   const { data, error } = await db.from('community_events').update({ status }).eq('id', id).select('id').maybeSingle();
   if (error) throw toAppError(error);

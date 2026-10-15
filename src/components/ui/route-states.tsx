@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { LogoutButton } from '@/components/logout-button';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { PageSkeleton } from '@/components/ui/skeleton';
 
@@ -14,6 +15,7 @@ export function RouteError({ reset }: { error: Error & { digest?: string }; rese
       <p className="text-card font-semibold">משהו השתבש</p>
       <p className="text-small text-muted">לא הצלחנו לטעון את העמוד. אפשר לנסות שוב, ואם זה חוזר, כדאי לרענן את הדף.</p>
       <Button onClick={reset}>ניסיון חוזר</Button>
+      <LogoutButton />
     </div>
   );
 }

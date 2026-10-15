@@ -20,6 +20,7 @@ const FILTERS: { value: ApprovalStatus | 'all'; label: string }[] = [
   { value: 'pending', label: 'ממתינות לאישור' },
   { value: 'approved', label: 'מאושרות' },
   { value: 'rejected', label: 'נדחו' },
+  { value: 'inactive', label: 'לא פעילות' },
 ];
 
 function SubscriptionBadge({ m }: { m: MemberOverview }) {

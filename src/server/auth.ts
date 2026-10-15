@@ -21,8 +21,11 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   if (!userId) return null;
 
   // Explicit columns: `admin_notes` is private to staff and not readable by the signed-in trainee.
-  const { data: profile } = await db.from('profiles').select(PROFILE_COLUMNS).eq('id', userId).maybeSingle();
-  if (!profile) return null;
+  const { data: profile, error } = await db.from('profiles').select(PROFILE_COLUMNS).eq('id', userId).maybeSingle();
+  // The user IS signed in, so returning null ("signed out") would send her to /login, and the proxy sends a signed-in
+  // user straight back to "/": an endless redirect loop. Fail loudly instead; the error page offers a logout.
+  if (error) throw new AppError('INTERNAL', { cause: error });
+  if (!profile) throw new AppError('MEMBER_NOT_FOUND');
   return { db, userId, profile: profile as Profile };
 });
 

@@ -1,7 +1,7 @@
 /** Row shapes returned by the database (see supabase/migrations). */
 
 export type UserRole = 'admin' | 'trainee';
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'inactive';
 export type SessionStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';
 export type BookingStatus =
   | 'CONFIRMED'
@@ -43,6 +43,8 @@ export interface MemberSubscription {
   member_id: string;
   plan_id: string;
   is_active: boolean;
+  /** Closed because a newer subscription replaced it: still in force for the dates it covers. */
+  superseded: boolean;
   starts_on: string;
   ends_on: string | null;
   created_at: string;

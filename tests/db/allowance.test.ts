@@ -231,6 +231,56 @@ describe('subscription changes', () => {
     await admin.call('admin_assign_subscription', { p_member_id: member.userId, p_plan_id: await db.planIdForLimit(3) });
     expect(await member.allowance(THIS_MONTH)).toMatchObject({ plan_limit: 3 });
   });
+
+  it('a plan scheduled for a future start keeps the current plan in force until then', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember({ limit: 2, startsOn: '2026-10-01' });
+    const thisMonth = await db.createSession({ date: '2026-10-30', start: '07:00' });
+    const nextMonth = await db.createSession({ date: '2026-11-03', start: '07:00' });
+
+    await admin.call('admin_assign_subscription', {
+      p_member_id: member.userId,
+      p_plan_id: await db.planIdForLimit(3),
+      p_starts_on: '2026-11-01',
+    });
+
+    // The old plan still covers the rest of this month: booking works and the numbers are the old plan's.
+    expect(await member.allowance(THIS_MONTH)).toMatchObject({ plan_limit: 2, has_active_subscription: true });
+    await expect(member.book(thisMonth)).resolves.toBeTruthy();
+    expect(await member.allowance(THIS_MONTH)).toMatchObject({ plan_limit: 2, used: 1, remaining: 1 });
+
+    // From the 1st the new plan applies.
+    expect(await member.allowance(NEXT_MONTH)).toMatchObject({ plan_limit: 3, has_active_subscription: true });
+    await expect(member.book(nextMonth)).resolves.toBeTruthy();
+
+    // The replaced row is history (closed the day before) but marked as replaced, not switched off.
+    const subs = await db.sql(
+      'select is_active, superseded, starts_on::text, ends_on::text from public.member_subscriptions where member_id = $1 order by starts_on',
+      [member.userId],
+    );
+    expect(subs.rows).toEqual([
+      { is_active: false, superseded: true, starts_on: '2026-10-01', ends_on: '2026-10-31' },
+      { is_active: true, superseded: false, starts_on: '2026-11-01', ends_on: null },
+    ]);
+  });
+
+  it('switching a replaced subscription off by hand still blocks booking for the dates it covers', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember({ limit: 2, startsOn: '2026-10-01' });
+    const session = await db.createSession({ date: '2026-10-30', start: '07:00' });
+    await admin.call('admin_assign_subscription', {
+      p_member_id: member.userId,
+      p_plan_id: await db.planIdForLimit(3),
+      p_starts_on: '2026-11-01',
+    });
+    const oldId = (
+      await db.sql('select id from public.member_subscriptions where member_id = $1 and starts_on = $2', [member.userId, '2026-10-01'])
+    ).rows[0].id;
+
+    await admin.call('admin_set_subscription_active', { p_subscription_id: oldId, p_active: false });
+    expect((await member.allowance(THIS_MONTH)).has_active_subscription).toBe(false);
+    await expect(member.book(session)).rejects.toMatchObject(code('NO_ACTIVE_SUBSCRIPTION'));
+  });
 });
 
 describe('allowance adjustments', () => {

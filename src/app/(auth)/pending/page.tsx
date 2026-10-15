@@ -7,29 +7,31 @@ import { Alert } from '@/components/ui/card';
 import { requireUser } from '@/server/auth';
 
 export const metadata: Metadata = { title: 'ממתינה לאישור' };
-
 export default async function PendingPage() {
   const { profile } = await requireUser();
   if (profile.role === 'admin') redirect('/admin');
   if (profile.approval_status === 'approved') redirect('/');
 
+  const inactive = profile.approval_status === 'inactive';
   const rejected = profile.approval_status === 'rejected';
   const name = profile.full_name.split(' ')[0];
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col items-center gap-3 text-center">
-        {rejected ? (
+        {rejected || inactive ? (
           <span className="grid size-14 place-items-center rounded-full bg-danger-soft text-danger" aria-hidden="true">
             <Hourglass className="size-7" />
           </span>
         ) : (
           <PadelRackets className="w-24 text-pink-200" />
         )}
-        <h1 className="text-title font-semibold">{rejected ? 'הבקשה לא אושרה' : `תודה שהצטרפת${name ? `, ${name}` : ''}`}</h1>
+        <h1 className="text-title font-semibold">{inactive ? 'החשבון אינו פעיל' : rejected ? 'הבקשה לא אושרה' : `תודה שהצטרפת${name ? `, ${name}` : ''}`}</h1>
       </div>
 
-      {rejected ? (
+      {inactive ? (
+        <Alert tone="red">החשבון שלך הוגדר כלא פעיל. אם זו טעות או שאת רוצה לחזור להתאמן, אפשר לפנות ישירות לצוות שלנו.</Alert>
+      ) : rejected ? (
         <Alert tone="red">אם זו טעות, אפשר לפנות ישירות לצוות שלנו.</Alert>
       ) : (
         <>

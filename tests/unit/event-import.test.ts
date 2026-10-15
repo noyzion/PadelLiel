@@ -43,6 +43,24 @@ describe('annual events source file', () => {
     expect(multi[0]).toMatchObject({ date_start: '2026-10-11', date_end: '2026-10-15' });
   });
 
+  it('pins the weekday of every date: Wednesdays, except Tue 2027-08-31 and Thu 2027-09-30 (as on the flyer)', () => {
+    const weekday = (iso: string) => new Date(`${iso}T12:00:00Z`).getUTCDay(); // 0 = Sunday
+    const bySingleDay = new Map<string, number>(
+      source.events.slice(1).map((e: { import_key: string; date_start: string }) => [e.import_key, weekday(e.date_start)]),
+    );
+    expect(bySingleDay.get('2027-08-bring-your-bestie')).toBe(2); // Tuesday
+    expect(bySingleDay.get('2027-09-community-cup')).toBe(4); // Thursday
+    const wednesdays = [...bySingleDay.entries()].filter(([, d]) => d === 3);
+    expect(wednesdays).toHaveLength(9);
+    // the two exceptions are the only non-Wednesdays, so nobody "fixed" them to a Wednesday date
+    expect([...bySingleDay.entries()].filter(([, d]) => d !== 3).map(([k]) => k).sort()).toEqual([
+      '2027-08-bring-your-bestie',
+      '2027-09-community-cup',
+    ]);
+    expect(source.events[10].date_start).toBe('2027-08-31');
+    expect(source.events[11].date_start).toBe('2027-09-30');
+  });
+
   it('refuses a file that would publish, invent a time, or invent an image', () => {
     expect(errors(withEvent({ status: 'PUBLISHED' })).join()).toMatch(/status must be DRAFT/);
     expect(errors(withEvent({ start_time: '08:00' })).join()).toMatch(/start_time must be null/);

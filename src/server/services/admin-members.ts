@@ -22,6 +22,11 @@ export async function updateMember(db: Db, memberId: string, patch: Record<strin
   await rpc<null>(db, 'admin_update_member', { p_member_id: memberId, p_patch: patch });
 }
 
+/** Permanently removes a trainee who has no bookings or allowance history (MEMBER_HAS_HISTORY otherwise). */
+export async function deleteMember(db: Db, memberId: string) {
+  await rpc<null>(db, 'admin_delete_member', { p_member_id: memberId });
+}
+
 export function assignSubscription(
   db: Db,
   p: { memberId: string; planId: string; startsOn?: string; endsOn?: string },

@@ -124,7 +124,8 @@ describe('date-only drafts', () => {
     await bad('starts_at, date_end', "'2026-11-02T16:30:00Z', '2026-11-03'");
     await bad('ends_at, date_start', "'2026-11-03T16:30:00Z', '2026-11-02'"); // an end time without a start time
     await bad('date_end', "'2026-11-03'"); // an end date without a start date
-    await bad('status', "'DRAFT'"); // no "when" at all
+    // ...while an event with no date at all is allowed (as a draft, see below)
+    await expect(admin.query("insert into public.community_events (title, status) values ('בדיקה', 'DRAFT')")).resolves.toBeTruthy();
   });
 
   it('a date range must run forward; a single day has no end date', async () => {
@@ -136,29 +137,58 @@ describe('date-only drafts', () => {
     }
   });
 
-  it('a date-only event cannot be published; publishing needs a real start time', async () => {
+  it('can be published with a date and no time (single day), or with a date range and no hours', async () => {
     const admin = await db.createAdmin();
-    await expect(
-      admin.query("insert into public.community_events (title, description, date_start, status) values ('בדיקה', 'פרטים', '2026-11-25', 'PUBLISHED')"),
-    ).rejects.toMatchObject({ constraint: 'community_events_published_has_start' });
-
-    const draft = (await admin.query<Row>("insert into public.community_events (title, description, date_start) values ('בדיקה', 'פרטים', '2026-11-25') returning id")).rows[0].id;
-    await expect(admin.query("update public.community_events set status = 'PUBLISHED' where id = $1", [draft])).rejects.toMatchObject({
-      constraint: 'community_events_published_has_start',
-    });
-    // Adding the time without removing the date is not a valid state either...
-    await expect(
-      admin.query("update public.community_events set starts_at = '2026-11-25T05:00:00Z', status = 'PUBLISHED' where id = $1", [draft]),
-    ).rejects.toMatchObject({ constraint: 'community_events_when_exclusive' });
-    // ...but converting it to a timed event (what the edit form does) lets it be published.
-    await admin.query(
-      "update public.community_events set starts_at = '2026-11-25T05:00:00Z', date_start = null, date_end = null, status = 'PUBLISHED' where id = $1",
-      [draft],
+    const single = await admin.query<Row>(
+      "insert into public.community_events (title, description, date_start, status) values ('פורסם ללא שעה', 'פרטים', '2026-11-25', 'PUBLISHED') returning *",
     );
-    expect((await db.sql<Row>('select status, starts_at, date_start from public.community_events where id = $1', [draft])).rows[0]).toMatchObject({
-      status: 'PUBLISHED',
-      date_start: null,
+    expect(single.rows[0]).toMatchObject({ status: 'PUBLISHED', starts_at: null, ends_at: null, date_start: '2026-11-25', date_end: null });
+    const range = await admin.query<Row>(
+      "insert into public.community_events (title, description, date_start, date_end, status) values ('פורסם רב יומי', 'פרטים', '2026-10-11', '2026-10-15', 'PUBLISHED') returning *",
+    );
+    expect(range.rows[0]).toMatchObject({ status: 'PUBLISHED', starts_at: null, date_start: '2026-10-11', date_end: '2026-10-15' });
+
+    // a draft with a date can be published as it is (no time added)
+    const draft = (await admin.query<Row>("insert into public.community_events (title, description, date_start) values ('בדיקה', 'פרטים', '2026-11-25') returning id")).rows[0].id;
+    await admin.query("update public.community_events set status = 'PUBLISHED' where id = $1", [draft]);
+    expect((await db.sql<Row>('select status, starts_at from public.community_events where id = $1', [draft])).rows[0]).toMatchObject({ status: 'PUBLISHED', starts_at: null });
+  });
+
+  it('an event with no date at all stays a draft: it cannot be published, and it keeps no stray values', async () => {
+    const admin = await db.createAdmin();
+    const undated = (await admin.query<Row>("insert into public.community_events (title, description) values ('בלי תאריך', 'פרטים') returning *")).rows[0];
+    expect(undated).toMatchObject({ status: 'DRAFT', starts_at: null, date_start: null, date_end: null, effective_ends_at: null });
+    await expect(admin.query("update public.community_events set status = 'PUBLISHED' where id = $1", [undated.id])).rejects.toMatchObject({
+      constraint: 'community_events_published_has_date',
     });
+    await expect(
+      admin.query("insert into public.community_events (title, description, status) values ('בלי תאריך', 'פרטים', 'PUBLISHED')"),
+    ).rejects.toMatchObject({ constraint: 'community_events_published_has_date' });
+    // removing the date of a published event is refused as well
+    const published = (await admin.query<Row>("insert into public.community_events (title, description, date_start, status) values ('בדיקה', 'פרטים', '2026-11-25', 'PUBLISHED') returning id")).rows[0].id;
+    await expect(admin.query('update public.community_events set date_start = null where id = $1', [published])).rejects.toMatchObject({
+      constraint: 'community_events_published_has_date',
+    });
+  });
+
+  it('adding a time to a date-only event means converting it to a timed one (the two never mix)', async () => {
+    const admin = await db.createAdmin();
+    const id = (await admin.query<Row>("insert into public.community_events (title, description, date_start, status) values ('בדיקה', 'פרטים', '2026-11-25', 'PUBLISHED') returning id")).rows[0].id;
+    await expect(admin.query("update public.community_events set starts_at = '2026-11-25T05:00:00Z' where id = $1", [id])).rejects.toMatchObject({
+      constraint: 'community_events_when_exclusive',
+    });
+    await admin.query("update public.community_events set starts_at = '2026-11-25T05:00:00Z', date_start = null, date_end = null where id = $1", [id]);
+    expect((await db.sql<Row>('select status, starts_at, date_start from public.community_events where id = $1', [id])).rows[0]).toMatchObject({ status: 'PUBLISHED', date_start: null });
+  });
+
+  it('effective_starts_at is the start time, or midnight (Israel) of the first day', async () => {
+    const admin = await db.createAdmin();
+    const eff = async (cols: string, vals: string) =>
+      (await admin.query<{ effective_starts_at: Date | null }>(`insert into public.community_events (title, ${cols}) values ('בדיקה', ${vals}) returning effective_starts_at`)).rows[0].effective_starts_at;
+    expect((await eff('starts_at', "'2026-11-02T16:30:00Z'"))!.toISOString()).toBe('2026-11-02T16:30:00.000Z');
+    expect((await eff('date_start', "'2026-11-25'"))!.toISOString()).toBe('2026-11-24T22:00:00.000Z'); // 00:00 Israel, UTC+2
+    expect((await eff('date_start, date_end', "'2026-10-11', '2026-10-15'"))!.toISOString()).toBe('2026-10-10T21:00:00.000Z'); // UTC+3
+    expect(await eff('status', "'DRAFT'")).toBeNull();
   });
 
   it('the existing publish rules still apply: a published event needs a description', async () => {
@@ -176,6 +206,17 @@ describe('date-only drafts', () => {
     expect((await member.query('select 1 from public.community_events where id = $1', [id])).rowCount).toBe(0);
     expect((await pending.query('select 1 from public.community_events where id = $1', [id])).rowCount).toBe(0);
     expect((await admin.query('select 1 from public.community_events where id = $1', [id])).rowCount).toBe(1);
+  });
+
+  it('a published date-only event is visible to trainees; an undated draft never is', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember();
+    const pending = await db.createMember({ approved: false, limit: null });
+    const shown = (await admin.query<Row>("insert into public.community_events (title, description, date_start, status) values ('מפורסם ללא שעה', 'פרטים', '2026-11-25', 'PUBLISHED') returning id")).rows[0].id;
+    const hidden = (await admin.query<Row>("insert into public.community_events (title, description) values ('בלי תאריך', 'פרטים') returning id")).rows[0].id;
+    expect((await member.query('select 1 from public.community_events where id = $1', [shown])).rowCount).toBe(1);
+    expect((await member.query('select 1 from public.community_events where id = $1', [hidden])).rowCount).toBe(0);
+    expect((await pending.query('select 1 from public.community_events where id = $1', [shown])).rowCount).toBe(0);
   });
 
   it('a trainee still cannot create a date-only event', async () => {
@@ -362,5 +403,92 @@ describe('annual events import (the real data file)', () => {
     await expect(
       member.query("insert into public.community_events (import_key, title, status, date_start) values ('trainee-key-1', 'פריצה', 'DRAFT', '2026-11-25')"),
     ).rejects.toThrow(/row-level security|permission denied/);
+  });
+});
+
+describe('published events without a time: upcoming until the end of their last Israel day', () => {
+  // The exact trainee queries (src/server/services/events.ts), with and without the current-month range.
+  const upcomingSql = `select title from public.community_events
+    where status = 'PUBLISHED' and effective_ends_at > $1 and ($2::timestamptz is null or effective_starts_at < $2)
+    order by effective_starts_at asc, id`;
+  const pastSql = `select title from public.community_events
+    where status = 'PUBLISHED' and effective_ends_at <= $1 and ($2::timestamptz is null or effective_ends_at >= $2)
+    order by effective_starts_at desc, id`;
+
+  async function publishDateOnly(title: string, start: string, end: string | null = null) {
+    await db.sql(
+      `insert into public.community_events (title, description, date_start, date_end, status) values ($1, 'פרטים', $2, $3, 'PUBLISHED')`,
+      [title, start, end],
+    );
+  }
+  async function publishTimed(title: string, startsAt: string, endsAt: string | null = null) {
+    await db.sql(
+      `insert into public.community_events (title, description, starts_at, ends_at, status) values ($1, 'פרטים', $2, $3, 'PUBLISHED')`,
+      [title, startsAt, endsAt],
+    );
+  }
+  const upcomingAt = async (user: UserSession, now: string, to: string | null = null) =>
+    (await user.query<{ title: string }>(upcomingSql, [now, to])).rows.map((r) => r.title);
+  const pastAt = async (user: UserSession, now: string, from: string | null = null) =>
+    (await user.query<{ title: string }>(pastSql, [now, from])).rows.map((r) => r.title);
+
+  it('a single day turns past at the next Israel midnight, not before (winter time, UTC+2)', async () => {
+    await cleanSlate();
+    const member = await db.createMember();
+    await publishDateOnly('יום אחד', '2026-11-25');
+    expect(await upcomingAt(member, '2026-11-24T22:00:00Z')).toEqual(['יום אחד']); // the day starts: still upcoming
+    expect(await upcomingAt(member, '2026-11-25T21:59:59Z')).toEqual(['יום אחד']); // 23:59:59 on the day
+    expect(await pastAt(member, '2026-11-25T21:59:59Z')).toEqual([]);
+    expect(await upcomingAt(member, '2026-11-25T22:00:00Z')).toEqual([]); // 00:00 the next day
+    expect(await pastAt(member, '2026-11-25T22:00:00Z')).toEqual(['יום אחד']);
+  });
+
+  it('a multi-day event stays upcoming through its FINAL day (summer time, UTC+3)', async () => {
+    await cleanSlate();
+    const member = await db.createMember();
+    await publishDateOnly('אירוע פתיחה', '2026-10-11', '2026-10-15');
+    expect(await upcomingAt(member, '2026-10-12T10:00:00Z')).toEqual(['אירוע פתיחה']); // in the middle
+    expect(await pastAt(member, '2026-10-14T21:30:00Z')).toEqual([]); // end of the 4th day: not over
+    expect(await upcomingAt(member, '2026-10-15T20:59:59Z')).toEqual(['אירוע פתיחה']);
+    expect(await upcomingAt(member, '2026-10-15T21:00:00Z')).toEqual([]);
+    expect(await pastAt(member, '2026-10-15T21:00:00Z')).toEqual(['אירוע פתיחה']);
+  });
+
+  it('uses the Israel calendar on the 25-hour day the clock goes back (2026-10-25)', async () => {
+    await cleanSlate();
+    const member = await db.createMember();
+    await publishDateOnly('יום שינוי שעון', '2026-10-25');
+    // the day ends at 2026-10-26 00:00 Israel (UTC+2) = 22:00Z
+    expect(await upcomingAt(member, '2026-10-25T21:59:59Z')).toEqual(['יום שינוי שעון']);
+    expect(await pastAt(member, '2026-10-25T22:00:00Z')).toEqual(['יום שינוי שעון']);
+  });
+
+  it('timed events are unchanged, and sort together with date-only events by their day', async () => {
+    await cleanSlate();
+    const member = await db.createMember();
+    await publishTimed('יום קודם 07:00', '2026-11-24T05:00:00Z'); // 07:00 Israel on the 24th
+    await publishDateOnly('ללא שעה', '2026-11-25');
+    await publishTimed('אותו יום 07:00', '2026-11-25T05:00:00Z', '2026-11-25T07:00:00Z');
+    await publishTimed('יום אחרי 07:00', '2026-11-26T05:00:00Z');
+    expect(await upcomingAt(member, '2026-11-20T00:00:00Z')).toEqual(['יום קודם 07:00', 'ללא שעה', 'אותו יום 07:00', 'יום אחרי 07:00']);
+    // the timed event ended at 09:00 Israel; the date-only one is still going until midnight
+    expect(await pastAt(member, '2026-11-25T08:00:00Z')).toEqual(['אותו יום 07:00', 'יום קודם 07:00']);
+    expect(await upcomingAt(member, '2026-11-25T08:00:00Z')).toEqual(['ללא שעה', 'יום אחרי 07:00']);
+  });
+
+  it('the trainee month range includes an event that starts before the month ends, and excludes the next month', async () => {
+    await cleanSlate();
+    const member = await db.createMember();
+    // November 2026 in Israel: [2026-10-31T22:00Z, 2026-11-30T22:00Z)
+    await publishDateOnly('חוצה חודשים', '2026-10-28', '2026-11-02');
+    await publishDateOnly('אמצע החודש', '2026-11-15');
+    await publishDateOnly('היום הראשון בדצמבר', '2026-12-01');
+    await publishDateOnly('סוף נובמבר', '2026-11-30');
+    const to = '2026-11-30T22:00:00Z';
+    expect(await upcomingAt(member, '2026-11-01T08:00:00Z', to)).toEqual(['חוצה חודשים', 'אמצע החודש', 'סוף נובמבר']);
+    // without a range, December is listed too
+    expect(await upcomingAt(member, '2026-11-01T08:00:00Z')).toContain('היום הראשון בדצמבר');
+    // past events of the month: ended within it
+    expect(await pastAt(member, '2026-11-20T00:00:00Z', '2026-10-31T22:00:00Z')).toEqual(['חוצה חודשים', 'אמצע החודש'].reverse());
   });
 });

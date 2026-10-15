@@ -3,8 +3,8 @@ import { DeleteEventButton, PublishToggleButton } from '@/components/admin/event
 import { EventCover } from '@/components/events/event-card';
 import { ButtonLink } from '@/components/ui/button';
 import { Badge } from '@/components/ui/card';
-import { WHEN_PUBLISH_NEEDS_START } from '@/lib/domain/event-when';
-import { EVENT_STATUS_LABEL_HE, eventWhenHe, isDateOnlyEvent, type EventView } from '@/lib/domain/events';
+import { WHEN_PUBLISH_NEEDS_DATE } from '@/lib/domain/event-when';
+import { EVENT_STATUS_LABEL_HE, EVENT_TIME_TBA_HE, eventWhenHe, isDateOnlyEvent, isUndatedEvent, type EventView } from '@/lib/domain/events';
 
 /** One event in the admin list: thumbnail, key facts, and the management actions. */
 export function EventRow({ event }: { event: EventView }) {
@@ -30,7 +30,7 @@ export function EventRow({ event }: { event: EventView }) {
               <bdi className="num">{when.time}</bdi>
             </>
           ) : null}
-          {isDateOnlyEvent(event) ? <span> · טרם נקבעה שעה</span> : null}
+          {isDateOnlyEvent(event) ? <span> · {EVENT_TIME_TBA_HE}</span> : null}
         </p>
         <p className="flex items-center gap-1.5 text-caption text-muted">
           <MapPin className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.6} />
@@ -47,7 +47,7 @@ export function EventRow({ event }: { event: EventView }) {
         <PublishToggleButton
           eventId={event.id}
           status={event.status}
-          blockedReason={event.starts_at ? undefined : WHEN_PUBLISH_NEEDS_START}
+          blockedReason={isUndatedEvent(event) ? WHEN_PUBLISH_NEEDS_DATE : undefined}
         />
         <DeleteEventButton eventId={event.id} title={event.title} />
       </div>

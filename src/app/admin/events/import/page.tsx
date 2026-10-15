@@ -4,6 +4,7 @@ import { ImportAnnualEventsButton } from '@/components/admin/event-import';
 import { BackLink } from '@/components/admin/session-panels';
 import { Alert, Badge, PageHeader } from '@/components/ui/card';
 import { IMPORT_ACTION_LABEL_HE, type ImportAction } from '@/lib/domain/event-import';
+import { EVENT_TIME_TBA_HE } from '@/lib/domain/events';
 import { isEventImportEnabled } from '@/lib/env';
 import type { Tone } from '@/lib/domain/labels';
 import { formatEventDatesHe } from '@/lib/time';
@@ -83,7 +84,7 @@ export default async function ImportEventsPage() {
               </div>
               <p className="text-small font-semibold text-pink-700">
                 <bdi>{when.date}</bdi>
-                <span className="font-normal text-muted"> · טרם נקבעה שעה</span>
+                <span className="font-normal text-muted"> · {EVENT_TIME_TBA_HE}</span>
               </p>
               <p className="whitespace-pre-line text-small text-ink">{event.description}</p>
               <p className="text-caption text-muted">

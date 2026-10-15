@@ -4,8 +4,8 @@ import { PublishToggleButton } from '@/components/admin/event-actions';
 import { PreviewBar } from '@/components/admin/preview-bar';
 import { EventDetails } from '@/components/events/event-details';
 import { ButtonLink } from '@/components/ui/button';
-import { WHEN_PUBLISH_NEEDS_START } from '@/lib/domain/event-when';
-import { isEventPast } from '@/lib/domain/events';
+import { WHEN_PUBLISH_NEEDS_DATE } from '@/lib/domain/event-when';
+import { isEventPast, isUndatedEvent } from '@/lib/domain/events';
 import { nowMs } from '@/lib/now';
 import { requireAdmin } from '@/server/auth';
 import { getEvent } from '@/server/services/events';
@@ -41,7 +41,7 @@ export default async function PreviewEventPage({ params }: { params: Promise<{ i
           <PublishToggleButton
             eventId={event.id}
             status="DRAFT"
-            blockedReason={event.starts_at ? undefined : WHEN_PUBLISH_NEEDS_START}
+            blockedReason={isUndatedEvent(event) ? WHEN_PUBLISH_NEEDS_DATE : undefined}
           />
         )}
       </PreviewBar>

@@ -20,10 +20,13 @@ export function SessionCard({
   session,
   levelLabel,
   cutoffHours,
+  nowMs,
 }: {
   session: ScheduleSession;
   levelLabel: string;
   cutoffHours: number;
+  /** The server's current time (ms). Passed in so the card renders the same on the server and in the browser. */
+  nowMs: number;
 }) {
   const [lateBookOpen, setLateBookOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -35,7 +38,10 @@ export function SessionCard({
   const isBooked = Boolean(session.my_booking_id);
   const isOnWaitlist = Boolean(session.my_waitlist_entry_id);
   const cancelled = session.status === 'CANCELLED';
-  const finished = session.status === 'COMPLETED' || session.block_reason === 'SESSION_STARTED';
+  // A booked member's block_reason is ALREADY_BOOKED (never SESSION_STARTED), so the start time is checked directly:
+  // a session that already started can no longer be cancelled.
+  const started = new Date(session.starts_at).getTime() <= nowMs;
+  const finished = session.status === 'COMPLETED' || session.block_reason === 'SESSION_STARTED' || started;
   const canBook = !isBooked && !cancelled && !finished && session.block_reason === null;
   const canWait = !isBooked && !isOnWaitlist && !cancelled && !finished && session.block_reason === 'SESSION_FULL';
   const disabledReason =

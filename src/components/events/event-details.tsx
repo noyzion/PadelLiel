@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { EventCover } from '@/components/events/event-card';
 import { Badge } from '@/components/ui/card';
-import { eventWhenHe, splitParagraphs, type EventView } from '@/lib/domain/events';
+import { EVENT_TIME_TBA_HE, eventWhenHe, isDateOnlyEvent, splitParagraphs, type EventView } from '@/lib/domain/events';
 
 /**
  * The event details exactly as trainees see them. Shared by the trainee page (`/events/[id]`) and the
@@ -59,6 +59,11 @@ export function EventDetails({
             <dd className="num mt-0.5 font-semibold text-navy-900">
               <bdi>{when.time}</bdi>
             </dd>
+          </div>
+        ) : isDateOnlyEvent(event) ? (
+          <div>
+            <dt className="text-caption font-medium text-muted">שעה</dt>
+            <dd className="mt-0.5 font-semibold text-navy-900">{EVENT_TIME_TBA_HE}</dd>
           </div>
         ) : null}
         <div>

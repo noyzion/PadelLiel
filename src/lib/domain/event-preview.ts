@@ -1,17 +1,17 @@
 import { dateOnlyEffectiveEnd, parseEventWhen } from '@/lib/domain/event-when';
 import type { EventStatus, EventView } from '@/lib/domain/events';
-import { israelEndOfDay, israelNoonOf } from '@/lib/time';
+import { israelEndOfDay, israelLocalToInstant, israelNoonOf } from '@/lib/time';
 import { eventFormSchema } from '@/lib/validation/schemas';
 
 export interface EventPreviewInput {
   title: string;
   description: string;
   /**
-   * `datetime-local` value in Israel time exactly as typed in the form, or just a date ("2026-11-02")
-   * for a draft whose time is not known yet.
+   * `datetime-local` value in Israel time exactly as typed in the form; just a date ("2026-11-02") when the
+   * time is not known; empty when there is no date yet (a draft only).
    */
   startsAt: string;
-  /** Same formats as `startsAt` (a bare date means the last day of a multi-day draft). */
+  /** Same formats as `startsAt` (a bare date means the last day of a multi-day event without hours). */
   endsAt: string;
   location: string;
 }
@@ -46,6 +46,24 @@ export function buildPreviewEvent(input: EventPreviewInput, status: EventStatus,
     created_by: null,
   };
 
+  if (when.kind === 'undated') {
+    const now = new Date().toISOString();
+    return {
+      ok: true,
+      event: {
+        ...base,
+        starts_at: null,
+        ends_at: null,
+        date_start: null,
+        date_end: null,
+        created_at: now,
+        updated_at: now,
+        effective_ends_at: null,
+        effective_starts_at: null,
+      },
+    };
+  }
+
   if (when.kind === 'dateOnly') {
     const anchor = israelNoonOf(when.dateStart).toISOString();
     return {
@@ -58,8 +76,9 @@ export function buildPreviewEvent(input: EventPreviewInput, status: EventStatus,
         date_end: when.dateEnd,
         created_at: anchor,
         updated_at: anchor,
-        // Same rule as the database's generated column.
+        // Same rules as the database's generated columns.
         effective_ends_at: dateOnlyEffectiveEnd(when.dateStart, when.dateEnd).toISOString(),
+        effective_starts_at: israelLocalToInstant(`${when.dateStart}T00:00`)!.toISOString(),
       },
     };
   }
@@ -75,8 +94,9 @@ export function buildPreviewEvent(input: EventPreviewInput, status: EventStatus,
       date_end: null,
       created_at: startsAt,
       updated_at: startsAt,
-      // Same rule as the database's generated column.
+      // Same rules as the database's generated columns.
       effective_ends_at: (when.endsAt ?? israelEndOfDay(startsAt)).toISOString(),
+      effective_starts_at: startsAt,
     },
   };
 }

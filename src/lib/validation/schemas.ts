@@ -43,7 +43,6 @@ export const registerSchema = z.object({
 
 export const forgotPasswordSchema = z.object({ email: emailSchema });
 export const resetPasswordSchema = z.object({ password: passwordSchema });
-
 export const profileUpdateSchema = z.object({
   fullName: z.string().trim().min(2, 'יש להזין שם מלא').max(80, 'השם ארוך מדי'),
   phone,
@@ -123,7 +122,7 @@ export const adjustAllowanceSchema = z.object({
 
 export const memberPatchSchema = z
   .object({
-    approval_status: z.enum(['pending', 'approved', 'rejected']).optional(),
+    approval_status: z.enum(['pending', 'approved', 'rejected', 'inactive']).optional(),
     skill_level_code: z.union([levelCode, z.literal('')]).optional(),
     admin_notes: z.string().trim().max(2000).optional(),
     full_name: z.string().trim().min(2).max(80).optional(),
@@ -131,6 +130,7 @@ export const memberPatchSchema = z
   })
   .strict();
 export const updateMemberSchema = z.object({ memberId: uuid, patch: memberPatchSchema });
+export const memberIdSchema = z.object({ memberId: uuid });
 
 export const assignSubscriptionSchema = z
   .object({
@@ -177,10 +177,14 @@ export const settingsSchema = z.object({
 /* ------------------------------ community events ------------------------------ */
 
 /**
- * "2026-11-02T18:30" (what a datetime-local input produces, Israel time) or, for an unfinished DRAFT whose
- * clock time is not known yet, a plain date "2026-11-02". See `parseEventWhen` for the cross-field rules.
+ * "2026-11-02T18:30" (what a datetime-local input produces, Israel time), a plain date "2026-11-02" when the
+ * clock time is not known (draft or published), or empty when there is no date yet (a draft only).
+ * See `parseEventWhen` for the cross-field rules, including "publishing needs a date".
  */
-const localWhen = z.string().refine(isValidWhenValue, WHEN_INVALID);
+const localWhen = z
+  .string()
+  .trim()
+  .refine((v) => v === '' || isValidWhenValue(v), WHEN_INVALID);
 
 const eventFields = z.object({
   title: z.string().trim().min(2, 'יש להזין כותרת').max(EVENT_TITLE_MAX, 'הכותרת ארוכה מדי'),

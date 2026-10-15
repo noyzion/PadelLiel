@@ -108,7 +108,7 @@ describe('event form validation', () => {
   });
 
   it('rejects invalid dates and times', () => {
-    expect(message({ ...valid, startsAt: '' })).toBe('תאריך או שעה לא תקינים');
+    expect(message({ ...valid, startsAt: '' })).toBe('כדי לפרסם אירוע יש להוסיף תאריך'); // no date: can only be a draft
     expect(message({ ...valid, startsAt: '2026-02-30T10:00' })).toBe('תאריך או שעה לא תקינים');
     expect(message({ ...valid, startsAt: 'tomorrow' })).toBe('תאריך או שעה לא תקינים');
     expect(message({ ...valid, endsAt: '2026-11-31T10:00' })).toBe('תאריך או שעה לא תקינים');
@@ -191,7 +191,7 @@ describe('event text and status helpers', () => {
   });
 });
 
-describe('date-only drafts (no clock time yet)', () => {
+describe('events with a date but no clock time', () => {
   const draft = {
     title: 'פאדל ויוגה',
     description: '',
@@ -200,6 +200,7 @@ describe('date-only drafts (no clock time yet)', () => {
     location: 'מרכז הטניס כוכב יאיר',
     status: 'DRAFT' as const,
   };
+  const published = { ...draft, description: 'פרטים', status: 'PUBLISHED' as const };
   const message = (input: unknown) => {
     const r = eventFormSchema.safeParse(input);
     return r.success ? null : r.error.issues[0].message;
@@ -211,11 +212,25 @@ describe('date-only drafts (no clock time yet)', () => {
     expect(eventSaveSchema.safeParse({ ...draft, id: '3f2b8a52-1f4e-4d0b-9a55-1d1b2c0d9e11' }).success).toBe(true);
   });
 
-  it('refuses to publish without a start time, and still needs the description', () => {
-    expect(message({ ...draft, status: 'PUBLISHED', description: 'פרטים' })).toBe('כדי לפרסם אירוע יש להוסיף שעת התחלה');
-    // a timed event publishes as before
-    expect(eventFormSchema.safeParse({ ...draft, startsAt: '2026-11-25T07:00', status: 'PUBLISHED', description: 'פרטים' }).success).toBe(true);
-    expect(message({ ...draft, startsAt: '2026-11-25T07:00', status: 'PUBLISHED', description: '' })).toBe('כדי לפרסם אירוע יש להוסיף תיאור');
+  it('lets a date-only event be PUBLISHED: a single day, or a multi-day range, without any hours', () => {
+    expect(eventFormSchema.safeParse(published).success).toBe(true);
+    expect(eventFormSchema.safeParse({ ...published, startsAt: '2026-10-11', endsAt: '2026-10-15' }).success).toBe(true);
+    expect(eventSaveSchema.safeParse({ ...published, id: '3f2b8a52-1f4e-4d0b-9a55-1d1b2c0d9e11' }).success).toBe(true);
+  });
+
+  it('still publishes a timed event, and still needs a description to publish', () => {
+    expect(eventFormSchema.safeParse({ ...published, startsAt: '2026-11-25T07:00' }).success).toBe(true);
+    expect(eventFormSchema.safeParse({ ...published, startsAt: '2026-11-25T07:00', endsAt: '2026-11-25T09:00' }).success).toBe(true);
+    expect(message({ ...published, description: '' })).toBe('כדי לפרסם אירוע יש להוסיף תיאור');
+    expect(message({ ...published, startsAt: '2026-11-25T07:00', description: '' })).toBe('כדי לפרסם אירוע יש להוסיף תיאור');
+  });
+
+  it('an event without any date is allowed as a draft, but can never be published', () => {
+    expect(eventFormSchema.safeParse({ ...draft, startsAt: '' }).success).toBe(true);
+    expect(eventFormSchema.safeParse({ ...draft, startsAt: '   ' }).success).toBe(true);
+    expect(message({ ...published, startsAt: '' })).toBe('כדי לפרסם אירוע יש להוסיף תאריך');
+    // an end without a start is meaningless
+    expect(message({ ...draft, startsAt: '', endsAt: '2026-11-26' })).toBe('יש להזין תאריך התחלה');
   });
 
   it('keeps the date range rules: forward only, and no end time without a start time', () => {
@@ -225,7 +240,7 @@ describe('date-only drafts (no clock time yet)', () => {
   });
 
   it('a multi-day timed event needs an end time (a bare end date is not enough)', () => {
-    expect(message({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27' })).toBe('באירוע רב־יומי יש להזין גם שעת סיום');
+    expect(message({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27' })).toBe('באירוע רב־יומי עם שעת התחלה יש להזין גם שעת סיום');
     expect(eventFormSchema.safeParse({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27T12:00' }).success).toBe(true);
   });
 

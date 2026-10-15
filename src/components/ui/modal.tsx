@@ -37,6 +37,12 @@ export function Modal({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
+      // Esc: let the parent decide. A parent that refuses (e.g. while a request is running) keeps `open`, and the
+      // dialog must then stay open too, otherwise the browser would close it behind the component's back.
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
       onClose={onClose}
       onClick={(e) => {
         if (e.target === ref.current) onClose();

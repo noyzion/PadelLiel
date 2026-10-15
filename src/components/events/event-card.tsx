@@ -2,7 +2,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { eventAnchor, eventWhenHe, splitParagraphs, type EventView } from '@/lib/domain/events';
+import {
+  EVENT_DATE_TBA_HE,
+  EVENT_TIME_TBA_HE,
+  eventAnchor,
+  eventWhenHe,
+  isDateOnlyEvent,
+  isUndatedEvent,
+  splitParagraphs,
+  type EventView,
+} from '@/lib/domain/events';
 import { formatEventDayNumberHe, formatEventMonthHe } from '@/lib/time';
 
 /** Photo of the event, or (without one) the date set in plain typography on a soft blush panel. */
@@ -33,6 +42,10 @@ export function EventCover({
           unoptimized={event.image_url.startsWith('blob:')}
           className="object-cover"
         />
+      ) : isUndatedEvent(event) ? (
+        <div className="absolute inset-0 flex items-center justify-center text-center">
+          <span className={cn('font-medium text-pink-700', small ? 'text-caption' : 'text-body')}>{EVENT_DATE_TBA_HE}</span>
+        </div>
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className={cn('num font-semibold leading-none text-navy-900', small ? 'text-title' : 'text-[3rem]')}>{formatEventDayNumberHe(eventAnchor(event))}</span>
@@ -65,6 +78,11 @@ export function EventCard({ event, past = false }: { event: EventView; past?: bo
             <>
               <span aria-hidden="true"> · </span>
               <bdi className="num">{when.time}</bdi>
+            </>
+          ) : isDateOnlyEvent(event) ? (
+            <>
+              <span aria-hidden="true"> · </span>
+              <span>{EVENT_TIME_TBA_HE}</span>
             </>
           ) : null}
         </p>

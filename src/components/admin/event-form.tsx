@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/form';
 import { useServerAction } from '@/components/use-server-action';
 import { buildPreviewEvent } from '@/lib/domain/event-preview';
+import { WHEN_END_NEEDS_DATE } from '@/lib/domain/event-when';
 import { nowMs } from '@/lib/now';
 import {
   EVENT_DESCRIPTION_MAX,
@@ -125,10 +126,11 @@ export function EventForm({
 
   /**
    * The values (Israel time) behind the date, end date and the two time fields: `datetime-local` values when
-   * a time was entered, a bare date when it was not (an unfinished draft; the server refuses to publish it).
-   * A time is never made up.
+   * a time was entered, a bare date when it was not (the event is then shown with "השעה תפורסם בהמשך"), and
+   * empty when there is no date yet (a draft; the server refuses to publish it). A time is never made up.
    */
   function composeDateTimes() {
+    if (!values.date) return { startsAt: '', endsAt: '' };
     const endDate = values.endDate && values.endDate !== values.date ? values.endDate : '';
     return {
       startsAt: values.startTime ? `${values.date}T${values.startTime}` : values.date,
@@ -136,9 +138,18 @@ export function EventForm({
     };
   }
 
+  /** A time or an end date without a date cannot be stored: say so instead of silently dropping it. */
+  function missingDate() {
+    return !values.date && Boolean(values.startTime || values.endTime || values.endDate);
+  }
+
   function openPreview() {
     setError(undefined);
     if (!formRef.current?.reportValidity()) return;
+    if (missingDate()) {
+      setError(WHEN_END_NEEDS_DATE);
+      return;
+    }
     // Validated like a save, but a draft does not need a description yet.
     const result = buildPreviewEvent(
       { title: values.title, description: values.description, location: values.location, ...composeDateTimes() },
@@ -161,6 +172,10 @@ export function EventForm({
 
   function submit(status: EventStatus) {
     setError(undefined);
+    if (missingDate()) {
+      setError(WHEN_END_NEEDS_DATE);
+      return;
+    }
     const form = new FormData();
     if (mode.type === 'edit') form.set('id', mode.eventId);
     form.set('title', values.title);
@@ -200,13 +215,13 @@ export function EventForm({
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="תאריך" hint="לפי שעון ישראל">
-          {(p) => <Input {...p} type="date" value={values.date} onChange={(e) => set('date', e.target.value)} required />}
+        <Field label="תאריך" hint="לפי שעון ישראל. נדרש כדי לפרסם; בלי תאריך האירוע נשמר כטיוטה.">
+          {(p) => <Input {...p} type="date" value={values.date} onChange={(e) => set('date', e.target.value)} />}
         </Field>
         <Field label="תאריך סיום (אופציונלי)" hint="רק לאירוע שנמשך כמה ימים">
           {(p) => <Input {...p} type="date" value={values.endDate} min={values.date || undefined} onChange={(e) => set('endDate', e.target.value)} />}
         </Field>
-        <Field label="שעת התחלה" hint="אפשר להשאיר ריק בטיוטה. נדרשת כדי לפרסם.">
+        <Field label="שעת התחלה (אופציונלי)" hint="אם אין שעה, תוצג למתאמנות ״השעה תפורסם בהמשך״.">
           {(p) => <Input {...p} type="time" value={values.startTime} onChange={(e) => set('startTime', e.target.value)} />}
         </Field>
         <Field label="שעת סיום (אופציונלי)">

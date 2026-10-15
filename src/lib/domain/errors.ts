@@ -7,6 +7,7 @@ export const ERROR_MESSAGES_HE = {
   NOT_AUTHENTICATED: 'יש להתחבר כדי לבצע פעולה זו.',
   NOT_AUTHORIZED: 'אין לך הרשאה לבצע פעולה זו.',
   MEMBER_NOT_FOUND: 'המתאמנת לא נמצאה.',
+  MEMBER_HAS_HISTORY: 'למתאמנת יש היסטוריית אימונים או התאמות מכסה, ולכן אי אפשר למחוק אותה. אפשר להגדיר אותה כלא פעילה.',
   MEMBER_NOT_APPROVED: 'החשבון שלך עדיין ממתין לאישור המאמנת.',
   NO_ACTIVE_SUBSCRIPTION: 'אין מנוי פעיל לתאריך האימון. פני למאמנת.',
   NO_SKILL_LEVEL: 'עדיין לא הוגדרה לך רמה. פני למאמנת.',

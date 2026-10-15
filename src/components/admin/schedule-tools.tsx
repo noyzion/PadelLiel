@@ -37,6 +37,7 @@ export function ScheduleTools({
   sessionCount: number;
 }) {
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkVersion, setBulkVersion] = useState(0);
   const [singleOpen, setSingleOpen] = useState(false);
   const [dupOpen, setDupOpen] = useState(false);
   const { pending, run } = useServerAction();
@@ -67,8 +68,14 @@ export function ScheduleTools({
       </Button>
 
       <BulkCreateModal
+        // A fresh form after every successful creation (days / hours picked before must not linger).
+        key={`bulk-${bulkVersion}`}
         open={bulkOpen}
         onClose={() => setBulkOpen(false)}
+        onCreated={() => {
+          setBulkOpen(false);
+          setBulkVersion((v) => v + 1);
+        }}
         weekStart={weekStart}
         defaultSlots={defaultSlots}
         defaultCapacity={defaultCapacity}
@@ -128,6 +135,7 @@ export function ScheduleTools({
 function BulkCreateModal({
   open,
   onClose,
+  onCreated,
   weekStart,
   defaultSlots,
   defaultCapacity,
@@ -135,6 +143,7 @@ function BulkCreateModal({
 }: {
   open: boolean;
   onClose: () => void;
+  onCreated: () => void;
   weekStart: string;
   defaultSlots: Slot[];
   defaultCapacity: number;
@@ -165,7 +174,7 @@ function BulkCreateModal({
         }),
       {
         success: (d) => `נוצרו ${d.created} אימונים כטיוטות`,
-        onSuccess: () => onClose(),
+        onSuccess: () => onCreated(),
         onError: (message) => {
           setError(message);
           toast.error(message);
@@ -210,7 +219,7 @@ function BulkCreateModal({
           <legend className="mb-1 text-small font-semibold text-navy-900">שעות</legend>
           {slots.map((slot, i) => (
             <Checkbox
-              key={`${slot.start}-${slot.end}`}
+              key={`${i}-${slot.start}-${slot.end}`}
               label={`${slot.start}-${slot.end}`}
               checked={selectedSlots.includes(i)}
               onChange={() => setSelectedSlots((s) => toggle(s, i))}
@@ -229,6 +238,12 @@ function BulkCreateModal({
               onClick={() => {
                 if (!custom.start || !custom.end || custom.end <= custom.start) {
                   toast.error('שעת הסיום חייבת להיות אחרי שעת ההתחלה');
+                  return;
+                }
+                const existing = slots.findIndex((s) => s.start === custom.start && s.end === custom.end);
+                if (existing >= 0) {
+                  // The same hours again: select the existing option instead of listing it twice.
+                  setSelectedSlots((s) => (s.includes(existing) ? s : [...s, existing]));
                   return;
                 }
                 setSlots((s) => [...s, custom]);
