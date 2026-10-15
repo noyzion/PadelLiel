@@ -35,7 +35,7 @@ export default async function PendingPage() {
         </h1>
         {blocked ? null : (
           <p className="text-body text-muted">
-            איזה כיף שהצטרפת! ליאל תאשר את החשבון שלך בקרוב, ואז תוכלי להתחיל לבחור אימונים.
+            איזה כיף שהצטרפת! הצוות שלנו יאשר את החשבון שלך בקרוב, ואז תוכלי להתחיל לבחור אימונים.
           </p>
         )}
       </div>
