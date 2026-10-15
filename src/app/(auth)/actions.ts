@@ -15,29 +15,41 @@ import {
 export interface AuthFormState {
   error?: string;
   success?: 'confirm_email' | 'reset_sent' | 'password_updated';
+  /**
+   * What was typed (never a password), so the form can show it again: React clears an uncontrolled form after
+   * every action, which would otherwise wipe the name, phone and e-mail whenever an error is shown.
+   */
+  values?: { fullName?: string; phone?: string; email?: string };
+}
+
+function field(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === 'string' ? value : '';
 }
 
 export async function loginAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const values = { email: field(formData, 'email') };
   const parsed = loginSchema.safeParse({ email: formData.get('email'), password: formData.get('password') });
-  if (!parsed.success) return { error: firstIssueMessage(parsed.error) };
+  if (!parsed.success) return { error: firstIssueMessage(parsed.error), values };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    if (/confirm/i.test(error.message)) return { error: 'יש לאשר את כתובת האימייל דרך הקישור שנשלח אלייך.' };
-    return { error: 'אימייל או סיסמה שגויים.' };
+    if (/confirm/i.test(error.message)) return { error: 'יש לאשר את כתובת האימייל דרך הקישור שנשלח אלייך.', values };
+    return { error: 'אימייל או סיסמה שגויים.', values };
   }
   redirect(safeNext(formData.get('next')));
 }
 
 export async function registerAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const values = { fullName: field(formData, 'fullName'), phone: field(formData, 'phone'), email: field(formData, 'email') };
   const parsed = registerSchema.safeParse({
     fullName: formData.get('fullName'),
     phone: formData.get('phone'),
     email: formData.get('email'),
     password: formData.get('password'),
   });
-  if (!parsed.success) return { error: firstIssueMessage(parsed.error) };
+  if (!parsed.success) return { error: firstIssueMessage(parsed.error), values };
 
   const { fullName, phone, email, password } = parsed.data;
   const supabase = await createClient();
@@ -51,9 +63,9 @@ export async function registerAction(_prev: AuthFormState, formData: FormData): 
   });
 
   if (error) {
-    if (/registered|already/i.test(error.message)) return { error: 'כתובת האימייל כבר רשומה. נסי להתחבר.' };
-    if (/password/i.test(error.message)) return { error: 'הסיסמה חלשה מדי. בחרי סיסמה ארוכה וייחודית יותר.' };
-    return { error: 'ההרשמה נכשלה. נסי שוב בעוד רגע.' };
+    if (/registered|already/i.test(error.message)) return { error: 'כתובת האימייל כבר רשומה. נסי להתחבר.', values };
+    if (/password/i.test(error.message)) return { error: 'הסיסמה חלשה מדי. בחרי סיסמה ארוכה וייחודית יותר.', values };
+    return { error: 'ההרשמה נכשלה. נסי שוב בעוד רגע.', values };
   }
 
   // When e-mail confirmation is enabled in Supabase there is no session yet.
@@ -63,7 +75,7 @@ export async function registerAction(_prev: AuthFormState, formData: FormData): 
 
 export async function forgotPasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const parsed = forgotPasswordSchema.safeParse({ email: formData.get('email') });
-  if (!parsed.success) return { error: firstIssueMessage(parsed.error) };
+  if (!parsed.success) return { error: firstIssueMessage(parsed.error), values: { email: field(formData, 'email') } };
 
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {

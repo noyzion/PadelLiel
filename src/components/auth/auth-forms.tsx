@@ -33,7 +33,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: 'link' }) 
       {state.error ? <Alert tone="red">{state.error}</Alert> : null}
       <input type="hidden" name="next" value={next ?? '/'} />
       <Field label="אימייל">
-        {(p) => <Input {...p} name="email" type="email" autoComplete="email" inputMode="email" dir="ltr" required className="text-start" />}
+        {(p) => <Input {...p} name="email" type="email" autoComplete="email" inputMode="email" dir="ltr" required defaultValue={state.values?.email} className="text-start" />}
       </Field>
       <Field label="סיסמה">
         {(p) => <Input {...p} name="password" type="password" autoComplete="current-password" dir="ltr" required className="text-start" />}
@@ -69,13 +69,13 @@ export function RegisterForm() {
     <form action={action} className="flex flex-col gap-4" noValidate>
       {state.error ? <Alert tone="red">{state.error}</Alert> : null}
       <Field label="שם מלא">
-        {(p) => <Input {...p} name="fullName" autoComplete="name" required />}
+        {(p) => <Input {...p} name="fullName" autoComplete="name" required defaultValue={state.values?.fullName} />}
       </Field>
       <Field label="טלפון" hint="המאמנת תשתמש בו ליצירת קשר">
-        {(p) => <Input {...p} name="phone" type="tel" autoComplete="tel" inputMode="tel" dir="ltr" required className="text-start" />}
+        {(p) => <Input {...p} name="phone" type="tel" autoComplete="tel" inputMode="tel" dir="ltr" required defaultValue={state.values?.phone} className="text-start" />}
       </Field>
       <Field label="אימייל">
-        {(p) => <Input {...p} name="email" type="email" autoComplete="email" inputMode="email" dir="ltr" required className="text-start" />}
+        {(p) => <Input {...p} name="email" type="email" autoComplete="email" inputMode="email" dir="ltr" required defaultValue={state.values?.email} className="text-start" />}
       </Field>
       <Field label="סיסמה" hint="לפחות 8 תווים">
         {(p) => <Input {...p} name="password" type="password" autoComplete="new-password" dir="ltr" minLength={8} required className="text-start" />}
@@ -106,7 +106,7 @@ export function ForgotPasswordForm() {
     <form action={action} className="flex flex-col gap-4" noValidate>
       {state.error ? <Alert tone="red">{state.error}</Alert> : null}
       <Field label="אימייל">
-        {(p) => <Input {...p} name="email" type="email" autoComplete="email" inputMode="email" dir="ltr" required className="text-start" />}
+        {(p) => <Input {...p} name="email" type="email" autoComplete="email" inputMode="email" dir="ltr" required defaultValue={state.values?.email} className="text-start" />}
       </Field>
       <Submit>שליחת קישור לאיפוס</Submit>
       <Link href="/login" className="text-center text-small font-medium text-navy-900 underline underline-offset-4">
