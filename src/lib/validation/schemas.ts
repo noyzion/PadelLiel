@@ -27,7 +27,6 @@ const phone = z
   .max(20, 'מספר טלפון ארוך מדי')
   .regex(/^[0-9+\-\s()]+$/, 'מספר טלפון יכול להכיל ספרות בלבד');
 
-export const emailSchema = z.string().trim().toLowerCase().email('כתובת אימייל לא תקינה').max(254);
 export const passwordSchema = z.string().min(8, 'הסיסמה חייבת להכיל לפחות 8 תווים').max(72, 'הסיסמה ארוכה מדי');
 
 export const PHONE_INVALID_MESSAGE = 'מספר הטלפון לא נראה תקין. נסי מספר נייד ישראלי, למשל 050-123-4567';
@@ -41,25 +40,9 @@ export const israeliMobileSchema = z
   .refine((v) => normalizeIsraeliMobile(v) !== null, PHONE_INVALID_MESSAGE)
   .transform((v) => normalizeIsraeliMobile(v) ?? v);
 
-/** What a person typed to sign in: a phone number (trainees) or an e-mail address (the coach and older accounts). */
-export type LoginIdentifier = { phone: string; email?: never } | { email: string; phone?: never };
-
-const loginIdentifier = z
-  .string()
-  .trim()
-  .min(1, 'יש להזין מספר טלפון')
-  .max(254, PHONE_INVALID_MESSAGE)
-  .refine(
-    (v) => (v.includes('@') ? emailSchema.safeParse(v).success : normalizeIsraeliMobile(v) !== null),
-    { error: (issue) => (String(issue.input).includes('@') ? 'כתובת אימייל לא תקינה' : PHONE_INVALID_MESSAGE) },
-  )
-  .transform((v): LoginIdentifier => {
-    if (v.includes('@')) return { email: v.toLowerCase() };
-    return { phone: normalizeIsraeliMobile(v) ?? v };
-  });
-
+/** Everyone signs in with the phone number and password they registered with. */
 export const loginSchema = z.object({
-  identifier: loginIdentifier,
+  phone: israeliMobileSchema,
   password: z.string().min(1, 'יש להזין סיסמה').max(72, 'הסיסמה ארוכה מדי'),
 });
 
@@ -70,8 +53,6 @@ export const registerSchema = z.object({
   password: passwordSchema,
 });
 
-export const forgotPasswordSchema = z.object({ email: emailSchema });
-export const resetPasswordSchema = z.object({ password: passwordSchema });
 export const profileUpdateSchema = z.object({
   fullName: z.string().trim().min(2, 'יש להזין שם מלא').max(80, 'השם ארוך מדי'),
   /** Omitted for accounts that sign in with their phone number: that number is the login and is not editable here. */

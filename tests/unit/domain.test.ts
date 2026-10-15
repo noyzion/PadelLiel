@@ -113,14 +113,12 @@ describe('input validation', () => {
     expect(registerSchema.safeParse({ fullName: 'דנה', phone: '050-123-4567', password: '1' }).success).toBe(false);
   });
 
-  it('login accepts a phone number (any format) or, for the coach and older accounts, an e-mail address', () => {
-    const phone = loginSchema.safeParse({ identifier: '050 123 4567', password: 'x' });
-    expect(phone.success && phone.data.identifier).toEqual({ phone: '+972501234567' });
-    const email = loginSchema.safeParse({ identifier: ' Coach@Example.com ', password: 'x' });
-    expect(email.success && email.data.identifier).toEqual({ email: 'coach@example.com' });
-    expect(loginSchema.safeParse({ identifier: 'not a number', password: 'x' }).success).toBe(false);
-    expect(loginSchema.safeParse({ identifier: 'a@b', password: 'x' }).success).toBe(false);
-    expect(loginSchema.safeParse({ identifier: '050-123-4567', password: '' }).success).toBe(false);
+  it('login takes a phone number in any format (no e-mail) and a password', () => {
+    const ok = loginSchema.safeParse({ phone: '050 123 4567', password: 'x' });
+    expect(ok.success && ok.data.phone).toBe('+972501234567');
+    expect(loginSchema.safeParse({ phone: 'coach@example.com', password: 'x' }).success).toBe(false);
+    expect(loginSchema.safeParse({ phone: 'not a number', password: 'x' }).success).toBe(false);
+    expect(loginSchema.safeParse({ phone: '050-123-4567', password: '' }).success).toBe(false);
   });
 
   it('session form validates times, capacity and ordering', () => {

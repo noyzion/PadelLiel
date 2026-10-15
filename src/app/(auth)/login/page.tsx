@@ -4,16 +4,12 @@ import { LoginForm } from '@/components/auth/auth-forms';
 
 export const metadata: Metadata = { title: 'התחברות' };
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ next?: string; error?: string }>;
-}) {
-  const { next, error } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
   return (
     <>
       <AuthHeading title="ברוכה הבאה">התחברי עם מספר הטלפון והסיסמה שלך.</AuthHeading>
-      <LoginForm next={next} notice={error === 'link' ? 'link' : undefined} />
+      <LoginForm next={next} />
     </>
   );
 }

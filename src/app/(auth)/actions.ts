@@ -3,30 +3,22 @@
 import type { AuthError } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
 import type { ZodError } from 'zod';
-import { getAppUrl } from '@/lib/env';
 import { safeNext } from '@/lib/safe-redirect';
 import { createClient } from '@/lib/supabase/server';
-import {
-  firstIssueMessage,
-  forgotPasswordSchema,
-  loginSchema,
-  registerSchema,
-  resetPasswordSchema,
-} from '@/lib/validation/schemas';
+import { loginSchema, registerSchema } from '@/lib/validation/schemas';
 
-export type AuthField = 'fullName' | 'phone' | 'password' | 'identifier';
+export type AuthField = 'fullName' | 'phone' | 'password';
 
 export interface AuthFormState {
   /** A message about the form as a whole (wrong password, service unavailable...). */
   error?: string;
   /** Messages that belong under one specific input. */
   fieldErrors?: Partial<Record<AuthField, string>>;
-  success?: 'reset_sent';
   /**
    * What was typed (never a password), so the form can show it again: React clears an uncontrolled form after
    * every action, which would otherwise wipe the name and phone whenever an error is shown.
    */
-  values?: { fullName?: string; phone?: string; identifier?: string; email?: string };
+  values?: { fullName?: string; phone?: string };
 }
 
 function field(formData: FormData, key: string): string {
@@ -54,22 +46,17 @@ function isRateLimited(error: AuthError): boolean {
 }
 
 export async function loginAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const values = { identifier: field(formData, 'identifier') };
-  const parsed = loginSchema.safeParse({ identifier: formData.get('identifier'), password: formData.get('password') });
+  const values = { phone: field(formData, 'phone') };
+  const parsed = loginSchema.safeParse({ phone: formData.get('phone'), password: formData.get('password') });
   if (!parsed.success) return { fieldErrors: fieldErrorsOf(parsed.error), values };
 
-  const { identifier, password } = parsed.data;
+  const { phone, password } = parsed.data;
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(
-    identifier.email ? { email: identifier.email, password } : { phone: identifier.phone ?? '', password },
-  );
+  const { error } = await supabase.auth.signInWithPassword({ phone, password });
   if (error) {
     if (isRateLimited(error)) return { error: RATE_LIMITED, values };
-    if (error.code === 'email_not_confirmed') {
-      return { error: 'יש לאשר את כתובת האימייל דרך הקישור שנשלח אלייך.', values };
-    }
     // The same answer for "no such account" and "wrong password".
-    return { error: identifier.email ? 'האימייל או הסיסמה שגויים.' : 'מספר הטלפון או הסיסמה שגויים.', values };
+    return { error: 'מספר הטלפון או הסיסמה שגויים.', values };
   }
   redirect(safeNext(formData.get('next')));
 }
@@ -120,32 +107,6 @@ export async function registerAction(_prev: AuthFormState, formData: FormData): 
     return { error: TRY_LATER, values };
   }
   redirect('/pending');
-}
-
-/** Password reset by e-mail link. Only accounts that have an e-mail address (the coach, older members) can use it. */
-export async function forgotPasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const parsed = forgotPasswordSchema.safeParse({ email: formData.get('email') });
-  if (!parsed.success) return { error: firstIssueMessage(parsed.error), values: { email: field(formData, 'email') } };
-
-  const supabase = await createClient();
-  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${getAppUrl()}/auth/callback?next=/reset-password`,
-  });
-  // Always report success so the form can't be used to discover which e-mails are registered.
-  return { success: 'reset_sent' };
-}
-
-export async function resetPasswordAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const parsed = resetPasswordSchema.safeParse({ password: formData.get('password') });
-  if (!parsed.success) return { error: firstIssueMessage(parsed.error) };
-
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  if (!data?.claims?.sub) return { error: 'הקישור פג תוקף. בקשי קישור חדש.' };
-
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
-  if (error) return { error: 'לא הצלחנו לעדכן את הסיסמה. נסי סיסמה אחרת.' };
-  redirect('/');
 }
 
 export async function logoutAction() {

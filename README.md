@@ -61,20 +61,19 @@ The Supabase `service_role` key is **never** used or needed. Do not commit `.env
    - Turn **Enable Phone provider** ON.
    - Turn **Enable phone confirmations** OFF. This is what makes sign-up instant: no SMS is sent, so no SMS provider is needed. While it is ON, registration shows "ההרשמה אינה זמינה כרגע" and the server log names this setting. (`GET <project-url>/auth/v1/settings` reports it as `external.phone` and `phone_autoconfirm`; both must be `true`.)
    - If the dashboard will not save the Phone form without an SMS provider, choose one and enter placeholder credentials. This was not verified: none is ever called while confirmations are off.
-   - Keep the **Email** provider enabled: the coach signs in with an e-mail address, and so do members who registered before phone sign-up.
    - **Authentication → Sign In / Providers → Email → Password requirements**: set the minimum length (and, on Pro, leaked-password protection). The app asks for at least 8 characters and shows Supabase's "weak password" answer in Hebrew.
    - **Authentication → Attack Protection**: sign-up is open to anyone with the link, so keep the default rate limits and consider enabling CAPTCHA (Turnstile).
-5. Create the admin account in **Authentication → Users → Add user → Create new user** (the coach's e-mail and a password, with **Auto Confirm User** ticked; `/register` no longer has an e-mail field), then promote it in the SQL Editor:
+5. Register the admin account through the app's `/register` page (name, phone, password: exactly like a trainee), then promote it in the SQL Editor:
 
 ```sql
 update public.profiles
 set role = 'admin', approval_status = 'approved'
-where email = 'admin@example.com';   -- use the real address
+where phone = '+972501234567';   -- the coach's number in E.164: +972, then the number without its leading 0
 ```
 
-The coach signs in on `/login` with **התחברות עם אימייל**.
+Everyone, the coach included, signs in with a phone number and password. Accounts created before phone sign-up (e-mail based) can no longer sign in; open new accounts for them and delete the old ones in **Authentication → Users**.
 
-**Phone sign-up caveats.** The number is not verified (no SMS), so anyone can register with any number; the coach's approval is the gate, and a new account can do nothing until approved. A number can only be registered once (Supabase enforces it). Numbers are stored as E.164 (`+9725XXXXXXXX`) and shown as `050-123-4567`. There is no self-service password reset for phone accounts (that needs SMS): the team has to help, and an admin "set a new password" action is not built (it would need the `service_role` key, which this app deliberately does not hold). Members with an e-mail address can still use the e-mail reset link.
+**Phone sign-up caveats.** The number is not verified (no SMS), so anyone can register with any number; the coach's approval is the gate, and a new account can do nothing until approved. A number can only be registered once (Supabase enforces it). Numbers are stored as E.164 (`+9725XXXXXXXX`) and shown as `050-123-4567`. There is no self-service password reset (that needs SMS): the team has to help, and an admin "set a new password" action is not built (it would need the `service_role` key, which this app deliberately does not hold).
 
 This is the only manual SQL step. Everything else is done from the admin screens.
 
