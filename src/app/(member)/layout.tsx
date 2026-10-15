@@ -6,6 +6,8 @@ import { getVapidPublicKey } from '@/lib/env';
 import { requireMember } from '@/server/auth';
 import { getUnreadCount } from '@/server/services/notifications';
 
+export const dynamic = 'force-dynamic';
+
 const NAV: NavItem[] = [
   { href: '/', label: 'בית', icon: 'home', exact: true },
   { href: '/schedule', label: 'אימונים', icon: 'calendar' },

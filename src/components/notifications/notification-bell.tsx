@@ -3,7 +3,7 @@
 import { Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getUnreadCountAction } from '@/app/(member)/notifications/actions';
 import { cn } from '@/lib/cn';
 
@@ -29,8 +29,14 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
     if (result.ok) setUnread(result.data);
   }, []);
 
-  // Moving to another page: ask again (the layout is not re-rendered on client navigations).
+  // Client navigations do not re-render the layout, so poll on path change. Skip the first run:
+  // the server already sent `initialUnread` for this load.
+  const skipPathFetch = useRef(true);
   useEffect(() => {
+    if (skipPathFetch.current) {
+      skipPathFetch.current = false;
+      return;
+    }
     let cancelled = false;
     void getUnreadCountAction().then((result) => {
       if (!cancelled && result.ok) setUnread(result.data);

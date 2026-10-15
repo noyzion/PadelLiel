@@ -51,7 +51,7 @@ class NotCacheable extends Error {}
 async function loadConfig(db: Db): Promise<AppConfig> {
   const [settings, levels] = await Promise.all([
     db.from('app_settings').select('key, value'),
-    db.from('skill_levels').select('*').eq('is_active', true).order('sort_order'),
+    db.from('skill_levels').select('code, label_he, sort_order, is_active').eq('is_active', true).order('sort_order'),
   ]);
   return { settings: unwrap(settings) as SettingRow[], levels: unwrap(levels) as SkillLevel[] };
 }

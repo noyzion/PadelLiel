@@ -109,6 +109,18 @@ export async function registerAction(_prev: AuthFormState, formData: FormData): 
   redirect('/pending');
 }
 
+/** Used by the waiting screen to notice approval without the trainee having to refresh. */
+export async function getApprovalStatusAction(): Promise<'approved' | 'pending' | 'rejected' | 'inactive' | 'signed_out'> {
+  const db = await createClient();
+  const { data } = await db.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) return 'signed_out';
+  const { data: profile } = await db.from('profiles').select('approval_status').eq('id', userId).maybeSingle();
+  const status = (profile as { approval_status?: string } | null)?.approval_status;
+  if (status === 'approved' || status === 'rejected' || status === 'inactive' || status === 'pending') return status;
+  return 'signed_out';
+}
+
 export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();

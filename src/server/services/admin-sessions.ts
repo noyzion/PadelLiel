@@ -2,7 +2,7 @@ import 'server-only';
 import type { Db } from '@/lib/supabase/server';
 import type { BookingStatus, Profile, SessionRow, WaitlistStatus } from '@/lib/domain/types';
 import type { NewSessionRow } from '@/lib/domain/schedule-generator';
-import { rpc, unwrap } from '../rpc';
+import { embedded, rpc, unwrap } from '../rpc';
 
 export interface SessionFormValues {
   date: string;
@@ -110,24 +110,33 @@ export interface SessionDetail {
   waitlist: WaitlistRow[];
 }
 
-const MEMBER_COLUMNS = 'id, full_name, phone, skill_level_code';
+const SESSION_COLUMNS =
+  'id, session_date, start_time, end_time, starts_at, ends_at, week_start, skill_level_code, capacity, status, registration_open, notes, cancel_reason';
+const ROSTER_COLUMNS =
+  'id, member_id, status, booked_at, cancelled_at, skill_override, admin_note, profiles!bookings_member_id_fkey(id, full_name, phone, skill_level_code)';
+const WAITLIST_COLUMNS =
+  'id, member_id, status, joined_at, profiles!waitlist_entries_member_id_fkey(id, full_name, phone, skill_level_code)';
 
 export async function getSessionDetail(db: Db, sessionId: string): Promise<SessionDetail | null> {
-  const session = unwrap(await db.from('sessions').select('*').eq('id', sessionId).maybeSingle()) as SessionRow | null;
+  const [sessionRes, bookingsRes, entriesRes] = await Promise.all([
+    db.from('sessions').select(SESSION_COLUMNS).eq('id', sessionId).maybeSingle(),
+    db.from('bookings').select(ROSTER_COLUMNS).eq('session_id', sessionId).order('created_at'),
+    db.from('waitlist_entries').select(WAITLIST_COLUMNS).eq('session_id', sessionId).order('joined_at'),
+  ]);
+  const session = unwrap(sessionRes) as SessionRow | null;
   if (!session) return null;
 
-  const bookings = unwrap(
-    await db.from('bookings').select('*').eq('session_id', sessionId).order('created_at'),
-  ) as (Omit<RosterEntry, 'booking_id' | 'member'> & { id: string })[];
-  const entries = unwrap(
-    await db.from('waitlist_entries').select('*').eq('session_id', sessionId).order('joined_at'),
-  ) as { id: string; member_id: string; status: WaitlistStatus; joined_at: string }[];
-
-  const memberIds = [...new Set([...bookings.map((b) => b.member_id), ...entries.map((e) => e.member_id)])];
-  const members = memberIds.length
-    ? (unwrap(await db.from('profiles').select(MEMBER_COLUMNS).in('id', memberIds)) as NonNullable<RosterEntry['member']>[])
-    : [];
-  const byId = new Map(members.map((m) => [m.id, m]));
+  const bookings = unwrap(bookingsRes) as unknown as (Omit<RosterEntry, 'booking_id' | 'member'> & {
+    id: string;
+    profiles: RosterEntry['member'] | NonNullable<RosterEntry['member']>[] | null;
+  })[];
+  const entries = unwrap(entriesRes) as unknown as {
+    id: string;
+    member_id: string;
+    status: WaitlistStatus;
+    joined_at: string;
+    profiles: RosterEntry['member'] | NonNullable<RosterEntry['member']>[] | null;
+  }[];
 
   let position = 0;
   return {
@@ -140,7 +149,7 @@ export async function getSessionDetail(db: Db, sessionId: string): Promise<Sessi
       cancelled_at: b.cancelled_at,
       skill_override: b.skill_override,
       admin_note: b.admin_note,
-      member: byId.get(b.member_id) ?? null,
+      member: embedded(b.profiles),
     })),
     waitlist: entries.map((e) => ({
       entry_id: e.id,
@@ -148,7 +157,7 @@ export async function getSessionDetail(db: Db, sessionId: string): Promise<Sessi
       status: e.status,
       joined_at: e.joined_at,
       position: e.status === 'WAITING' ? ++position : null,
-      member: byId.get(e.member_id) ?? null,
+      member: embedded(e.profiles),
     })),
   };
 }

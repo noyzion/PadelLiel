@@ -161,7 +161,9 @@ describe('security hardening', () => {
     expect((await pending.query('select id from public.sessions where id = $1', [session])).rowCount).toBe(0);
     expect((await approved.query('select id from public.sessions where id = $1', [session])).rowCount).toBe(1);
     await expect(pending.rpc('get_week_schedule', { p_week_start: '2026-11-01' })).rejects.toMatchObject(code('NOT_AUTHORIZED'));
+    await expect(pending.rpc('week_has_sessions', { p_week_start: '2026-11-01' })).rejects.toMatchObject(code('NOT_AUTHORIZED'));
     expect((await approved.rpc('get_week_schedule', { p_week_start: '2026-11-01' })).length).toBeGreaterThan(0);
+    expect(await approved.call<boolean>('week_has_sessions', { p_week_start: '2026-11-01' })).toBe(true);
   });
 
   it('every SECURITY DEFINER function pins pg_temp last in its search_path', async () => {
@@ -213,6 +215,7 @@ describe('private data isolation', () => {
     await expect(asAnon('select * from public.sessions')).rejects.toThrow(/permission denied/);
     await expect(asAnon('select * from public.bookings')).rejects.toThrow(/permission denied/);
     await expect(asAnon('select * from public.get_week_schedule(current_date)')).rejects.toThrow(/permission denied/);
+    await expect(asAnon('select public.week_has_sessions(current_date)')).rejects.toThrow(/permission denied/);
   });
 });
 

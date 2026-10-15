@@ -189,12 +189,14 @@ const mock = createServer(async (req, res) => {
   if (path === '/rest/v1/skill_levels') return rows(skillLevels);
   if (path === '/rest/v1/community_events') return rows([]);
   if (path === '/rest/v1/member_subscriptions') return rows([]);
+  if (path === '/rest/v1/notifications') return rows([]);
 
   if (path.startsWith('/rest/v1/rpc/')) {
     const fn = path.slice('/rest/v1/rpc/'.length);
     if (fn === 'get_member_allowance') return json(res, 200, [allowance()]);
     if (fn === 'get_my_bookings') return json(res, 200, [upcomingBooking()]);
     if (fn === 'get_week_schedule') return json(res, 200, []);
+    if (fn === 'week_has_sessions') return json(res, 200, false);
     if (fn === 'get_member_monthly_usage') return json(res, 200, []);
     return json(res, 200, []);
   }

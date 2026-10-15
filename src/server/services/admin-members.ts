@@ -11,7 +11,7 @@ import type {
   MonthlyUsageRow,
 } from '@/lib/domain/types';
 import { shiftMonth } from '@/lib/time';
-import { rpc, unwrap } from '../rpc';
+import { embedded, rpc, unwrap } from '../rpc';
 import { getAllowance, getMonthlyUsage } from './booking';
 
 export function listMembers(db: Db, monthStart: string) {
@@ -103,31 +103,40 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
 
   const nextMonthStart = shiftMonth(currentMonth, 1);
   const [subs, plans, thisMonth, nextMonth, usage, bookings, adjustments] = await Promise.all([
-    db.from('member_subscriptions').select('*').eq('member_id', memberId).order('starts_on', { ascending: false }),
-    db.from('subscription_plans').select('*'),
+    db
+      .from('member_subscriptions')
+      .select('id, member_id, plan_id, is_active, superseded, starts_on, ends_on, created_at')
+      .eq('member_id', memberId)
+      .order('starts_on', { ascending: false }),
+    db.from('subscription_plans').select('id, name, monthly_session_limit, description, is_active'),
     getAllowance(db, memberId, currentMonth),
     getAllowance(db, memberId, nextMonthStart),
     getMonthlyUsage(db, memberId, shiftMonth(currentMonth, -3), nextMonthStart),
-    db.from('bookings').select('*').eq('member_id', memberId).order('created_at', { ascending: false }).limit(200),
-    db.from('allowance_adjustments').select('*').eq('member_id', memberId).order('created_at', { ascending: false }),
+    db
+      .from('bookings')
+      .select(
+        'id, status, booked_at, cancelled_at, session_id, sessions!bookings_session_id_fkey(id, session_date, start_time, end_time, starts_at, skill_level_code, status, week_start)',
+      )
+      .eq('member_id', memberId)
+      .order('created_at', { ascending: false })
+      .limit(200),
+    db
+      .from('allowance_adjustments')
+      .select('id, month_start, delta, kind, reason, created_at, related_booking_id')
+      .eq('member_id', memberId)
+      .order('created_at', { ascending: false }),
   ]);
 
   const planById = new Map((unwrap(plans) as SubscriptionPlan[]).map((p) => [p.id, p]));
-  const bookingRows = unwrap(bookings) as (Omit<MemberBookingRow, 'session' | 'allowance_restored'> & {
+  const bookingRows = unwrap(bookings) as unknown as {
+    id: string;
+    status: BookingStatus;
+    booked_at: string;
+    cancelled_at: string | null;
     session_id: string;
-  })[];
+    sessions: NonNullable<MemberBookingRow['session']> | NonNullable<MemberBookingRow['session']>[] | null;
+  }[];
   const adjustmentRows = unwrap(adjustments) as (AdjustmentRow & { related_booking_id: string | null })[];
-
-  const sessionIds = [...new Set(bookingRows.map((b) => b.session_id))];
-  const sessions = sessionIds.length
-    ? (unwrap(
-        await db
-          .from('sessions')
-          .select('id, session_date, start_time, end_time, starts_at, skill_level_code, status, week_start')
-          .in('id', sessionIds),
-      ) as NonNullable<MemberBookingRow['session']>[])
-    : [];
-  const sessionById = new Map(sessions.map((s) => [s.id, s]));
   const restored = new Set(
     adjustmentRows.filter((a) => a.kind === 'restore_booking').map((a) => a.related_booking_id),
   );
@@ -149,7 +158,7 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
         status: b.status,
         booked_at: b.booked_at,
         cancelled_at: b.cancelled_at,
-        session: sessionById.get(b.session_id) ?? null,
+        session: embedded(b.sessions),
         allowance_restored: restored.has(b.id),
       }))
       .sort((a, b) => (b.session?.starts_at ?? '').localeCompare(a.session?.starts_at ?? '')),

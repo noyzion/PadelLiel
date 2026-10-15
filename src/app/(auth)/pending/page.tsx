@@ -1,10 +1,12 @@
 import { CircleCheck, Hourglass } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { PendingGate } from '@/components/auth/pending-gate';
 import { LogoutButton } from '@/components/logout-button';
 import { Alert } from '@/components/ui/card';
 import { requireUser } from '@/server/auth';
 
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'ההרשמה התקבלה' };
 
 export default async function PendingPage() {
@@ -50,6 +52,7 @@ export default async function PendingPage() {
         </Alert>
       ) : null}
 
+      {blocked ? null : <PendingGate />}
       <LogoutButton variant="secondary" />
     </div>
   );

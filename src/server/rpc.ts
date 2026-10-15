@@ -14,3 +14,11 @@ export function unwrap<T>(result: { data: T | null; error: { message?: string; c
   if (result.error) throw toAppError(result.error);
   return result.data as T;
 }
+
+/**
+ * A many-to-one embed from PostgREST. Generated types often say `T[]`; the payload is `T | null`.
+ */
+export function embedded<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}

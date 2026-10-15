@@ -4,7 +4,7 @@ import type { SubscriptionPlan } from '@/lib/domain/types';
 import { unwrap } from '../rpc';
 
 export async function listPlans(db: Db, opts: { onlyActive?: boolean } = {}): Promise<SubscriptionPlan[]> {
-  let query = db.from('subscription_plans').select('*').order('monthly_session_limit').order('name');
+  let query = db.from('subscription_plans').select('id, name, monthly_session_limit, description, is_active').order('monthly_session_limit').order('name');
   if (opts.onlyActive) query = query.eq('is_active', true);
   return unwrap(await query) as SubscriptionPlan[];
 }

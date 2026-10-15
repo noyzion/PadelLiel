@@ -242,6 +242,19 @@ describe('schedule read API', () => {
     expect(row.my_booking_id).toBeNull();
     expect(Object.keys(row).some((k) => k.includes('member'))).toBe(false);
   });
+
+  it('week_has_sessions matches whether get_week_schedule would return rows (drafts only for admins)', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember();
+    const empty = '2026-12-13';
+    const withDraft = '2026-12-20';
+    await db.createSession({ date: '2026-12-21', status: 'DRAFT' });
+
+    expect(await member.call<boolean>('week_has_sessions', { p_week_start: empty })).toBe(false);
+    expect(await admin.call<boolean>('week_has_sessions', { p_week_start: empty })).toBe(false);
+    expect(await member.call<boolean>('week_has_sessions', { p_week_start: withDraft })).toBe(false);
+    expect(await admin.call<boolean>('week_has_sessions', { p_week_start: withDraft })).toBe(true);
+  });
 });
 
 void NEXT_WEEK;

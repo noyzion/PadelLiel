@@ -206,6 +206,9 @@ export async function updateMemberAction(input: unknown): Promise<ActionResult> 
     const { db } = await actionContext('admin');
     await updateMember(db, memberId, patch);
     refresh();
+    // The trainee is sitting on /pending on another device; expire that page so her next load is not stale.
+    revalidatePath('/pending');
+    revalidatePath('/');
   });
 }
 

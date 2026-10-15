@@ -44,6 +44,11 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Approval status can change while this page is open; never serve a stored copy.
+        source: '/pending',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, no-cache, must-revalidate' }],
+      },
+      {
         // The service worker must always be re-checked so a new version is picked up, and it may only
         // load its own origin's scripts.
         source: '/sw.js',

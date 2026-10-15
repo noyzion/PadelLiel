@@ -15,7 +15,7 @@ import {
   weekdayNameHe,
 } from '@/lib/time';
 import { requireMember } from '@/server/auth';
-import { getWeekSchedule } from '@/server/services/booking';
+import { getWeekSchedule, weekHasSessions } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
 
 export const metadata: Metadata = { title: 'לוח אימונים' };
@@ -26,18 +26,48 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   // Members only see this week, plus next week once its sessions have been published.
   const thisWeek = currentWeekStart();
   const nextWeek = shiftWeek(thisWeek, 1);
+  const requestedNext = parseWeekParam(params.week) === nextWeek;
 
-  const [thisWeekSessions, nextWeekSessions, settings, levels] = await Promise.all([
-    getWeekSchedule(db, thisWeek),
-    getWeekSchedule(db, nextWeek),
-    getSettings(db),
-    getSkillLevels(db),
-  ]);
+  // Default view: this week's schedule + a cheap "does next week exist?" check.
+  // Opening next week still loads both, so an empty next week can fall back to this week.
+  const thisWeekSessionsP = getWeekSchedule(db, thisWeek);
+  const settingsP = getSettings(db);
+  const levelsP = getSkillLevels(db);
 
-  const nextWeekOpen = nextWeekSessions.length > 0;
-  const showNextWeek = nextWeekOpen && parseWeekParam(params.week) === nextWeek;
-  const weekStart = showNextWeek ? nextWeek : thisWeek;
-  const sessions = showNextWeek ? nextWeekSessions : thisWeekSessions;
+  let nextWeekOpen: boolean;
+  let showNextWeek: boolean;
+  let weekStart: string;
+  let sessions: Awaited<typeof thisWeekSessionsP>;
+  let settings: Awaited<typeof settingsP>;
+  let levels: Awaited<typeof levelsP>;
+
+  if (requestedNext) {
+    const [thisWeekSessions, nextWeekSessions, s, l] = await Promise.all([
+      thisWeekSessionsP,
+      getWeekSchedule(db, nextWeek),
+      settingsP,
+      levelsP,
+    ]);
+    nextWeekOpen = nextWeekSessions.length > 0;
+    showNextWeek = nextWeekOpen;
+    weekStart = showNextWeek ? nextWeek : thisWeek;
+    sessions = showNextWeek ? nextWeekSessions : thisWeekSessions;
+    settings = s;
+    levels = l;
+  } else {
+    const [thisWeekSessions, hasNext, s, l] = await Promise.all([
+      thisWeekSessionsP,
+      weekHasSessions(db, nextWeek),
+      settingsP,
+      levelsP,
+    ]);
+    nextWeekOpen = hasNext;
+    showNextWeek = false;
+    weekStart = thisWeek;
+    sessions = thisWeekSessions;
+    settings = s;
+    levels = l;
+  }
 
   const now = nowMs();
   const today = israelToday(new Date(now));

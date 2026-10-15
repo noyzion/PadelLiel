@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import type { Db } from '@/lib/supabase/server';
 import { DEFAULT_NOTIFICATION_PREFERENCES, type AppNotification, type NotificationPreferences } from '@/lib/domain/types';
 import { rpc, unwrap } from '../rpc';
@@ -18,11 +19,11 @@ export async function getNotifications(db: Db, limit = NOTIFICATION_PAGE_SIZE): 
   return (rows ?? []) as AppNotification[];
 }
 
-export async function getUnreadCount(db: Db): Promise<number> {
+export const getUnreadCount = cache(async (db: Db): Promise<number> => {
   const { count, error } = await db.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
   if (error) return 0; // the bell must never break a page
   return count ?? 0;
-}
+});
 
 export async function getPreferences(db: Db): Promise<NotificationPreferences> {
   const { data, error } = await db
