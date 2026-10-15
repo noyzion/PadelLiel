@@ -42,6 +42,31 @@ describe('profiles', () => {
     });
   });
 
+  it('a phone-only sign-up (no e-mail) gets a pending trainee profile with the number as E.164', async () => {
+    const id = '22222222-2222-2222-2222-222222222222';
+    // Supabase stores the number of a phone sign-up without the "+", and may leave e-mail empty.
+    await db.sql('insert into auth.users (id, email, phone, raw_user_meta_data) values ($1, $2, $3, $4)', [
+      id,
+      '',
+      '972501234567',
+      JSON.stringify({ full_name: 'Noa Levi', phone: '000', role: 'admin', approval_status: 'approved' }),
+    ]);
+    const r = await db.sql(
+      'select role, approval_status, full_name, phone, email, skill_level_code from public.profiles where id = $1',
+      [id],
+    );
+    expect(r.rows[0]).toEqual({
+      role: 'trainee',
+      approval_status: 'pending',
+      full_name: 'Noa Levi',
+      phone: '+972501234567', // taken from the authenticated number, not from user-supplied metadata
+      email: null,
+      skill_level_code: null,
+    });
+    const subs = await db.sql('select count(*)::int as n from public.member_subscriptions where member_id = $1', [id]);
+    expect(subs.rows[0].n).toBe(0);
+  });
+
   it('a trainee sees only her own profile; the admin sees all', async () => {
     const admin = await db.createAdmin();
     const a = await db.createMember({ name: 'A' });

@@ -52,19 +52,29 @@ The Supabase `service_role` key is **never** used or needed. Do not commit `.env
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events → date-only event drafts → subscription future-start fix) using the SQL Editor. **`20261015000013_subscription_future_start.sql`** fixes a plan scheduled for a future date blocking the member's bookings until it starts (it adds `member_subscriptions.superseded` and replaces four functions; no booking or allowance data changes). **Review `20261014000012_community_events_date_only_drafts.sql` before applying it to a live project** (it makes `community_events.starts_at` nullable, adds `date_start`, `date_end`, `import_key` and the `effective_starts_at` column, and rebuilds `effective_ends_at`; it changes no existing row's data). **Apply it before deploying the app version that uses it**; the previous app version keeps working after it.
+2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events → date-only event drafts → subscription future-start fix → phone sign-up profile trigger) using the SQL Editor. **`20261015000015_phone_signup_profile.sql`** replaces `handle_new_user()` so a phone-only sign-up (no e-mail) gets a correct pending profile; it changes no data. **Apply it before turning phone sign-up on.** **`20261015000013_subscription_future_start.sql`** fixes a plan scheduled for a future date blocking the member's bookings until it starts (it adds `member_subscriptions.superseded` and replaces four functions; no booking or allowance data changes). **Review `20261014000012_community_events_date_only_drafts.sql` before applying it to a live project** (it makes `community_events.starts_at` nullable, adds `date_start`, `date_end`, `import_key` and the `effective_starts_at` column, and rebuilds `effective_ends_at`; it changes no existing row's data). **Apply it before deploying the app version that uses it**; the previous app version keeps working after it.
    The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (once / twice / three times a week = 4 / 8 / 13 sessions per month) and default settings (8h cutoff, capacity 4, 07:00-08:00 and 08:00-09:00).
 3. **Authentication → URL Configuration**
    - Site URL: your app URL (e.g. `https://padel-liel.vercel.app`).
    - Redirect URLs: add `https://<your-app>/auth/callback` and `http://localhost:3000/auth/callback`.
-4. **Authentication → Providers → Email**: keep e-mail sign-in enabled. Keeping "Confirm email" on is recommended; new accounts are `pending` until the coach approves them anyway.
-5. Register the admin account through the app's `/register` page, confirm the e-mail, then promote it in the SQL Editor:
+4. **Authentication → Sign In / Providers → Phone** (trainees sign up with a phone number and a password, no e-mail and no SMS code):
+   - Turn **Enable Phone provider** ON.
+   - Turn **Enable phone confirmations** OFF. This is what makes sign-up instant: no SMS is sent, so no SMS provider is needed. While it is ON, registration shows "ההרשמה אינה זמינה כרגע" and the server log names this setting. (`GET <project-url>/auth/v1/settings` reports it as `external.phone` and `phone_autoconfirm`; both must be `true`.)
+   - If the dashboard will not save the Phone form without an SMS provider, choose one and enter placeholder credentials. This was not verified: none is ever called while confirmations are off.
+   - Keep the **Email** provider enabled: the coach signs in with an e-mail address, and so do members who registered before phone sign-up.
+   - **Authentication → Sign In / Providers → Email → Password requirements**: set the minimum length (and, on Pro, leaked-password protection). The app asks for at least 8 characters and shows Supabase's "weak password" answer in Hebrew.
+   - **Authentication → Attack Protection**: sign-up is open to anyone with the link, so keep the default rate limits and consider enabling CAPTCHA (Turnstile).
+5. Create the admin account in **Authentication → Users → Add user → Create new user** (the coach's e-mail and a password, with **Auto Confirm User** ticked; `/register` no longer has an e-mail field), then promote it in the SQL Editor:
 
 ```sql
 update public.profiles
 set role = 'admin', approval_status = 'approved'
 where email = 'admin@example.com';   -- use the real address
 ```
+
+The coach signs in on `/login` with **התחברות עם אימייל**.
+
+**Phone sign-up caveats.** The number is not verified (no SMS), so anyone can register with any number; the coach's approval is the gate, and a new account can do nothing until approved. A number can only be registered once (Supabase enforces it). Numbers are stored as E.164 (`+9725XXXXXXXX`) and shown as `050-123-4567`. There is no self-service password reset for phone accounts (that needs SMS): the team has to help, and an admin "set a new password" action is not built (it would need the `service_role` key, which this app deliberately does not hold). Members with an e-mail address can still use the e-mail reset link.
 
 This is the only manual SQL step. Everything else is done from the admin screens.
 
@@ -74,7 +84,7 @@ This is the only manual SQL step. Everything else is done from the admin screens
 
 ### First-run checklist (because the live integration is unverified)
 
-1. Register a trainee → confirm e-mail → she lands on the "waiting for approval" page.
+1. Register a trainee (name, phone, password) → she lands on the "ההרשמה שלך התקבלה" page straight away. Then log out and log back in with the phone number and password.
 2. Log in as the admin → **מתאמנות** → approve the trainee, set her level, assign a plan.
 3. **לוח אימונים** → create sessions for next week → publish.
 4. Log in as the trainee → book → cancel → check the allowance card.

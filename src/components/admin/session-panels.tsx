@@ -24,6 +24,7 @@ import { Modal } from '@/components/ui/modal';
 import { useServerAction } from '@/components/use-server-action';
 import { WAITLIST_STATUS_LABEL_HE, levelLabel } from '@/lib/domain/labels';
 import type { BookingStatus, SessionStatus, SkillLevel } from '@/lib/domain/types';
+import { formatIsraeliPhone } from '@/lib/phone';
 import { formatInstantHe } from '@/lib/time';
 import type { RosterEntry, WaitlistRow } from '@/server/services/admin-sessions';
 
@@ -212,7 +213,7 @@ export function Roster({ roster, hasStarted, levels }: { roster: RosterEntry[]; 
               <div>
                 <p className="font-semibold">{r.member?.full_name ?? '-'}</p>
                 <p className="text-caption text-muted" dir="ltr">
-                  {r.member?.phone ?? ''}
+                  {formatIsraeliPhone(r.member?.phone)}
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-1.5">

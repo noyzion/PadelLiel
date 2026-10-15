@@ -7,6 +7,7 @@ import { BookingStatusBadge } from '@/components/domain/badges';
 import { Badge, Card, PageHeader, ProgressBar, SectionHeading } from '@/components/ui/card';
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
+import { formatIsraeliPhone } from '@/lib/phone';
 import type { Allowance } from '@/lib/domain/types';
 import { currentMonthStart, formatDateHe, formatInstantHe, formatMonthHe, formatTimeRange, israelToday, shiftMonth } from '@/lib/time';
 import { requireAdmin } from '@/server/auth';
@@ -61,7 +62,14 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
         <BackLink href="/admin/members">חזרה לרשימת המתאמנות</BackLink>
         <PageHeader title={profile.full_name} description={levelLabel(profile.skill_level_code, levels)} />
         <p className="text-small text-muted">
-          <span dir="ltr">{profile.phone ?? '-'}</span> · <span dir="ltr">{profile.email ?? '-'}</span> · הצטרפה {formatInstantHe(profile.created_at)}
+          <span dir="ltr">{formatIsraeliPhone(profile.phone) || '-'}</span>
+          {profile.email ? (
+            <>
+              {' · '}
+              <span dir="ltr">{profile.email}</span>
+            </>
+          ) : null}
+          {' · '}הצטרפה {formatInstantHe(profile.created_at)}
         </p>
       </div>
 

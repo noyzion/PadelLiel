@@ -7,6 +7,7 @@ import { FilterChips } from '@/components/ui/filter-chips';
 import { SearchField } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { levelLabel } from '@/lib/domain/labels';
+import { formatIsraeliPhone } from '@/lib/phone';
 import type { ApprovalStatus, MemberOverview } from '@/lib/domain/types';
 import { currentMonthStart } from '@/lib/time';
 import { requireAdmin } from '@/server/auth';
@@ -52,7 +53,9 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
   const filtered = members.filter((m) => {
     if (status !== 'all' && m.approval_status !== status) return false;
     if (!needle) return true;
-    return [m.full_name, m.phone ?? '', m.email ?? ''].some((v) => v.toLowerCase().includes(needle));
+    // Phones are stored as +972..., shown as 050-123-4567; both spellings (and the dash-less one) must be searchable.
+    const shown = formatIsraeliPhone(m.phone);
+    return [m.full_name, m.phone ?? '', shown, shown.replace(/\D/g, ''), m.email ?? ''].some((v) => v.toLowerCase().includes(needle));
   });
 
   const hrefFor = (value: string) => {
@@ -94,7 +97,13 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                   <div className="min-w-0">
                     <p className="truncate text-body font-semibold text-navy-900">{m.full_name}</p>
                     <p className="truncate text-caption text-muted">
-                      <span dir="ltr">{m.phone ?? '-'}</span> · <span dir="ltr">{m.email ?? '-'}</span>
+                      <span dir="ltr">{formatIsraeliPhone(m.phone) || '-'}</span>
+                      {m.email ? (
+                        <>
+                          {' · '}
+                          <span dir="ltr">{m.email}</span>
+                        </>
+                      ) : null}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -127,12 +136,14 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                     <Link href={`/admin/members/${m.id}`} className="text-navy-900 underline-offset-4 hover:underline">
                       {m.full_name}
                     </Link>
-                    <div className="text-caption font-normal text-muted" dir="ltr">
-                      {m.email ?? '-'}
-                    </div>
+                    {m.email ? (
+                      <div className="text-caption font-normal text-muted" dir="ltr">
+                        {m.email}
+                      </div>
+                    ) : null}
                   </Td>
                   <Td>
-                    <span dir="ltr">{m.phone ?? '-'}</span>
+                    <span dir="ltr">{formatIsraeliPhone(m.phone) || '-'}</span>
                   </Td>
                   <Td>
                     <SkillLevelBadge label={levelLabel(m.skill_level_code, levels)} />

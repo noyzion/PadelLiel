@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AuthHeading } from '@/components/auth/auth-heading';
 import { LoginForm } from '@/components/auth/auth-forms';
 
 export const metadata: Metadata = { title: 'התחברות' };
@@ -11,7 +12,7 @@ export default async function LoginPage({
   const { next, error } = await searchParams;
   return (
     <>
-      <h1 className="mb-5 text-title font-semibold">ברוכה הבאה</h1>
+      <AuthHeading title="ברוכה הבאה">התחברי עם מספר הטלפון והסיסמה שלך.</AuthHeading>
       <LoginForm next={next} notice={error === 'link' ? 'link' : undefined} />
     </>
   );

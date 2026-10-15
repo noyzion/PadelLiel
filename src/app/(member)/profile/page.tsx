@@ -6,6 +6,7 @@ import { SubscriptionSummary } from '@/components/member/subscription-summary';
 import { Badge, Card, SectionHeading } from '@/components/ui/card';
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
+import { formatIsraeliPhone } from '@/lib/phone';
 import { currentMonthStart, formatMonthHe, shiftMonth } from '@/lib/time';
 import { requireMember } from '@/server/auth';
 import { getAllowance, getMonthlyUsage } from '@/server/services/booking';
@@ -39,7 +40,7 @@ export default async function ProfilePage() {
           <div className="min-w-0">
             <h1 className="truncate text-title font-semibold">{profile.full_name || 'הפרופיל שלי'}</h1>
             <p className="truncate text-small text-muted" dir="ltr">
-              {profile.email}
+              {profile.email ?? formatIsraeliPhone(profile.phone)}
             </p>
           </div>
         </div>
@@ -62,7 +63,7 @@ export default async function ProfilePage() {
       <section aria-labelledby="personal" className="flex flex-col gap-3">
         <SectionHeading id="personal">פרטים אישיים</SectionHeading>
         <Card>
-          <ProfileForm fullName={profile.full_name} phone={profile.phone ?? ''} email={profile.email ?? ''} />
+          <ProfileForm fullName={profile.full_name} phone={formatIsraeliPhone(profile.phone)} email={profile.email ?? ''} />
         </Card>
       </section>
 

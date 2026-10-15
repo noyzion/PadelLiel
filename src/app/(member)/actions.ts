@@ -58,14 +58,17 @@ export async function leaveWaitlistAction(input: { entryId: string }): Promise<A
   });
 }
 
-/** Trainees may only change their own name and phone (column-level grant + RLS enforce this in the database). */
-export async function updateProfileAction(input: { fullName: string; phone: string }): Promise<ActionResult> {
+/**
+ * Trainees may only change their own name and contact phone (column-level grant + RLS enforce this in the database).
+ * An account without an e-mail address signs in with its phone number, so that number is left alone here: changing the
+ * contact number only would make it silently differ from the login.
+ */
+export async function updateProfileAction(input: { fullName: string; phone?: string }): Promise<ActionResult> {
   return runAction(async () => {
     const { fullName, phone } = parseInput(profileUpdateSchema, input);
-    const { db, userId } = await actionContext('member');
-    const rows = unwrap(
-      await db.from('profiles').update({ full_name: fullName, phone }).eq('id', userId).select('id'),
-    ) as { id: string }[];
+    const { db, userId, profile } = await actionContext('member');
+    const changes = profile.email && phone ? { full_name: fullName, phone } : { full_name: fullName };
+    const rows = unwrap(await db.from('profiles').update(changes).eq('id', userId).select('id')) as { id: string }[];
     if (rows.length !== 1) throw new AppError('NOT_AUTHORIZED');
     refresh();
   });

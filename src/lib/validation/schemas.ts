@@ -3,6 +3,7 @@ import { slotsOverlap } from '@/lib/domain/schedule-generator';
 import { EVENT_DESCRIPTION_MAX, EVENT_LOCATION_MAX, EVENT_TITLE_MAX } from '@/lib/domain/events';
 import { IMPORT_CONFIRM_PHRASE } from '@/lib/domain/event-import';
 import { WHEN_INVALID, isValidWhenValue, parseEventWhen } from '@/lib/domain/event-when';
+import { normalizeIsraeliMobile } from '@/lib/phone';
 import { isValidDateString } from '@/lib/time';
 
 /** Runtime validation for every untrusted input that reaches a server action. */
@@ -29,15 +30,43 @@ const phone = z
 export const emailSchema = z.string().trim().toLowerCase().email('כתובת אימייל לא תקינה').max(254);
 export const passwordSchema = z.string().min(8, 'הסיסמה חייבת להכיל לפחות 8 תווים').max(72, 'הסיסמה ארוכה מדי');
 
+export const PHONE_INVALID_MESSAGE = 'מספר הטלפון לא נראה תקין. נסי מספר נייד ישראלי, למשל 050-123-4567';
+
+/** An Israeli mobile number typed any reasonable way; the parsed value is canonical E.164 (`+9725XXXXXXXX`). */
+export const israeliMobileSchema = z
+  .string()
+  .trim()
+  .min(1, 'יש להזין מספר טלפון')
+  .max(30, PHONE_INVALID_MESSAGE)
+  .refine((v) => normalizeIsraeliMobile(v) !== null, PHONE_INVALID_MESSAGE)
+  .transform((v) => normalizeIsraeliMobile(v) ?? v);
+
+/** What a person typed to sign in: a phone number (trainees) or an e-mail address (the coach and older accounts). */
+export type LoginIdentifier = { phone: string; email?: never } | { email: string; phone?: never };
+
+const loginIdentifier = z
+  .string()
+  .trim()
+  .min(1, 'יש להזין מספר טלפון')
+  .max(254, PHONE_INVALID_MESSAGE)
+  .refine(
+    (v) => (v.includes('@') ? emailSchema.safeParse(v).success : normalizeIsraeliMobile(v) !== null),
+    { error: (issue) => (String(issue.input).includes('@') ? 'כתובת אימייל לא תקינה' : PHONE_INVALID_MESSAGE) },
+  )
+  .transform((v): LoginIdentifier => {
+    if (v.includes('@')) return { email: v.toLowerCase() };
+    return { phone: normalizeIsraeliMobile(v) ?? v };
+  });
+
 export const loginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, 'יש להזין סיסמה').max(72),
+  identifier: loginIdentifier,
+  password: z.string().min(1, 'יש להזין סיסמה').max(72, 'הסיסמה ארוכה מדי'),
 });
 
+/** Trainees register with a name, a phone number and a password. No e-mail address. */
 export const registerSchema = z.object({
   fullName: z.string().trim().min(2, 'יש להזין שם מלא').max(80, 'השם ארוך מדי'),
-  phone,
-  email: emailSchema,
+  phone: israeliMobileSchema,
   password: passwordSchema,
 });
 
@@ -45,7 +74,8 @@ export const forgotPasswordSchema = z.object({ email: emailSchema });
 export const resetPasswordSchema = z.object({ password: passwordSchema });
 export const profileUpdateSchema = z.object({
   fullName: z.string().trim().min(2, 'יש להזין שם מלא').max(80, 'השם ארוך מדי'),
-  phone,
+  /** Omitted for accounts that sign in with their phone number: that number is the login and is not editable here. */
+  phone: phone.optional(),
 });
 
 export const bookSessionSchema = z.object({ sessionId: uuid, ackLatePolicy: z.boolean().default(false) });

@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
+import { AuthHeading } from '@/components/auth/auth-heading';
 import { RegisterForm } from '@/components/auth/auth-forms';
 
-export const metadata: Metadata = { title: 'הרשמה' };
+export const metadata: Metadata = { title: 'הצטרפות לקהילה' };
 
 export default function RegisterPage() {
   return (
     <>
-      <h1 className="mb-1 text-title font-semibold">הצטרפות לקהילה</h1>
-      <p className="mb-5 text-small text-muted">אחרי ההרשמה המאמנת תאשר אותך ותגדיר את המנוי והרמה שלך.</p>
+      <AuthHeading title="הצטרפות לקהילה">שם, טלפון וסיסמה, וזהו. אין צורך באימייל.</AuthHeading>
       <RegisterForm />
     </>
   );

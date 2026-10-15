@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
+import { AuthHeading } from '@/components/auth/auth-heading';
 import { ResetPasswordForm } from '@/components/auth/auth-forms';
 
-export const metadata: Metadata = { title: 'סיסמה חדשה' };
+export const metadata: Metadata = { title: 'איפוס סיסמה' };
 
 export default function ResetPasswordPage() {
   return (
     <>
-      <h1 className="mb-5 text-title font-semibold">בחירת סיסמה חדשה</h1>
+      <AuthHeading title="בחירת סיסמה חדשה" />
       <ResetPasswordForm />
     </>
   );

@@ -1,12 +1,12 @@
-import { Hourglass } from 'lucide-react';
+import { CircleCheck, Hourglass } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { PadelRackets } from '@/components/brand';
 import { LogoutButton } from '@/components/logout-button';
 import { Alert } from '@/components/ui/card';
 import { requireUser } from '@/server/auth';
 
-export const metadata: Metadata = { title: 'ממתינה לאישור' };
+export const metadata: Metadata = { title: 'ההרשמה התקבלה' };
+
 export default async function PendingPage() {
   const { profile } = await requireUser();
   if (profile.role === 'admin') redirect('/admin');
@@ -14,36 +14,43 @@ export default async function PendingPage() {
 
   const inactive = profile.approval_status === 'inactive';
   const rejected = profile.approval_status === 'rejected';
-  const name = profile.full_name.split(' ')[0];
+  const blocked = rejected || inactive;
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col items-center gap-3 text-center">
-        {rejected || inactive ? (
-          <span className="grid size-14 place-items-center rounded-full bg-danger-soft text-danger" aria-hidden="true">
-            <Hourglass className="size-7" />
-          </span>
-        ) : (
-          <PadelRackets className="w-24 text-pink-200" />
+    <div className="flex flex-col items-center gap-6 py-4 text-center sm:py-0">
+      <span
+        className={
+          blocked
+            ? 'grid size-16 place-items-center rounded-full bg-danger-soft text-danger'
+            : 'grid size-16 place-items-center rounded-full bg-success-soft text-success'
+        }
+        aria-hidden="true"
+      >
+        {blocked ? <Hourglass className="size-8" /> : <CircleCheck className="size-8" />}
+      </span>
+
+      <div className="flex flex-col gap-2">
+        <h1 className="text-title font-semibold">
+          {inactive ? 'החשבון אינו פעיל' : rejected ? 'הבקשה לא אושרה' : 'ההרשמה שלך התקבלה'}
+        </h1>
+        {blocked ? null : (
+          <p className="text-body text-muted">
+            איזה כיף שהצטרפת! ליאל תאשר את החשבון שלך בקרוב, ואז תוכלי להתחיל לבחור אימונים.
+          </p>
         )}
-        <h1 className="text-title font-semibold">{inactive ? 'החשבון אינו פעיל' : rejected ? 'הבקשה לא אושרה' : `תודה שהצטרפת${name ? `, ${name}` : ''}`}</h1>
       </div>
 
       {inactive ? (
-        <Alert tone="red">החשבון שלך הוגדר כלא פעיל. אם זו טעות או שאת רוצה לחזור להתאמן, אפשר לפנות ישירות לצוות שלנו.</Alert>
+        <Alert tone="red" className="text-start">
+          החשבון שלך הוגדר כלא פעיל. אם זו טעות או שאת רוצה לחזור להתאמן, אפשר לפנות ישירות לצוות שלנו.
+        </Alert>
       ) : rejected ? (
-        <Alert tone="red">אם זו טעות, אפשר לפנות ישירות לצוות שלנו.</Alert>
-      ) : (
-        <>
-          <p className="text-center text-body text-muted">
-            הצוות שלנו יאשר את הצטרפותך, יגדיר לך רמה ומנוי, ואז תוכלי להירשם לאימונים. אין צורך לעשות שום דבר נוסף.
-          </p>
-          <Alert tone="blue" title="מה הלאה?">
-            אפשר לסגור את העמוד ולחזור מאוחר יותר. ברגע שהחשבון יאושר, תוכלי להתחבר ולהירשם לאימונים.
-          </Alert>
-        </>
-      )}
-      <LogoutButton variant="secondary" className="self-center" />
+        <Alert tone="red" className="text-start">
+          אם זו טעות, אפשר לפנות ישירות לצוות שלנו.
+        </Alert>
+      ) : null}
+
+      <LogoutButton variant="secondary" />
     </div>
   );
 }

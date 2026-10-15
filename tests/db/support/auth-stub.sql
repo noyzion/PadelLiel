@@ -10,6 +10,7 @@ create schema auth;
 create table auth.users (
   id                  uuid primary key default gen_random_uuid(),
   email               text,
+  phone               text, -- Supabase keeps a phone sign-up's number here, without the leading "+"
   raw_user_meta_data  jsonb not null default '{}'::jsonb
 );
 

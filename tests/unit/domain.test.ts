@@ -6,6 +6,7 @@ import {
   adjustAllowanceSchema,
   assignSubscriptionSchema,
   bulkCreateSchema,
+  loginSchema,
   registerSchema,
   sessionFormSchema,
   settingsSchema,
@@ -102,11 +103,24 @@ describe('WhatsApp message', () => {
 });
 
 describe('input validation', () => {
-  it('registration requires name, phone, email and a strong-enough password', () => {
-    const ok = registerSchema.safeParse({ fullName: 'דנה כהן', phone: '050-1234567', email: ' Dana@Example.com ', password: 'password1' });
-    expect(ok.success && ok.data.email).toBe('dana@example.com');
-    expect(registerSchema.safeParse({ fullName: 'ד', phone: '050', email: 'x', password: '1' }).success).toBe(false);
-    expect(registerSchema.safeParse({ fullName: 'דנה', phone: 'abc-defgh', email: 'a@b.co', password: 'password1' }).success).toBe(false);
+  it('registration needs a name, an Israeli mobile number and a strong-enough password (no e-mail)', () => {
+    const ok = registerSchema.safeParse({ fullName: ' דנה כהן ', phone: '050-123-4567', password: 'password1' });
+    expect(ok.success && ok.data).toEqual({ fullName: 'דנה כהן', phone: '+972501234567', password: 'password1' });
+    expect(registerSchema.safeParse({ fullName: 'ד', phone: '050-123-4567', password: 'password1' }).success).toBe(false);
+    expect(registerSchema.safeParse({ fullName: 'דנה', phone: '050', password: 'password1' }).success).toBe(false);
+    expect(registerSchema.safeParse({ fullName: 'דנה', phone: '03-123-4567', password: 'password1' }).success).toBe(false);
+    expect(registerSchema.safeParse({ fullName: 'דנה', phone: 'abc-defgh', password: 'password1' }).success).toBe(false);
+    expect(registerSchema.safeParse({ fullName: 'דנה', phone: '050-123-4567', password: '1' }).success).toBe(false);
+  });
+
+  it('login accepts a phone number (any format) or, for the coach and older accounts, an e-mail address', () => {
+    const phone = loginSchema.safeParse({ identifier: '050 123 4567', password: 'x' });
+    expect(phone.success && phone.data.identifier).toEqual({ phone: '+972501234567' });
+    const email = loginSchema.safeParse({ identifier: ' Coach@Example.com ', password: 'x' });
+    expect(email.success && email.data.identifier).toEqual({ email: 'coach@example.com' });
+    expect(loginSchema.safeParse({ identifier: 'not a number', password: 'x' }).success).toBe(false);
+    expect(loginSchema.safeParse({ identifier: 'a@b', password: 'x' }).success).toBe(false);
+    expect(loginSchema.safeParse({ identifier: '050-123-4567', password: '' }).success).toBe(false);
   });
 
   it('session form validates times, capacity and ordering', () => {
