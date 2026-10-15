@@ -1,6 +1,7 @@
-import { CalendarPlus, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import type { Metadata } from 'next';
 import { BookingStatusBadge, SkillLevelBadge } from '@/components/domain/badges';
+import { AddToCalendarLink } from '@/components/member/add-to-calendar-link';
 import { CancelBookingButton } from '@/components/member/cancel-booking';
 import { Alert, Card, EmptyState, PageHeader, SectionHeading } from '@/components/ui/card';
 import { VENUE_NAME } from '@/lib/brand';
@@ -65,16 +66,7 @@ function BookingCard({
         {VENUE_NAME}
       </p>
       {note ? <p className="text-small text-muted">{note}</p> : null}
-      {b.status === 'CONFIRMED' && b.session_status === 'PUBLISHED' ? (
-        // A plain link (not next/link): it downloads a file, so it must never be prefetched.
-        <a
-          href={`/bookings/${b.booking_id}/calendar`}
-          className="inline-flex min-h-10 items-center gap-2 self-start rounded-control px-2 text-small font-semibold text-ocean-700 hover:bg-ocean-50 focus-visible:outline-3"
-        >
-          <CalendarPlus className="size-4" aria-hidden="true" />
-          הוספה ליומן
-        </a>
-      ) : null}
+      {b.status === 'CONFIRMED' && b.session_status === 'PUBLISHED' ? <AddToCalendarLink bookingId={b.booking_id} /> : null}
       {b.can_cancel ? (
         <div className="flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-caption text-muted">
@@ -116,6 +108,11 @@ export default async function MyBookingsPage() {
           <Alert tone="blue" title="מדיניות ביטול">
             ביטול של לפחות {hours} שעות לפני האימון מחזיר אותו למכסה החודשית. ביטול מאוחר יותר משחרר את המקום, אבל האימון ממשיך להיספר במכסה.
           </Alert>
+          {upcoming.length > 0 ? (
+            <p className="text-caption text-muted">
+              אירוע שמיובא ליומן הוא עותק: אם האימון משתנה או מתבטל, העדכון מגיע באפליקציה ולא ביומן.
+            </p>
+          ) : null}
           {sections.map((s) => (
             <section key={s.id} aria-labelledby={`sec-${s.id}`} className="flex flex-col gap-3">
               <SectionHeading id={`sec-${s.id}`} count={s.items.length}>

@@ -131,12 +131,35 @@ describe('booking confirmation', () => {
     });
   });
 
-  it('is created for a booking the coach assigns and for a waiting-list promotion as well', async () => {
+  it('is created for a booking the coach assigns', async () => {
     const admin = await db.createAdmin();
     const member = await db.createMember();
     const session = await db.createSession({ date: MONDAY });
     await admin.rpc('admin_assign_booking', { p_session_id: session, p_member_id: member.userId });
     expect(await notificationsOf(member)).toHaveLength(1);
+    expect((await notificationsOf(member))[0].type).toBe('booking_confirmed');
+  });
+
+  it('is created when a waiting-list entry is promoted into a booking', async () => {
+    const admin = await db.createAdmin();
+    const holder = await db.createMember();
+    const waiter = await db.createMember();
+    const session = await db.createSession({ date: MONDAY, capacity: 1 });
+    const held = await holder.book(session);
+    await waiter.call('join_waitlist', { p_session_id: session });
+    expect(await notificationsOf(waiter)).toHaveLength(0);
+
+    await holder.cancel(held);
+    const entry = (
+      await db.sql<{ id: string }>('select id from public.waitlist_entries where member_id = $1 and status = $2', [
+        waiter.userId,
+        'WAITING',
+      ])
+    ).rows[0].id;
+    await admin.call('admin_promote_waitlist_entry', { p_entry_id: entry });
+    const list = await notificationsOf(waiter);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ type: 'booking_confirmed', title: 'נרשמת לאימון בהצלחה' });
   });
 
   it('creates NOTHING for a booking that fails', async () => {

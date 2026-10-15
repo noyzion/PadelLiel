@@ -1,5 +1,6 @@
 import { MapPin } from 'lucide-react';
 import { SkillLevelBadge } from '@/components/domain/badges';
+import { AddToCalendarLink } from '@/components/member/add-to-calendar-link';
 import { CancelBookingButton } from '@/components/member/cancel-booking';
 import { Badge, Card } from '@/components/ui/card';
 import { VENUE_NAME } from '@/lib/brand';
@@ -35,6 +36,9 @@ export function NextSessionCard({
         <MapPin className="size-4 shrink-0 text-ocean-700" aria-hidden="true" />
         {VENUE_NAME}
       </p>
+      {booking.status === 'CONFIRMED' && booking.session_status === 'PUBLISHED' ? (
+        <AddToCalendarLink bookingId={booking.booking_id} />
+      ) : null}
       <div className="flex flex-col gap-3 border-t border-ocean-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-caption text-muted">
           ביטול שמחזיר את האימון למכסה אפשרי עד <span className="num font-semibold text-navy-900">{formatInstantHe(booking.cancellation_deadline)}</span>

@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { bookSessionAction, joinWaitlistAction, leaveWaitlistAction } from '@/app/(member)/actions';
 import { CapacityIndicator } from '@/components/domain/capacity-indicator';
 import { SkillLevelBadge } from '@/components/domain/badges';
+import { AddToCalendarLink } from '@/components/member/add-to-calendar-link';
 import { CancelBookingButton } from '@/components/member/cancel-booking';
 import { Button } from '@/components/ui/button';
 import { Alert, Badge } from '@/components/ui/card';
@@ -129,14 +130,17 @@ export function SessionCard({
 
       <div className="mt-auto flex flex-col gap-2">
         {isBooked && session.my_booking_id && session.my_booking_status === 'CONFIRMED' && !finished ? (
-          <CancelBookingButton
-            bookingId={session.my_booking_id}
-            isLateWindow={session.is_late_window}
-            cutoffHours={cutoffHours}
-            label={label}
-            size="md"
-            className="w-full"
-          />
+          <>
+            <AddToCalendarLink bookingId={session.my_booking_id} className="self-center" />
+            <CancelBookingButton
+              bookingId={session.my_booking_id}
+              isLateWindow={session.is_late_window}
+              cutoffHours={cutoffHours}
+              label={label}
+              size="md"
+              className="w-full"
+            />
+          </>
         ) : null}
 
         {canBook ? (

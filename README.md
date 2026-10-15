@@ -12,12 +12,13 @@ message with the booking link to copy/share.
 
 | Area | Status |
 |---|---|
-| SQL business rules, RLS, privileges, concurrency | **Verified** - 164 tests against a real PostgreSQL 18 (`npm run test:db`), including the community-events RLS and storage policies |
-| Pure TypeScript (time, validation, error mapping, generators) | **Verified** - 56 unit tests |
+| SQL business rules, RLS, privileges, concurrency | **Verified** - 261 tests against a real PostgreSQL 18 (`npm run test:db`), including notifications, community-events RLS and storage policies |
+| Pure TypeScript (time, validation, error mapping, generators, Push/calendar helpers) | **Verified** - 172 unit tests |
 | Type check, lint, production build | **Verified** (`npm run typecheck`, `npm run lint`, `npm run build`) |
 | App boots without env and redirects to `/setup`; `/setup` renders RTL Hebrew | **Verified** (smoke test against `next start`) |
 | Against a **live Supabase project**: Auth e-mail flows, PostgREST RPC argument shapes, `.select()` behaviour, RLS through PostgREST | **NOT verified** - no Supabase credentials were available while building. Follow the first-run checklist below. |
 | In-browser UI behaviour (modals, dialogs, RTL layout on devices) | **NOT verified** - no browser automation was run |
+| Web Push on a real Android / iPhone Home Screen app | **NOT verified** - do not claim phone Push works until it has been tried on a device after VAPID + cron are set (see `docs/NOTIFICATIONS.md`) |
 
 The annual-events import (`/admin/events/import`) and the date-only draft migration are verified against the embedded PostgreSQL only (RLS, grants, constraints, idempotency, preserved edits). They have **NOT** been run against a live Supabase project: the migration has not been applied there, and PostgREST behaviour for the new columns (including the "column does not exist" detection before the migration) is unverified.
 
@@ -44,15 +45,21 @@ Without `.env.local` the app redirects every page to `/setup`, which explains wh
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API | public |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | same page (publishable / anon key) | public. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is accepted as a fallback name |
 | `NEXT_PUBLIC_APP_URL` | your deployed URL (`http://localhost:3000` locally) | used in auth e-mail links and the WhatsApp message |
-
 | `ALLOW_EVENT_IMPORT` | server only (optional) | set to `1` to let `/admin/events/import` write the annual events. Leave unset otherwise; the dry-run works without it. Never a `NEXT_PUBLIC_` variable |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | generated (`npm run notifications:setup`) | public. Without it, the in-app notification center still works; phone Push does not |
+| `VAPID_PRIVATE_KEY` | same script | **server only**. Never a `NEXT_PUBLIC_` variable |
+| `VAPID_SUBJECT` | `mailto:` of the operator | identifies the sender to push services |
+| `NOTIFICATION_DISPATCH_SECRET` | same script, ≥ 32 characters | **server only**. Authorises `/api/notifications/dispatch`. Store only its SHA-256 in the database (the script prints the SQL) |
+
+See `docs/NOTIFICATIONS.md` for VAPID setup, the dispatcher cron job, iOS Home Screen install, and rollback.
 
 The Supabase `service_role` key is **never** used or needed. Do not commit `.env.local`.
 
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events → date-only event drafts → subscription future-start fix → phone sign-up profile trigger) using the SQL Editor. **`20261015000015_phone_signup_profile.sql`** replaces `handle_new_user()` so a phone-only sign-up (no e-mail) gets a correct pending profile; it changes no data. **Apply it before turning phone sign-up on.** **`20261015000013_subscription_future_start.sql`** fixes a plan scheduled for a future date blocking the member's bookings until it starts (it adds `member_subscriptions.superseded` and replaces four functions; no booking or allowance data changes). **Review `20261014000012_community_events_date_only_drafts.sql` before applying it to a live project** (it makes `community_events.starts_at` nullable, adds `date_start`, `date_end`, `import_key` and the `effective_starts_at` column, and rebuilds `effective_ends_at`; it changes no existing row's data). **Apply it before deploying the app version that uses it**; the previous app version keeps working after it.
+2. Apply the SQL migrations **in order** (core schema → booking engine → RLS and grants → seed defaults → admin member list → monthly quota → single court → community events → date-only event drafts → subscription future-start fix → member inactive/delete → phone sign-up profile trigger → notifications → admin reset member password) using the SQL Editor. **`20261015000015_phone_signup_profile.sql`** replaces `handle_new_user()` so a phone-only sign-up (no e-mail) gets a correct pending profile; it changes no data. **Apply it before turning phone sign-up on.** **`20261015000013_subscription_future_start.sql`** fixes a plan scheduled for a future date blocking the member's bookings until it starts (it adds `member_subscriptions.superseded` and replaces four functions; no booking or allowance data changes). **Review `20261014000012_community_events_date_only_drafts.sql` before applying it to a live project** (it makes `community_events.starts_at` nullable, adds `date_start`, `date_end`, `import_key` and the `effective_starts_at` column, and rebuilds `effective_ends_at`; it changes no existing row's data). **Apply it before deploying the app version that uses it**; the previous app version keeps working after it.
+   **`20261016000016_notifications.sql`** adds the in-app notification center, Push subscriptions and the reminder outbox. It does not change booking, cancellation or quota rules. After applying it, run `npm run notifications:setup` and follow `docs/NOTIFICATIONS.md` (VAPID keys, secret hash, cron). Without that follow-up, the bell still works once the app is deployed, but phone Push and timed reminders do not fire.
    The migration files are not part of this repository and are kept locally. The seed adds the three skill levels, three starter plans (once / twice / three times a week = 4 / 8 / 13 sessions per month) and default settings (8h cutoff, capacity 4, 07:00-08:00 and 08:00-09:00).
 3. **Authentication → URL Configuration**
    - Site URL: your app URL (e.g. `https://padel-liel.vercel.app`).
@@ -92,7 +99,7 @@ This is the only manual SQL step. Everything else is done from the admin screens
 ## Deployment (Vercel)
 
 1. Push the repo to GitHub and import it in Vercel (framework preset: Next.js).
-2. Set the three environment variables above for Production (and Preview if desired). `NEXT_PUBLIC_APP_URL` must be the final public URL.
+2. Set the environment variables above for Production (and Preview if desired). `NEXT_PUBLIC_APP_URL` must be the final public URL. For phone Push, also set the VAPID variables and `NOTIFICATION_DISPATCH_SECRET`, then follow `docs/NOTIFICATIONS.md` (secret hash + cron).
 3. Deploy. Then update the Supabase Site URL and Redirect URLs to the deployed domain.
 
 ## Scripts
@@ -105,6 +112,7 @@ This is the only manual SQL step. Everything else is done from the admin screens
 | `npm test` | unit + DB tests |
 | `npm run test:unit` | pure TypeScript tests (fast) |
 | `npm run events:import:dry-run` | offline dry run of the annual-events import: validates `data/padelliel_annual_events_2026_2027.json` and prints the 12 planned drafts. No database connection, writes nothing |
+| `npm run notifications:setup` | prints VAPID keys, a dispatcher secret and the SQL that stores only the secret's SHA-256. Writes nothing |
 | `npm run test:db` | SQL tests against an embedded PostgreSQL 18 - no Docker or Supabase needed (first run downloads the Postgres binary) |
 
 ## Using the app
@@ -112,6 +120,9 @@ This is the only manual SQL step. Everything else is done from the admin screens
 **Trainee:** home (this month's quota and upcoming sessions) → schedule (book, join the waiting list, cancel) → my sessions → profile.
 A cancellation up to 8 hours before the session returns the session to the monthly quota; after that the spot is released but the session
 still counts. The app asks for explicit confirmation before a late cancellation, and before booking a session that starts in under 8 hours.
+The header bell opens `/notifications`. Profile → **הגדרות התראות** turns phone Push on (explicit tap, never on page load) and controls
+reminders. Confirmed bookings have **הוספה ליומן** (an `.ics` file; a copy imported into a calendar is not updated if the booking later
+changes). On iPhone, Push requires adding the app to the Home Screen first (iOS 16.4+).
 
 **Coach (admin):** dashboard → schedule (bulk-create by days × time slots × levels, duplicate a week, publish, WhatsApp message) → session page
 (roster, attendance, manual assignment, waiting list, cancel session) → members (approve, level, plan, manual allowance adjustments) →
