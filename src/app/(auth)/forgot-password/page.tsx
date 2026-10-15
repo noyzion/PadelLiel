@@ -7,7 +7,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <h1 className="mb-1 text-title font-semibold">שכחת סיסמה?</h1>
-      <p className="mb-5 text-small text-muted">נשלח לך קוד באימייל לבחירת סיסמה חדשה.</p>
+      <p className="mb-5 text-small text-muted">נשלח לך קישור לבחירת סיסמה חדשה.</p>
       <ForgotPasswordForm />
     </>
   );
