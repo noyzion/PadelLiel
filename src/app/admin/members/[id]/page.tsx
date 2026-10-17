@@ -41,7 +41,9 @@ function AllowanceSummary({ title, allowance }: { title: string; allowance: Allo
           </p>
         </>
       ) : (
-        <p className="text-small text-muted">אין מנוי פעיל בחודש הזה</p>
+        <p className="text-small text-muted">
+          {allowance.trial_available ? 'אין מנוי פעיל · יש אימון ניסיון אחד' : 'אין מנוי פעיל בחודש הזה'}
+        </p>
       )}
     </Card>
   );
@@ -185,6 +187,7 @@ function BookingList({ items }: { items: MemberBookingRow[] }) {
                   <p className="text-caption text-muted tabular-nums">{formatTimeRange(b.session.start_time, b.session.end_time)}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  {b.is_trial ? <Badge tone="blue">ניסיון</Badge> : null}
                   {b.allowance_restored ? <Badge tone="green">הוחזר למכסה</Badge> : null}
                   <BookingStatusBadge status={b.status} />
                 </div>

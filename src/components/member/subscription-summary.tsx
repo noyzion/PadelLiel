@@ -35,9 +35,15 @@ export function SubscriptionSummary({
     return (
       <Card>
         <p className="text-small font-semibold text-muted">{title}</p>
-        <Alert tone="amber" className="mt-3">
-          אין לך מנוי פעיל לחודש הזה. פני לצוות שלנו כדי להפעיל מנוי.
-        </Alert>
+        {allowance.trial_available ? (
+          <Alert tone="blue" className="mt-3" title="אימון ניסיון">
+            יש לך אימון אחד בחינם. בחרי אותו בלוח האימונים, באיזה מועד שתרצי. אם אחר כך תעברי למנוי, האימון הזה לא ירד מהמכסה החודשית.
+          </Alert>
+        ) : (
+          <Alert tone="amber" className="mt-3">
+            אין לך מנוי פעיל לחודש הזה. פני לצוות שלנו כדי להפעיל מנוי.
+          </Alert>
+        )}
       </Card>
     );
   }

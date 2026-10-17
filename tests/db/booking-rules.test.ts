@@ -31,10 +31,15 @@ describe('booking preconditions', () => {
     await expect(member.book(session)).rejects.toMatchObject(code('MEMBER_NOT_APPROVED'));
   });
 
-  it('rejects members without a subscription', async () => {
+  it('lets a member without a subscription take one free trial, then blocks the next', async () => {
     const member = await db.createMember({ limit: null });
-    const session = await db.createSession({ date: '2026-11-02' });
-    await expect(member.book(session)).rejects.toMatchObject(code('NO_ACTIVE_SUBSCRIPTION'));
+    const first = await db.createSession({ date: '2026-11-02' });
+    const second = await db.createSession({ date: '2026-11-03', start: '07:00' });
+    const bookingId = await member.book(first);
+    expect(await db.bookingStatus(bookingId)).toBe('CONFIRMED');
+    const row = await db.sql<{ is_trial: boolean }>('select is_trial from public.bookings where id = $1', [bookingId]);
+    expect(row.rows[0].is_trial).toBe(true);
+    await expect(member.book(second)).rejects.toMatchObject(code('TRIAL_ALREADY_USED'));
   });
 
   it('rejects members with a deactivated subscription', async () => {

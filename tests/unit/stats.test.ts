@@ -25,6 +25,7 @@ function session(over: Partial<ScheduleSession>): ScheduleSession {
     block_reason: null,
     cancellation_deadline: '2026-10-31T21:00:00Z',
     is_late_window: false,
+    my_booking_is_trial: false,
     ...over,
   };
 }

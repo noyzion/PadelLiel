@@ -6,6 +6,7 @@ import { WeekNav } from '@/components/week-nav';
 import { levelLabel } from '@/lib/domain/labels';
 import { nowMs } from '@/lib/now';
 import {
+  currentMonthStart,
   currentWeekStart,
   formatDayMonth,
   israelToday,
@@ -15,14 +16,14 @@ import {
   weekdayNameHe,
 } from '@/lib/time';
 import { requireMember } from '@/server/auth';
-import { getWeekSchedule, weekHasSessions } from '@/server/services/booking';
+import { getAllowance, getWeekSchedule, weekHasSessions } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
 
 export const metadata: Metadata = { title: 'לוח אימונים' };
 
 export default async function SchedulePage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const params = await searchParams;
-  const { db } = await requireMember();
+  const { db, userId } = await requireMember();
   // Members only see this week, plus next week once its sessions have been published.
   const thisWeek = currentWeekStart();
   const nextWeek = shiftWeek(thisWeek, 1);
@@ -33,6 +34,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const thisWeekSessionsP = getWeekSchedule(db, thisWeek);
   const settingsP = getSettings(db);
   const levelsP = getSkillLevels(db);
+  const allowanceP = getAllowance(db, userId, currentMonthStart());
 
   let nextWeekOpen: boolean;
   let showNextWeek: boolean;
@@ -40,13 +42,15 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   let sessions: Awaited<typeof thisWeekSessionsP>;
   let settings: Awaited<typeof settingsP>;
   let levels: Awaited<typeof levelsP>;
+  let trialAvailable: boolean;
 
   if (requestedNext) {
-    const [thisWeekSessions, nextWeekSessions, s, l] = await Promise.all([
+    const [thisWeekSessions, nextWeekSessions, s, l, allowance] = await Promise.all([
       thisWeekSessionsP,
       getWeekSchedule(db, nextWeek),
       settingsP,
       levelsP,
+      allowanceP,
     ]);
     nextWeekOpen = nextWeekSessions.length > 0;
     showNextWeek = nextWeekOpen;
@@ -54,12 +58,14 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
     sessions = showNextWeek ? nextWeekSessions : thisWeekSessions;
     settings = s;
     levels = l;
+    trialAvailable = allowance.trial_available;
   } else {
-    const [thisWeekSessions, hasNext, s, l] = await Promise.all([
+    const [thisWeekSessions, hasNext, s, l, allowance] = await Promise.all([
       thisWeekSessionsP,
       weekHasSessions(db, nextWeek),
       settingsP,
       levelsP,
+      allowanceP,
     ]);
     nextWeekOpen = hasNext;
     showNextWeek = false;
@@ -67,6 +73,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
     sessions = thisWeekSessions;
     settings = s;
     levels = l;
+    trialAvailable = allowance.trial_available;
   }
 
   const now = nowMs();
@@ -89,6 +96,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
           levelLabel={levelLabel(session.skill_level_code, levels)}
           cutoffHours={settings.cancellation_cutoff_hours}
           nowMs={now}
+          trialAvailable={trialAvailable}
         />
       )),
     };
@@ -103,7 +111,10 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="לוח אימונים" description="בחרי יום ואז אימון להרשמה" />
+      <PageHeader
+        title="לוח אימונים"
+        description={trialAvailable ? 'יש לך אימון ניסיון אחד בחינם. בחרי איזה מועד שתרצי.' : 'בחרי יום ואז אימון להרשמה'}
+      />
       <WeekNav
         basePath="/schedule"
         weekStart={weekStart}

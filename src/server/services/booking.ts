@@ -13,8 +13,9 @@ import { rpc } from '../rpc';
  * never hit the same RPC twice.
  */
 
-export const getWeekSchedule = cache((db: Db, weekStart: string) => {
-  return rpc<ScheduleSession[]>(db, 'get_week_schedule', { p_week_start: weekStart });
+export const getWeekSchedule = cache(async (db: Db, weekStart: string) => {
+  const rows = await rpc<ScheduleSession[]>(db, 'get_week_schedule', { p_week_start: weekStart });
+  return (rows ?? []).map((s) => ({ ...s, my_booking_is_trial: Boolean(s.my_booking_is_trial) }));
 });
 
 /**
@@ -27,14 +28,16 @@ export const weekHasSessions = cache(async (db: Db, weekStart: string): Promise<
   return (count ?? 0) > 0;
 });
 
-export const getMyBookings = cache((db: Db) => {
-  return rpc<MyBooking[]>(db, 'get_my_bookings');
+export const getMyBookings = cache(async (db: Db) => {
+  const rows = await rpc<MyBooking[]>(db, 'get_my_bookings');
+  return (rows ?? []).map((b) => ({ ...b, is_trial: Boolean(b.is_trial) }));
 });
 
 /** The single, centralized monthly-quota calculation (`monthStart` = any date in the month). */
 export const getAllowance = cache(async (db: Db, memberId: string, monthStart: string): Promise<Allowance> => {
   const rows = await rpc<Allowance[]>(db, 'get_member_allowance', { p_member_id: memberId, p_month_start: monthStart });
-  return rows[0];
+  const row = rows[0];
+  return { ...row, trial_available: Boolean(row?.trial_available) };
 });
 
 export const getMonthlyUsage = cache((db: Db, memberId: string, fromMonth: string, toMonth: string) => {

@@ -22,12 +22,15 @@ export function SessionCard({
   levelLabel,
   cutoffHours,
   nowMs,
+  trialAvailable = false,
 }: {
   session: ScheduleSession;
   levelLabel: string;
   cutoffHours: number;
   /** The server's current time (ms). Passed in so the card renders the same on the server and in the browser. */
   nowMs: number;
+  /** She can still take her one free session (no plan in force). */
+  trialAvailable?: boolean;
 }) {
   const [lateBookOpen, setLateBookOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -104,7 +107,7 @@ export function SessionCard({
           {isBooked ? (
             <Badge tone="green">
               <Check className="size-3.5" aria-hidden="true" />
-              את רשומה
+              {session.my_booking_is_trial ? 'אימון ניסיון' : 'את רשומה'}
             </Badge>
           ) : null}
         </div>
@@ -139,13 +142,14 @@ export function SessionCard({
               label={label}
               size="md"
               className="w-full"
+              isTrial={session.my_booking_is_trial}
             />
           </>
         ) : null}
 
         {canBook ? (
           <Button className="w-full" loading={pending} onClick={() => (session.is_late_window ? setLateBookOpen(true) : book(false))}>
-            להרשמה לאימון
+            {trialAvailable ? 'להרשמה לאימון ניסיון' : 'להרשמה לאימון'}
           </Button>
         ) : null}
 
@@ -199,7 +203,9 @@ export function SessionCard({
       >
         <p className="mb-3 text-body font-semibold text-navy-900">{label}</p>
         <Alert tone="amber" title="שימי לב">
-          האימון מתחיל בעוד פחות מ-{hours} שעות. אם תבטלי את ההרשמה הזו, האימון עדיין ייספר במכסה החודשית שלך.
+          {trialAvailable
+            ? `האימון מתחיל בעוד פחות מ-${hours} שעות. ביטול מאוחר ינצל את אימון הניסיון, ולא יהיה אפשר לקחת אימון חינם נוסף.`
+            : `האימון מתחיל בעוד פחות מ-${hours} שעות. אם תבטלי את ההרשמה הזו, האימון עדיין ייספר במכסה החודשית שלך.`}
         </Alert>
       </Modal>
 

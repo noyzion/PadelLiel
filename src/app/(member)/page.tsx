@@ -65,13 +65,13 @@ export default async function MemberHomePage() {
             ) : (
               <Card className="flex flex-col gap-1 text-small text-muted">
                 <p className="text-card font-semibold text-navy-900">עוד לא נרשמת לאימון קרוב</p>
-                <p>אפשר לבחור אימון בלוח האימונים.</p>
+                <p>{thisMonth.trial_available ? 'אפשר לבחור את אימון הניסיון בלוח האימונים, באיזה מועד שתרצי.' : 'אפשר לבחור אימון בלוח האימונים.'}</p>
               </Card>
             )}
           </section>
 
           <ButtonLink href="/schedule" size="lg" racket="end" className="order-4 w-full lg:order-none">
-            <span className="text-card font-bold">להרשמה לאימון</span>
+            <span className="text-card font-bold">{thisMonth.trial_available ? 'להרשמה לאימון ניסיון' : 'להרשמה לאימון'}</span>
           </ButtonLink>
 
           {available.length > 0 ? (

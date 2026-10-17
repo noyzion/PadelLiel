@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { BookingStatusBadge, SkillLevelBadge } from '@/components/domain/badges';
 import { AddToCalendarLink } from '@/components/member/add-to-calendar-link';
 import { CancelBookingButton } from '@/components/member/cancel-booking';
-import { Alert, Card, EmptyState, PageHeader, SectionHeading } from '@/components/ui/card';
+import { Alert, Badge, Card, EmptyState, PageHeader, SectionHeading } from '@/components/ui/card';
 import { VENUE_NAME } from '@/lib/brand';
 import { levelLabel } from '@/lib/domain/labels';
 import type { MyBooking } from '@/lib/domain/types';
@@ -16,6 +16,20 @@ import { getSettings, getSkillLevels } from '@/server/services/settings';
 export const metadata: Metadata = { title: 'ההרשמות שלי' };
 
 function statusNote(b: MyBooking, hours: string): string | null {
+  if (b.is_trial) {
+    switch (b.status) {
+      case 'CANCELLED_EARLY':
+        return 'בוטל בזמן - אימון הניסיון חזר אליך';
+      case 'CANCELLED_LATE':
+        return 'בוטל מאוחר - אימון הניסיון נוצל';
+      case 'CANCELLED_BY_COACH':
+        return 'האימון או ההרשמה בוטלו ע״י המאמנת - אימון הניסיון חזר אליך';
+      case 'NO_SHOW':
+        return 'לא הגעת לאימון - אימון הניסיון נוצל';
+      default:
+        return 'אימון ניסיון - לא נספר במכסה החודשית';
+    }
+  }
   switch (b.status) {
     case 'CANCELLED_EARLY':
       return 'בוטל בזמן - לא נספר במכסה החודשית';
@@ -57,6 +71,7 @@ function BookingCard({
           <p className="text-small text-muted">{formatDateHe(b.session_date)}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5">
+          {b.is_trial ? <Badge tone="blue">אימון ניסיון</Badge> : null}
           <BookingStatusBadge status={b.status} />
           <SkillLevelBadge label={levelLabel(b.skill_level_code, levels)} />
         </div>
@@ -70,9 +85,16 @@ function BookingCard({
       {b.can_cancel ? (
         <div className="flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-caption text-muted">
-            ביטול שמחזיר למכסה עד <span className="num font-semibold text-navy-900">{formatInstantHe(b.cancellation_deadline)}</span>
+            {b.is_trial ? 'ביטול שמחזיר את אימון הניסיון עד' : 'ביטול שמחזיר למכסה עד'}{' '}
+            <span className="num font-semibold text-navy-900">{formatInstantHe(b.cancellation_deadline)}</span>
           </p>
-          <CancelBookingButton bookingId={b.booking_id} isLateWindow={b.is_late_window} cutoffHours={cutoffHours} label={label} />
+          <CancelBookingButton
+            bookingId={b.booking_id}
+            isLateWindow={b.is_late_window}
+            cutoffHours={cutoffHours}
+            label={label}
+            isTrial={b.is_trial}
+          />
         </div>
       ) : null}
     </Card>

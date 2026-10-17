@@ -52,8 +52,12 @@ export default async function ProfilePage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SkillLevelBadge label={levelLabel(profile.skill_level_code, levels)} />
-          <Badge tone={allowance.has_active_subscription ? 'green' : 'amber'}>
-            {allowance.has_active_subscription ? `מנוי: ${allowance.plan_name}` : 'אין מנוי פעיל'}
+          <Badge tone={allowance.has_active_subscription ? 'green' : allowance.trial_available ? 'blue' : 'amber'}>
+            {allowance.has_active_subscription
+              ? `מנוי: ${allowance.plan_name}`
+              : allowance.trial_available
+                ? 'יש אימון ניסיון'
+                : 'אין מנוי פעיל'}
           </Badge>
           {sub?.ends_on ? (
             <span className="text-caption text-muted">

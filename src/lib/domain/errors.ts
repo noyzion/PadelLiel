@@ -10,6 +10,7 @@ export const ERROR_MESSAGES_HE = {
   MEMBER_HAS_HISTORY: 'למתאמנת יש היסטוריית אימונים או התאמות מכסה, ולכן אי אפשר למחוק אותה. אפשר להגדיר אותה כלא פעילה.',
   MEMBER_NOT_APPROVED: 'החשבון שלך עדיין ממתין לאישור המאמנת.',
   NO_ACTIVE_SUBSCRIPTION: 'אין מנוי פעיל לתאריך האימון. פני למאמנת.',
+  TRIAL_ALREADY_USED: 'אימון הניסיון כבר נוצל. פני למאמנת כדי להפעיל מנוי.',
   NO_SKILL_LEVEL: 'עדיין לא הוגדרה לך רמה. פני למאמנת.',
   SESSION_NOT_FOUND: 'האימון לא נמצא.',
   SESSION_NOT_PUBLISHED: 'האימון אינו זמין להרשמה.',
@@ -68,6 +69,8 @@ export function blockReasonHe(reason: string | null): string | null {
       return 'האימון כבר התחיל';
     case 'NO_ACTIVE_SUBSCRIPTION':
       return 'אין מנוי פעיל לתאריך זה';
+    case 'TRIAL_ALREADY_USED':
+      return 'אימון הניסיון כבר נוצל';
     case 'MEMBER_NOT_APPROVED':
       return 'ממתין לאישור המאמנת';
     case 'NO_SKILL_LEVEL':

@@ -22,6 +22,7 @@ export function CancelBookingButton({
   label,
   size = 'sm',
   className,
+  isTrial = false,
 }: {
   bookingId: string;
   isLateWindow: boolean;
@@ -29,6 +30,7 @@ export function CancelBookingButton({
   label: string;
   size?: 'sm' | 'md';
   className?: string;
+  isTrial?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [late, setLate] = useState(isLateWindow);
@@ -42,9 +44,13 @@ export function CancelBookingButton({
       if (result.ok) {
         setOpen(false);
         toast.success(
-          result.data.allowance_restored
-            ? 'הביטול נשמר, והמקום חזר למכסה החודשית שלך.'
-            : 'ההרשמה בוטלה והמקום שוחרר. האימון עדיין ייחשב במכסה החודשית שלך.',
+          isTrial
+            ? result.data.allowance_restored
+              ? 'הביטול נשמר. אימון הניסיון חזר אליך ואפשר לבחור מועד אחר.'
+              : 'ההרשמה בוטלה. אימון הניסיון נוצל ולא יהיה אימון חינם נוסף.'
+            : result.data.allowance_restored
+              ? 'הביטול נשמר, והמקום חזר למכסה החודשית שלך.'
+              : 'ההרשמה בוטלה והמקום שוחרר. האימון עדיין ייחשב במכסה החודשית שלך.',
         );
         return;
       }
@@ -88,13 +94,17 @@ export function CancelBookingButton({
         <p className="mb-3 text-body font-semibold text-navy-900">{label}</p>
         {late ? (
           <Alert tone="amber" title="שימי לב">
-            אם תבטלי, האימון עדיין ייחשב במכסה החודשית שלך ולא יוחזר.
+            {isTrial
+              ? 'אם תבטלי עכשיו, אימון הניסיון ינוצל ולא יהיה אפשר לקחת אימון חינם נוסף.'
+              : 'אם תבטלי, האימון עדיין ייחשב במכסה החודשית שלך ולא יוחזר.'}
             <br />
             המקום ישוחרר ויהיה זמין לחברה אחרת בקהילה.
           </Alert>
         ) : (
           <Alert tone="green" title="ביטול בזמן">
-            הביטול הוא לפחות {hours} שעות לפני האימון, ולכן האימון יחזור למכסה החודשית שלך ותוכלי להירשם לאימון אחר.
+            {isTrial
+              ? `הביטול הוא לפחות ${hours} שעות לפני האימון, ולכן אימון הניסיון יחזור אליך ותוכלי לבחור מועד אחר.`
+              : `הביטול הוא לפחות ${hours} שעות לפני האימון, ולכן האימון יחזור למכסה החודשית שלך ותוכלי להירשם לאימון אחר.`}
           </Alert>
         )}
       </Modal>

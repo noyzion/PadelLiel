@@ -29,6 +29,7 @@ export function NextSessionCard({
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <SkillLevelBadge label={levelLabel} />
+          {booking.is_trial ? <Badge tone="blue">אימון ניסיון</Badge> : null}
           <Badge tone="green">את רשומה</Badge>
         </div>
       </div>
@@ -41,13 +42,16 @@ export function NextSessionCard({
       ) : null}
       <div className="flex flex-col gap-3 border-t border-ocean-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-caption text-muted">
-          ביטול שמחזיר את האימון למכסה אפשרי עד <span className="num font-semibold text-navy-900">{formatInstantHe(booking.cancellation_deadline)}</span>
+          {booking.is_trial
+            ? <>ביטול שמחזיר את אימון הניסיון אפשרי עד <span className="num font-semibold text-navy-900">{formatInstantHe(booking.cancellation_deadline)}</span></>
+            : <>ביטול שמחזיר את האימון למכסה אפשרי עד <span className="num font-semibold text-navy-900">{formatInstantHe(booking.cancellation_deadline)}</span></>}
         </p>
         <CancelBookingButton
           bookingId={booking.booking_id}
           isLateWindow={booking.is_late_window}
           cutoffHours={cutoffHours}
           label={label}
+          isTrial={booking.is_trial}
         />
       </div>
     </Card>

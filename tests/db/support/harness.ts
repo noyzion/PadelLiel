@@ -102,6 +102,7 @@ export class UserSession {
       plan_limit: number;
       adjustments: number;
       has_active_subscription: boolean;
+      trial_available: boolean;
     }>('get_member_allowance', { p_member_id: this.userId, p_month_start: monthStart });
     return rows[0];
   }

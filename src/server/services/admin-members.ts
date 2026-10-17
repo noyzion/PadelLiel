@@ -66,6 +66,7 @@ export interface MemberBookingRow {
   cancelled_at: string | null;
   session: Pick<SessionRow, 'id' | 'session_date' | 'start_time' | 'end_time' | 'starts_at' | 'skill_level_code' | 'status' | 'week_start'> | null;
   allowance_restored: boolean;
+  is_trial: boolean;
 }
 
 export interface AdjustmentRow {
@@ -115,7 +116,7 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
     db
       .from('bookings')
       .select(
-        'id, status, booked_at, cancelled_at, session_id, sessions!bookings_session_id_fkey(id, session_date, start_time, end_time, starts_at, skill_level_code, status, week_start)',
+        'id, status, booked_at, cancelled_at, session_id, is_trial, sessions!bookings_session_id_fkey(id, session_date, start_time, end_time, starts_at, skill_level_code, status, week_start)',
       )
       .eq('member_id', memberId)
       .order('created_at', { ascending: false })
@@ -134,6 +135,7 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
     booked_at: string;
     cancelled_at: string | null;
     session_id: string;
+    is_trial: boolean | null;
     sessions: NonNullable<MemberBookingRow['session']> | NonNullable<MemberBookingRow['session']>[] | null;
   }[];
   const adjustmentRows = unwrap(adjustments) as (AdjustmentRow & { related_booking_id: string | null })[];
@@ -160,6 +162,7 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
         cancelled_at: b.cancelled_at,
         session: embedded(b.sessions),
         allowance_restored: restored.has(b.id),
+        is_trial: Boolean(b.is_trial),
       }))
       .sort((a, b) => (b.session?.starts_at ?? '').localeCompare(a.session?.starts_at ?? '')),
     adjustments: adjustmentRows,

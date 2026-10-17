@@ -53,7 +53,11 @@ describe('waiting list', () => {
     const wrongLevel = await db.createMember({ level: 'beginner' });
     await expect(wrongLevel.call('join_waitlist', { p_session_id: session })).rejects.toMatchObject(code('SKILL_LEVEL_MISMATCH'));
     const noSub = await db.createMember({ limit: null });
-    await expect(noSub.call('join_waitlist', { p_session_id: session })).rejects.toMatchObject(code('NO_ACTIVE_SUBSCRIPTION'));
+    await expect(noSub.call('join_waitlist', { p_session_id: session })).resolves.toBeTruthy();
+    const usedTrial = await db.createMember({ limit: null, name: 'UsedTrial' });
+    const other = await db.createSession({ date: '2026-11-06', start: '09:00', end: '10:00' });
+    await usedTrial.book(other);
+    await expect(usedTrial.call('join_waitlist', { p_session_id: session })).rejects.toMatchObject(code('TRIAL_ALREADY_USED'));
   });
 
   it('a member without remaining allowance cannot join', async () => {
