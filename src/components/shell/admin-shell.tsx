@@ -7,7 +7,17 @@ import { NavLinks, type NavItem } from '@/components/nav-links';
  * Coach shell: same identity as the trainee app with less decoration and more room for data.
  * Sidebar on desktop, compact header + bottom tabs on phones.
  */
-export function AdminShell({ nav, name, children }: { nav: NavItem[]; name: string; children: ReactNode }) {
+export function AdminShell({
+  nav,
+  name,
+  headerActions,
+  children,
+}: {
+  nav: NavItem[];
+  name: string;
+  headerActions?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[16.5rem_1fr]">
       <aside className="hidden border-e border-line bg-surface md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:justify-between md:p-5">
@@ -16,17 +26,23 @@ export function AdminShell({ nav, name, children }: { nav: NavItem[]; name: stri
           <NavLinks items={nav} layout="side" />
         </div>
         <div className="flex flex-col gap-3 border-t border-line pt-4">
-          <p className="px-2 text-small text-muted">
-            מחוברת: <span className="font-semibold text-navy-900">{name}</span>
-          </p>
+          <div className="flex items-center justify-between gap-2 px-1">
+            <p className="text-small text-muted">
+              מחוברת: <span className="font-semibold text-navy-900">{name}</span>
+            </p>
+            {headerActions}
+          </div>
           <LogoutButton variant="secondary" />
         </div>
       </aside>
 
       <div className="min-w-0 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-12">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-surface/95 px-4 backdrop-blur md:hidden">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b border-line bg-surface/95 px-4 backdrop-blur md:hidden">
           <Brand href="/admin" />
-          <LogoutButton />
+          <div className="flex items-center gap-1">
+            {headerActions}
+            <LogoutButton />
+          </div>
         </header>
         <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
           {children}

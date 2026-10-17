@@ -13,7 +13,7 @@ export const NOTIFICATIONS_CHANGED_EVENT = 'padel:notifications-changed';
  * Header bell with the unread count. The count comes from the server on every full render and is then kept fresh
  * (page changes, window focus, once a minute, and instantly when a Push arrives while the app is open).
  */
-export function NotificationBell({ initialUnread }: { initialUnread: number }) {
+export function NotificationBell({ initialUnread, href = '/notifications' }: { initialUnread: number; href?: string }) {
   const [unread, setUnread] = useState(initialUnread);
   const [seenInitial, setSeenInitial] = useState(initialUnread);
   const pathname = usePathname();
@@ -72,12 +72,12 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
   const label = unread > 0 ? `התראות, ${unread} חדשות` : 'התראות';
   return (
     <Link
-      href="/notifications"
+      href={href}
       aria-label={label}
-      aria-current={pathname === '/notifications' ? 'page' : undefined}
+      aria-current={pathname === href ? 'page' : undefined}
       className={cn(
         'relative grid size-11 place-items-center rounded-control text-navy-900 transition-colors duration-150 hover:bg-navy-50 active:bg-navy-100',
-        pathname === '/notifications' && 'bg-pink-100 text-pink-700',
+        pathname === href && 'bg-pink-100 text-pink-700',
       )}
     >
       <Bell className="size-6" strokeWidth={1.6} aria-hidden="true" />

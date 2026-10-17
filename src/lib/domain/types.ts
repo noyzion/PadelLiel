@@ -186,7 +186,11 @@ export type NotificationType =
   | 'training_reminder'
   | 'cancellation_deadline'
   | 'session_cancelled'
-  | 'schedule_published';
+  | 'schedule_published'
+  | 'staff_member_pending'
+  | 'staff_booking_created'
+  | 'staff_booking_cancelled'
+  | 'staff_waitlist_joined';
 
 /** A row of the trainee's in-app notification center. */
 export interface AppNotification {

@@ -71,4 +71,8 @@ export const NOTIFICATION_TYPE_LABELS_HE: Record<NotificationType, string> = {
   cancellation_deadline: 'תזכורת ביטול',
   session_cancelled: 'ביטול אימון',
   schedule_published: 'לוח אימונים',
+  staff_member_pending: 'ממתינה לאישור',
+  staff_booking_created: 'הרשמה חדשה',
+  staff_booking_cancelled: 'ביטול הרשמה',
+  staff_waitlist_joined: 'רשימת המתנה',
 };

@@ -1,6 +1,10 @@
+import { NotificationBell } from '@/components/notifications/notification-bell';
+import { ServiceWorkerRegistrar } from '@/components/notifications/sw-registrar';
 import type { NavItem } from '@/components/nav-links';
 import { AdminShell } from '@/components/shell/admin-shell';
+import { getVapidPublicKey } from '@/lib/env';
 import { requireAdmin } from '@/server/auth';
+import { getUnreadCount } from '@/server/services/notifications';
 
 const NAV: NavItem[] = [
   { href: '/admin', label: 'דשבורד', icon: 'dashboard', exact: true },
@@ -11,10 +15,18 @@ const NAV: NavItem[] = [
   { href: '/admin/settings', label: 'הגדרות', icon: 'settings' },
 ];
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { profile } = await requireAdmin();
+  const { db, profile } = await requireAdmin();
+  const unread = await getUnreadCount(db);
   return (
-    <AdminShell nav={NAV} name={profile.full_name || 'מאמנת'}>
+    <AdminShell
+      nav={NAV}
+      name={profile.full_name || 'מאמנת'}
+      headerActions={<NotificationBell initialUnread={unread} href="/admin/notifications" />}
+    >
+      <ServiceWorkerRegistrar enabled={Boolean(getVapidPublicKey())} />
       {children}
     </AdminShell>
   );

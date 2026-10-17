@@ -40,10 +40,12 @@ export function NotificationSettings({
   vapidPublicKey,
   preferences,
   deviceEndpoints,
+  audience = 'member',
 }: {
   vapidPublicKey: string | null;
   preferences: NotificationPreferences;
   deviceEndpoints: string[];
+  audience?: 'member' | 'staff';
 }) {
   const toast = useToast();
   const [prefs, setPrefs] = useState(preferences);
@@ -137,7 +139,14 @@ export function NotificationSettings({
 
   return (
     <div className="flex flex-col gap-5">
-      <DeviceSection support={support} subscribed={subscribed} busy={busy} onEnable={enable} onDisable={disable} />
+      <DeviceSection
+        audience={audience}
+        support={support}
+        subscribed={subscribed}
+        busy={busy}
+        onEnable={enable}
+        onDisable={disable}
+      />
 
       <div className="border-t border-line pt-2">
         <SwitchRow
@@ -147,25 +156,35 @@ export function NotificationSettings({
           onChange={(v) => void setPref('push_enabled', v)}
         />
       </div>
-      <div className="flex flex-col divide-y divide-line border-t border-line">
-        {TYPE_SWITCHES.map((s) => (
-          <SwitchRow key={s.key} label={s.label} description={s.description} checked={prefs[s.key]} onChange={(v) => void setPref(s.key, v)} />
-        ))}
-      </div>
-      <p className="text-caption text-muted">
-        אישורי הרשמה וביטולי אימון נשמרים תמיד בפעמון. תזכורות ופתיחת לוח אימונים שכיבית לא יופיעו גם שם.
-      </p>
+      {audience === 'member' ? (
+        <>
+          <div className="flex flex-col divide-y divide-line border-t border-line">
+            {TYPE_SWITCHES.map((s) => (
+              <SwitchRow key={s.key} label={s.label} description={s.description} checked={prefs[s.key]} onChange={(v) => void setPref(s.key, v)} />
+            ))}
+          </div>
+          <p className="text-caption text-muted">
+            אישורי הרשמה וביטולי אימון נשמרים תמיד בפעמון. תזכורות ופתיחת לוח אימונים שכיבית לא יופיעו גם שם.
+          </p>
+        </>
+      ) : (
+        <p className="text-caption text-muted">
+          בפעמון תמיד יופיעו מתאמנת שממתינה לאישור, הרשמה חדשה, ביטול ורשימת המתנה. Push נשלח למכשירים שבהם הפעלת התראות.
+        </p>
+      )}
     </div>
   );
 }
 
 function DeviceSection({
+  audience = 'member',
   support,
   subscribed,
   busy,
   onEnable,
   onDisable,
 }: {
+  audience?: 'member' | 'staff';
   support: PushSupportState | 'checking';
   subscribed: boolean;
   busy: boolean;
@@ -194,7 +213,11 @@ function DeviceSection({
           </li>
           <li className="flex items-start gap-2">
             <BellRing className="mt-0.5 size-4 shrink-0 text-ocean-700" aria-hidden="true" />
-            <span>פתחי את האפליקציה מהאייקון במסך הבית, היכנסי לפרופיל ולחצי על ״הפעלת התראות״.</span>
+            <span>
+              {audience === 'staff'
+                ? 'פתחי את האפליקציה מהאייקון במסך הבית, היכנסי להגדרות ולחצי על ״הפעלת התראות״.'
+                : 'פתחי את האפליקציה מהאייקון במסך הבית, היכנסי לפרופיל ולחצי על ״הפעלת התראות״.'}
+            </span>
           </li>
         </ol>
         <p className="mt-2 text-caption text-muted">נדרשת גרסת iOS 16.4 ומעלה.</p>
@@ -251,7 +274,11 @@ function DeviceSection({
         </span>
         <div>
           <p className="text-body font-semibold text-navy-900">קבלי תזכורות ועדכונים לטלפון</p>
-          <p className="text-small text-muted">תזכורת לפני האימון, עדכון על ביטול אימון ופתיחת לוח האימונים, גם כשהאפליקציה סגורה.</p>
+          <p className="text-small text-muted">
+            {audience === 'staff'
+              ? 'עדכון כשמתאמנת נרשמת, מבטלת, מצטרפת לרשימת המתנה או ממתינה לאישור — גם כשהאפליקציה סגורה.'
+              : 'תזכורת לפני האימון, עדכון על ביטול אימון ופתיחת לוח האימונים, גם כשהאפליקציה סגורה.'}
+          </p>
         </div>
       </div>
       <Button onClick={onEnable} loading={busy} className="self-start">

@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, BellRing, CalendarCheck, CalendarDays, CalendarX, Clock, type LucideIcon } from 'lucide-react';
+import { Bell, BellRing, CalendarCheck, CalendarDays, CalendarX, Clock, Hourglass, UserPlus, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -20,13 +20,23 @@ const ICONS: Record<NotificationType, LucideIcon> = {
   cancellation_deadline: Clock,
   session_cancelled: CalendarX,
   schedule_published: CalendarDays,
+  staff_member_pending: UserPlus,
+  staff_booking_created: CalendarCheck,
+  staff_booking_cancelled: CalendarX,
+  staff_waitlist_joined: Hourglass,
 };
 
 function announceChange() {
   window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED_EVENT));
 }
 
-export function NotificationList({ items }: { items: AppNotification[] }) {
+export function NotificationList({
+  items,
+  emptyDescription = 'כאן יופיעו אישורי הרשמה, תזכורות לאימונים ועדכונים מהצוות שלנו.',
+}: {
+  items: AppNotification[];
+  emptyDescription?: string;
+}) {
   const router = useRouter();
   const { pending, run } = useServerAction();
   // Items marked as read in this view are shown as read immediately (before the server round trip returns).
@@ -59,7 +69,7 @@ export function NotificationList({ items }: { items: AppNotification[] }) {
           <Bell className="size-7" strokeWidth={1.6} />
         </span>
         <p className="text-card font-semibold text-navy-900">אין עדכונים עדיין</p>
-        <p className="max-w-sm text-small text-muted">כאן יופיעו אישורי הרשמה, תזכורות לאימונים ועדכונים מהצוות שלנו.</p>
+        <p className="max-w-sm text-small text-muted">{emptyDescription}</p>
       </div>
     );
   }

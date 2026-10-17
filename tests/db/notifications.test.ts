@@ -536,7 +536,7 @@ describe('weekly schedule published', () => {
     }
     expect(await notificationsOf(pending)).toHaveLength(0);
     expect(await notificationsOf(inactive)).toHaveLength(0);
-    expect(await db.sql('select 1 from public.notifications where user_id = $1', [admin.userId])).toHaveProperty('rowCount', 0);
+    expect((await notificationsOf(admin)).map((n) => n.type)).not.toContain('schedule_published');
   });
 
   it('does not announce again when more sessions of the same week are published or published sessions are edited', async () => {
