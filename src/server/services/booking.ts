@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import type { Db } from '@/lib/supabase/server';
 import type { Allowance, CancelResult, MyBooking, ScheduleSession, MonthlyUsageRow } from '@/lib/domain/types';
+import { toAppError } from '@/lib/domain/errors';
 import { rpc } from '../rpc';
 
 /**
@@ -16,9 +17,14 @@ export const getWeekSchedule = cache((db: Db, weekStart: string) => {
   return rpc<ScheduleSession[]>(db, 'get_week_schedule', { p_week_start: weekStart });
 });
 
-/** Whether the caller can see any session in that week (drafts only for admins). */
-export const weekHasSessions = cache((db: Db, weekStart: string) => {
-  return rpc<boolean>(db, 'week_has_sessions', { p_week_start: weekStart });
+/**
+ * Whether the caller can see any session in that week. Uses a head-count on `sessions` (RLS hides
+ * drafts from trainees) so the schedule page does not depend on a new RPC that may not be applied yet.
+ */
+export const weekHasSessions = cache(async (db: Db, weekStart: string): Promise<boolean> => {
+  const { count, error } = await db.from('sessions').select('id', { count: 'exact', head: true }).eq('week_start', weekStart);
+  if (error) throw toAppError(error);
+  return (count ?? 0) > 0;
 });
 
 export const getMyBookings = cache((db: Db) => {

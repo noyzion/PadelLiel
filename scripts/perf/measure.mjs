@@ -190,6 +190,7 @@ const mock = createServer(async (req, res) => {
   if (path === '/rest/v1/community_events') return rows([]);
   if (path === '/rest/v1/member_subscriptions') return rows([]);
   if (path === '/rest/v1/notifications') return rows([]);
+  if (path === '/rest/v1/sessions') return rows([]);
 
   if (path.startsWith('/rest/v1/rpc/')) {
     const fn = path.slice('/rest/v1/rpc/'.length);
