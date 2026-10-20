@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink } from '@/components/ui/pending-link';
 import { ApprovalBadge, SkillLevelBadge } from '@/components/domain/badges';
 import { Badge, Card, EmptyState, PageHeader } from '@/components/ui/card';
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
@@ -92,8 +92,8 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
           {/* Phones: short cards */}
           <div className="flex flex-col gap-2 md:hidden">
             {filtered.map((m) => (
-              <Link key={m.id} href={`/admin/members/${m.id}`} className="block">
-                <Card className="flex flex-col gap-3 p-4 transition-colors duration-150 hover:border-navy-900/40">
+              <PendingLink key={m.id} href={`/admin/members/${m.id}`} className="block">
+                <Card className="flex flex-col gap-3 p-4 transition-colors duration-150 hover:border-navy-900/40 active:border-navy-900/50 active:bg-navy-50">
                   <div className="min-w-0">
                     <p className="truncate text-body font-semibold text-navy-900">{m.full_name}</p>
                     <p className="truncate text-caption text-muted">
@@ -113,7 +113,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                     {monthlyUsage(m) ? <Badge tone="neutral">{monthlyUsage(m)}</Badge> : null}
                   </div>
                 </Card>
-              </Link>
+              </PendingLink>
             ))}
           </div>
 
@@ -133,9 +133,13 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
               {filtered.map((m) => (
                 <Tr key={m.id} className="hover:bg-navy-50/60">
                   <Td className="font-semibold">
-                    <Link href={`/admin/members/${m.id}`} className="text-navy-900 underline-offset-4 hover:underline">
+                    <PendingLink
+                      href={`/admin/members/${m.id}`}
+                      indicator="inline"
+                      className="inline-flex items-center gap-1.5 text-navy-900 underline-offset-4 hover:underline"
+                    >
                       {m.full_name}
-                    </Link>
+                    </PendingLink>
                     {m.email ? (
                       <div className="text-caption font-normal text-muted" dir="ltr">
                         {m.email}

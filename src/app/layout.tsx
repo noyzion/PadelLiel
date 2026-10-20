@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Assistant } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import { Suspense } from 'react';
+import { NavigationProgress } from '@/components/ui/navigation-progress';
 import { ToastProvider } from '@/components/ui/toast';
 import './globals.css';
 
@@ -35,7 +37,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           דלגי לתוכן
         </a>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
+          {children}
+        </ToastProvider>
         <Analytics />
       </body>
     </html>

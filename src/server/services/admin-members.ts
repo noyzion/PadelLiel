@@ -97,10 +97,10 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
       .maybeSingle(),
   ) as Profile | null;
   if (!profile) return null;
-  const adminNotes = (await rpc<string | null>(db, 'admin_get_member_notes', { p_member_id: memberId })) ?? '';
 
   const nextMonthStart = shiftMonth(currentMonth, 1);
-  const [subs, plans, thisMonth, nextMonth, usage, bookings, adjustments] = await Promise.all([
+  const [adminNotes, subs, plans, thisMonth, nextMonth, usage, bookings, adjustments] = await Promise.all([
+    rpc<string | null>(db, 'admin_get_member_notes', { p_member_id: memberId }),
     db
       .from('member_subscriptions')
       .select('id, member_id, plan_id, is_active, superseded, starts_on, ends_on, created_at')
@@ -142,7 +142,7 @@ export async function getMemberDetail(db: Db, memberId: string, currentMonth: st
 
   return {
     profile,
-    adminNotes,
+    adminNotes: adminNotes ?? '',
     subscriptions: (unwrap(subs) as MemberSubscription[]).map((s) => ({
       ...s,
       plan_name: planById.get(s.plan_id)?.name ?? '-',

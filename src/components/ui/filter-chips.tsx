@@ -33,7 +33,7 @@ export function FilterChips({
                   'inline-flex min-h-11 items-center gap-1.5 rounded-chip border px-4 text-small font-semibold transition-colors duration-150',
                   active
                     ? 'border-navy-900 bg-navy-900 text-white'
-                    : 'border-line-strong bg-surface text-navy-900 hover:border-navy-900/50 hover:bg-navy-50',
+                    : 'border-line-strong bg-surface text-navy-900 hover:border-navy-900/50 hover:bg-navy-50 active:bg-navy-100',
                 )}
               >
                 {chip.label}

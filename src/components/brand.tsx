@@ -20,7 +20,7 @@ export function VenueLogo({ size = 'md', className }: { size?: keyof typeof LOGO
         alt={VENUE_LOGO.alt}
         sizes="96px"
         className="size-full scale-[1.05] object-cover"
-        priority={size === 'lg'}
+        priority
       />
     </span>
   );

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink } from '@/components/ui/pending-link';
 import { notFound } from 'next/navigation';
 import {
   AllowanceAdjustForm,
@@ -183,8 +183,8 @@ function BookingList({ items }: { items: MemberBookingRow[] }) {
       {items.map((b) =>
         b.session ? (
           <li key={b.id}>
-            <Link href={`/admin/sessions/${b.session.id}`} className="block">
-              <Card className="flex flex-wrap items-center justify-between gap-2 p-4 transition-colors hover:border-pink-200">
+            <PendingLink href={`/admin/sessions/${b.session.id}`} className="block">
+              <Card className="flex flex-wrap items-center justify-between gap-2 p-4 transition-colors hover:border-pink-200 active:bg-navy-50">
                 <div>
                   <p className="font-semibold">{formatDateHe(b.session.session_date)}</p>
                   <p className="text-caption text-muted tabular-nums">{formatTimeRange(b.session.start_time, b.session.end_time)}</p>
@@ -195,7 +195,7 @@ function BookingList({ items }: { items: MemberBookingRow[] }) {
                   <BookingStatusBadge status={b.status} />
                 </div>
               </Card>
-            </Link>
+            </PendingLink>
           </li>
         ) : null,
       )}

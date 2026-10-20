@@ -3,11 +3,6 @@
 import Link from 'next/link';
 import { LogoutButton } from '@/components/logout-button';
 import { Button, buttonClasses } from '@/components/ui/button';
-import { PageSkeleton } from '@/components/ui/skeleton';
-
-export function RouteLoading() {
-  return <PageSkeleton />;
-}
 
 export function RouteError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (

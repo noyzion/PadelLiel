@@ -1,6 +1,6 @@
 import { ChevronLeft } from 'lucide-react';
-import Link from 'next/link';
 import { SkillLevelBadge } from '@/components/domain/badges';
+import { PendingLink } from '@/components/ui/pending-link';
 import type { ScheduleSession } from '@/lib/domain/types';
 import { formatDateHe, formatTimeRange } from '@/lib/time';
 
@@ -8,9 +8,9 @@ import { formatDateHe, formatTimeRange } from '@/lib/time';
 export function SessionPreview({ session, levelLabel, href }: { session: ScheduleSession; levelLabel: string; href: string }) {
   const free = Math.max(0, session.capacity - session.occupied_count);
   return (
-    <Link
+    <PendingLink
       href={href}
-      className="group flex items-center justify-between gap-3 rounded-card border border-line bg-surface p-4 shadow-soft transition-colors duration-150 hover:border-navy-900/40"
+      className="group flex items-center justify-between gap-3 rounded-card border border-line bg-surface p-4 shadow-soft transition-colors duration-150 hover:border-navy-900/40 active:border-navy-900/50 active:bg-navy-50"
     >
       <div className="min-w-0">
         <p className="num text-card font-semibold text-navy-900">
@@ -24,6 +24,6 @@ export function SessionPreview({ session, levelLabel, href }: { session: Schedul
         <SkillLevelBadge label={levelLabel} />
         <ChevronLeft className="size-5 text-muted transition-transform duration-150 group-hover:-translate-x-0.5" aria-hidden="true" />
       </div>
-    </Link>
+    </PendingLink>
   );
 }

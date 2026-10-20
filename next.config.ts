@@ -14,6 +14,8 @@ function supabaseImageConfig(): NonNullable<NextConfig['images']> {
           pathname: '/storage/v1/object/public/event-images/**',
         },
       ],
+      // Optimized event covers stay in the Next image cache; Storage itself is cache-busted by a new object path.
+      minimumCacheTTL: 60 * 60 * 24,
       // Only for a local Supabase (supabase start); never in production.
       dangerouslyAllowLocalIP: isLocal && process.env.NODE_ENV !== 'production',
     };
@@ -29,6 +31,11 @@ const nextConfig: NextConfig = {
   experimental: {
     // Event cover images are uploaded through a server action: 4 MB image + multipart overhead.
     serverActions: { bodySizeLimit: '5mb' },
+    optimizePackageImports: ['lucide-react'],
+    // Reuse the bottom-nav prefetch for 30s so tab switches are instant. Booking actions already
+    // call revalidatePath, so a successful book/cancel still refreshes. The database remains the
+    // source of truth if two people race the last spot.
+    staleTimes: { dynamic: 30 },
   },
   async headers() {
     return [

@@ -17,6 +17,7 @@ import {
 } from '@/app/admin/actions';
 import { SessionForm, type SessionFormInitial } from '@/components/admin/session-form';
 import { Button } from '@/components/ui/button';
+import { LinkBusyInline } from '@/components/ui/pending-link';
 import { BookingStatusBadge, SkillLevelBadge } from '@/components/domain/badges';
 import { Alert, Badge, Card } from '@/components/ui/card';
 import { Checkbox, Field, Input, Select, Textarea } from '@/components/ui/form';
@@ -515,6 +516,7 @@ export function BackLink({ href, children }: { href: string; children: React.Rea
   return (
     <Link href={href} className="mb-3 inline-flex items-center gap-1 text-small text-muted hover:text-ink">
       → {children}
+      <LinkBusyInline />
     </Link>
   );
 }

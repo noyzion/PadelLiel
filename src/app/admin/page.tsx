@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SessionRow } from '@/components/admin/session-row';
 import { ButtonLink } from '@/components/ui/button';
+import { PendingLink } from '@/components/ui/pending-link';
 import { BookingStatusBadge } from '@/components/domain/badges';
 import { Alert, Card, EmptyState, PageHeader, ProgressBar, SectionHeading, Stat } from '@/components/ui/card';
 import { COACH_NAME } from '@/lib/brand';
@@ -117,7 +118,7 @@ export default async function AdminDashboardPage() {
           ) : (
             <Card className="divide-y divide-line p-0">
               {data.recentCancellations.map((c) => (
-                <Link key={c.booking_id} href={`/admin/sessions/${c.session_id}`} className="flex flex-col gap-1 p-4 hover:bg-pink-50">
+                <PendingLink key={c.booking_id} href={`/admin/sessions/${c.session_id}`} className="flex flex-col gap-1 p-4 hover:bg-pink-50 active:bg-pink-100">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{c.member_name}</span>
                     <BookingStatusBadge status={c.status} />
@@ -126,7 +127,7 @@ export default async function AdminDashboardPage() {
                     {formatDateHe(c.session_date)} · {formatTimeRange(c.start_time, c.end_time)}
                     {c.cancelled_at ? ` · בוטל ${formatInstantHe(c.cancelled_at)}` : ''}
                   </span>
-                </Link>
+                </PendingLink>
               ))}
             </Card>
           )}

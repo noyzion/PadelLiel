@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { SessionStatusBadge, SkillLevelBadge } from '@/components/domain/badges';
 import { Badge, ProgressBar } from '@/components/ui/card';
+import { PendingLink } from '@/components/ui/pending-link';
 import type { ScheduleSession } from '@/lib/domain/types';
 import { formatDateHe, formatTimeRange } from '@/lib/time';
 
@@ -16,9 +16,9 @@ export function SessionRow({
 }) {
   const full = session.occupied_count >= session.capacity;
   return (
-    <Link
+    <PendingLink
       href={`/admin/sessions/${session.id}`}
-      className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4 shadow-soft transition-colors duration-150 hover:border-navy-900/40"
+      className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4 shadow-soft transition-colors duration-150 hover:border-navy-900/40 active:border-navy-900/50 active:bg-navy-50"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -48,6 +48,6 @@ export function SessionRow({
           </div>
         </>
       ) : null}
-    </Link>
+    </PendingLink>
   );
 }

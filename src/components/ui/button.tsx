@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from 'react';
 import { PadelRacket } from '@/components/brand';
 import { cn } from '@/lib/cn';
+import { LinkBusyInline } from './pending-link';
 import { Spinner } from './spinner';
 
 type Variant = 'primary' | 'accent' | 'secondary' | 'soft' | 'ghost' | 'danger';
@@ -105,6 +106,7 @@ export function ButtonLink({ variant = 'primary', size = 'md', racket, className
     <Link {...props} className={buttonClasses(variant, size, className, Boolean(racket))}>
       {racket ? <RacketFlourish variant={variant} placement={racket} /> : null}
       {racket ? <span className="relative">{children}</span> : children}
+      <LinkBusyInline className="relative" />
     </Link>
   );
 }

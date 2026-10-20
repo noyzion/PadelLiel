@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LinkBusyInline } from '@/components/ui/pending-link';
 import { CalendarDays, CalendarHeart, ClipboardList, History, House, Layers, LayoutDashboard, Settings, UserRound, Users } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -63,8 +64,9 @@ export function NavLinks({
                   layout === 'tabs' && 'min-h-16 flex-col justify-center gap-1 px-1 text-[0.6875rem] font-semibold',
                   layout === 'inline' && 'gap-2 rounded-control px-4 py-2.5 text-small font-semibold',
                   layout === 'side' && 'gap-3 rounded-control px-4 py-3 text-small font-semibold',
-                  layout === 'tabs' && (active ? 'text-navy-900' : 'text-muted'),
-                  layout !== 'tabs' && (active ? 'bg-pink-100 text-navy-900' : 'text-muted hover:bg-navy-50 hover:text-navy-900'),
+                  layout === 'tabs' && (active ? 'text-navy-900' : 'text-muted active:text-navy-900'),
+                  layout !== 'tabs' &&
+                    (active ? 'bg-pink-100 text-navy-900' : 'text-muted hover:bg-navy-50 hover:text-navy-900 active:bg-navy-100'),
                 )}
               >
                 {layout === 'tabs' ? (
@@ -80,6 +82,7 @@ export function NavLinks({
                   <Icon className="size-5" aria-hidden="true" strokeWidth={1.6} />
                 )}
                 <span>{layout === 'tabs' ? (item.tabLabel ?? item.label) : item.label}</span>
+                {layout !== 'tabs' ? <LinkBusyInline /> : null}
               </Link>
             </li>
           );
