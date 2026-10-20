@@ -96,7 +96,7 @@ export function MemberProfileEditor({
           });
         }}
       >
-        <Field label="רמה" hint="מתאמנת יכולה להירשם רק לאימונים ברמה שלה.">
+        <Field label="רמה" hint="יכולה להירשם לאימונים ברמה שלה או נמוכה יותר, לא לרמה גבוהה יותר.">
           {(p) => (
             <Select {...p} value={levelValue} onChange={(e) => setLevelValue(e.target.value)}>
               <option value="">ללא רמה</option>
