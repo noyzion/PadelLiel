@@ -81,11 +81,38 @@ describe('booking preconditions', () => {
     await expect(member.book(session)).rejects.toMatchObject(code('SESSION_STARTED'));
   });
 
-  it('enforces skill levels and requires a level to be assigned', async () => {
-    const intermediate = await db.createMember({ level: 'intermediate' });
-    const noLevel = await db.createMember({ level: null });
-    const advancedSession = await db.createSession({ date: '2026-11-02', level: 'advanced' });
+  it('lets a higher level book down, but never up, and still requires a level', async () => {
+    const beginner = await db.createMember({ level: 'beginner', limit: 3 });
+    const intermediate = await db.createMember({ level: 'intermediate', limit: 3 });
+    const advanced = await db.createMember({ level: 'advanced', limit: 3 });
+    const noLevel = await db.createMember({ level: null, limit: 3 });
+    const beginnerSession = await db.createSession({ date: '2026-11-02', start: '07:00', end: '08:00', level: 'beginner', capacity: 4 });
+    const intermediateSession = await db.createSession({
+      date: '2026-11-02',
+      start: '08:00',
+      end: '09:00',
+      level: 'intermediate',
+      capacity: 4,
+    });
+    const advancedSession = await db.createSession({ date: '2026-11-02', start: '09:00', end: '10:00', level: 'advanced', capacity: 4 });
+
+    await expect(beginner.book(beginnerSession)).resolves.toBeTruthy();
+    await expect(beginner.book(intermediateSession)).rejects.toMatchObject(code('SKILL_LEVEL_MISMATCH'));
+    await expect(beginner.book(advancedSession)).rejects.toMatchObject(code('SKILL_LEVEL_MISMATCH'));
+
+    await expect(intermediate.book(beginnerSession)).resolves.toBeTruthy();
+    await expect(intermediate.book(intermediateSession)).resolves.toBeTruthy();
     await expect(intermediate.book(advancedSession)).rejects.toMatchObject(code('SKILL_LEVEL_MISMATCH'));
+
+    const week = await advanced.rpc<{ id: string; block_reason: string | null }>('get_week_schedule', { p_week_start: '2026-11-01' });
+    expect(week.find((s) => s.id === beginnerSession)?.block_reason).toBeNull();
+    expect(week.find((s) => s.id === intermediateSession)?.block_reason).toBeNull();
+    expect(week.find((s) => s.id === advancedSession)?.block_reason).toBeNull();
+
+    await expect(advanced.book(beginnerSession)).resolves.toBeTruthy();
+    await expect(advanced.book(intermediateSession)).resolves.toBeTruthy();
+    await expect(advanced.book(advancedSession)).resolves.toBeTruthy();
+
     await expect(noLevel.book(advancedSession)).rejects.toMatchObject(code('NO_SKILL_LEVEL'));
   });
 
@@ -162,6 +189,15 @@ describe('capacity', () => {
 });
 
 describe('admin manual assignment', () => {
+  it('can assign a higher level into a lower session without override', async () => {
+    const admin = await db.createAdmin();
+    const advanced = await db.createMember({ level: 'advanced' });
+    const session = await db.createSession({ date: '2026-11-04', start: '14:00', end: '15:00', level: 'beginner' });
+    await expect(
+      admin.call('admin_assign_booking', { p_session_id: session, p_member_id: advanced.userId, p_override_skill: false }),
+    ).resolves.toBeTruthy();
+  });
+
   it('can override the skill level but never capacity', async () => {
     const admin = await db.createAdmin();
     const member = await db.createMember({ level: 'beginner' });

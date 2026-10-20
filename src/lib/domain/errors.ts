@@ -16,7 +16,7 @@ export const ERROR_MESSAGES_HE = {
   SESSION_NOT_PUBLISHED: 'האימון אינו זמין להרשמה.',
   REGISTRATION_CLOSED: 'ההרשמה לאימון זה סגורה.',
   SESSION_STARTED: 'האימון כבר התחיל.',
-  SKILL_LEVEL_MISMATCH: 'האימון מיועד לרמה אחרת.',
+  SKILL_LEVEL_MISMATCH: 'האימון מיועד לרמה גבוהה יותר.',
   NO_ALLOWANCE_REMAINING: 'ניצלת את כל האימונים החודשיים במנוי שלך.',
   SESSION_FULL: 'האימון מלא.',
   SESSION_NOT_FULL: 'יש מקום פנוי באימון, אפשר להירשם ישירות.',
@@ -60,7 +60,7 @@ export function blockReasonHe(reason: string | null): string | null {
     case 'NO_ALLOWANCE_REMAINING':
       return 'הגעת למכסה החודשית של המנוי שלך';
     case 'SKILL_LEVEL_MISMATCH':
-      return 'האימון מיועד לרמה אחרת';
+      return 'האימון מיועד לרמה גבוהה יותר';
     case 'OVERLAPPING_BOOKING':
       return 'את רשומה לאימון אחר באותה שעה';
     case 'REGISTRATION_CLOSED':

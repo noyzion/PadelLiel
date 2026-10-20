@@ -50,7 +50,7 @@ describe('error mapping', () => {
   it('explains block reasons for disabled buttons', () => {
     expect(blockReasonHe(null)).toBeNull();
     expect(blockReasonHe('NO_ALLOWANCE_REMAINING')).toContain('מכסה');
-    expect(blockReasonHe('SKILL_LEVEL_MISMATCH')).toContain('רמה');
+    expect(blockReasonHe('SKILL_LEVEL_MISMATCH')).toContain('גבוהה');
   });
 });
 

@@ -52,6 +52,8 @@ describe('waiting list', () => {
     await expect(holders[0].member.call('join_waitlist', { p_session_id: session })).rejects.toMatchObject(code('ALREADY_BOOKED'));
     const wrongLevel = await db.createMember({ level: 'beginner' });
     await expect(wrongLevel.call('join_waitlist', { p_session_id: session })).rejects.toMatchObject(code('SKILL_LEVEL_MISMATCH'));
+    const higherLevel = await db.createMember({ level: 'advanced' });
+    await expect(higherLevel.call('join_waitlist', { p_session_id: session })).resolves.toBeTruthy();
     const noSub = await db.createMember({ limit: null });
     await expect(noSub.call('join_waitlist', { p_session_id: session })).resolves.toBeTruthy();
     const usedTrial = await db.createMember({ limit: null, name: 'UsedTrial' });
