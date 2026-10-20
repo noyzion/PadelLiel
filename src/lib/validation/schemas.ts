@@ -159,12 +159,8 @@ export const assignSubscriptionSchema = z
     memberId: uuid,
     planId: uuid,
     startsOn: dateString.optional(),
-    endsOn: dateString.optional(),
   })
-  .refine((v) => !v.startsOn || !v.endsOn || v.endsOn >= v.startsOn, {
-    path: ['endsOn'],
-    message: 'תאריך הסיום חייב להיות אחרי תאריך ההתחלה',
-  });
+  .strict();
 
 export const subscriptionActiveSchema = z.object({ subscriptionId: uuid, active: z.boolean() });
 

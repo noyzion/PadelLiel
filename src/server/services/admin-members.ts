@@ -35,15 +35,12 @@ export function resetMemberPassword(db: Db, memberId: string) {
   return rpc<string>(db, 'admin_reset_member_password', { p_member_id: memberId });
 }
 
-export function assignSubscription(
-  db: Db,
-  p: { memberId: string; planId: string; startsOn?: string; endsOn?: string },
-) {
+export function assignSubscription(db: Db, p: { memberId: string; planId: string; startsOn?: string }) {
   return rpc<string>(db, 'admin_assign_subscription', {
     p_member_id: p.memberId,
     p_plan_id: p.planId,
     p_starts_on: p.startsOn ?? null,
-    p_ends_on: p.endsOn ?? null,
+    p_ends_on: null,
   });
 }
 

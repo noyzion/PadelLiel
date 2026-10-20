@@ -10,7 +10,7 @@ import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
 import { getVapidPublicKey } from '@/lib/env';
 import { formatIsraeliPhone } from '@/lib/phone';
-import { currentMonthStart, formatMonthHe, shiftMonth } from '@/lib/time';
+import { currentMonthStart, formatMonthCycleHe, formatMonthHe, shiftMonth } from '@/lib/time';
 import { requireMember } from '@/server/auth';
 import { getAllowance, getMonthlyUsage } from '@/server/services/booking';
 import { getDeviceEndpoints, getPreferences } from '@/server/services/notifications';
@@ -62,6 +62,10 @@ export default async function ProfilePage() {
           {sub?.ends_on ? (
             <span className="text-caption text-muted">
               בתוקף עד <span className="num">{sub.ends_on.split('-').reverse().join('.')}</span>
+            </span>
+          ) : sub ? (
+            <span className="text-caption text-muted">
+              מתחדש ב־1 בכל חודש · {formatMonthCycleHe(month)}
             </span>
           ) : null}
         </div>

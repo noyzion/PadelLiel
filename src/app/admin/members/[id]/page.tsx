@@ -15,7 +15,7 @@ import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
 import { formatIsraeliPhone } from '@/lib/phone';
 import type { Allowance } from '@/lib/domain/types';
-import { currentMonthStart, formatDateHe, formatInstantHe, formatMonthHe, formatTimeRange, israelToday, shiftMonth } from '@/lib/time';
+import { currentMonthStart, formatDateHe, formatInstantHe, formatMonthCycleHe, formatMonthHe, formatTimeRange, israelToday, shiftMonth } from '@/lib/time';
 import { requireAdmin } from '@/server/auth';
 import { getMemberDetail, type MemberBookingRow } from '@/server/services/admin-members';
 import { listPlans } from '@/server/services/admin-plans';
@@ -82,8 +82,11 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <AllowanceSummary title={`החודש · ${formatMonthHe(month)}`} allowance={thisMonth} />
-        <AllowanceSummary title={`החודש הבא · ${formatMonthHe(shiftMonth(month, 1))}`} allowance={nextMonth} />
+        <AllowanceSummary title={`החודש · ${formatMonthHe(month)} · ${formatMonthCycleHe(month)}`} allowance={thisMonth} />
+        <AllowanceSummary
+          title={`החודש הבא · ${formatMonthHe(shiftMonth(month, 1))} · ${formatMonthCycleHe(shiftMonth(month, 1))}`}
+          allowance={nextMonth}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

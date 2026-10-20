@@ -162,7 +162,7 @@ describe('cancellation vs. the monthly quota (8-hour policy)', () => {
 });
 
 describe('subscription changes', () => {
-  it('mid-month plan change keeps consumed sessions counted and applies the new limit going forward', async () => {
+  it('mid-month plan change keeps consumed sessions counted and applies the new limit to the whole calendar month', async () => {
     const admin = await db.createAdmin();
     const member = await db.createMember({ limit: 1, startsOn: '2026-10-01' });
     const fri = await db.createSession({ date: '2026-10-30', start: '07:00' });
@@ -171,19 +171,19 @@ describe('subscription changes', () => {
     await expect(member.book(sat)).rejects.toMatchObject(code('NO_ALLOWANCE_REMAINING'));
 
     const plan3 = await db.planIdForLimit(3);
-    await admin.call('admin_assign_subscription', { p_member_id: member.userId, p_plan_id: plan3 }); // starts today
+    await admin.call('admin_assign_subscription', { p_member_id: member.userId, p_plan_id: plan3 }); // snaps to the 1st
 
     expect(await member.allowance(THIS_MONTH)).toMatchObject({ plan_limit: 3, used: 1, remaining: 2 });
     await expect(member.book(sat)).resolves.toBeTruthy();
 
-    // Old subscription is preserved as history and closed the day before.
+    // Same-day correction of a 1st-of-month row: a one-day history row, newer plan wins the month.
     const subs = await db.sql(
-      'select is_active, starts_on::text, ends_on::text from public.member_subscriptions where member_id = $1 order by starts_on',
+      'select is_active, starts_on::text, ends_on::text from public.member_subscriptions where member_id = $1 order by created_at',
       [member.userId],
     );
     expect(subs.rows).toEqual([
-      { is_active: false, starts_on: '2026-10-01', ends_on: '2026-10-28' },
-      { is_active: true, starts_on: '2026-10-29', ends_on: null },
+      { is_active: false, starts_on: '2026-10-01', ends_on: '2026-10-01' },
+      { is_active: true, starts_on: '2026-10-01', ends_on: null },
     ]);
   });
 
@@ -280,6 +280,66 @@ describe('subscription changes', () => {
     await admin.call('admin_set_subscription_active', { p_subscription_id: oldId, p_active: false });
     expect((await member.allowance(THIS_MONTH)).has_active_subscription).toBe(false);
     await expect(member.book(session)).rejects.toMatchObject(code('NO_ACTIVE_SUBSCRIPTION'));
+  });
+});
+
+describe('calendar-month subscriptions (1st to 1st)', () => {
+  it('assigns from the 1st of the month, not from today', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember({ limit: null });
+    await admin.call('admin_assign_subscription', { p_member_id: member.userId, p_plan_id: await db.planIdForLimit(2) });
+    const row = await db.sql<{ s: string; e: string | null }>(
+      'select starts_on::text s, ends_on::text e from public.member_subscriptions where member_id = $1 and is_active',
+      [member.userId],
+    );
+    expect(row.rows[0]).toEqual({ s: THIS_MONTH, e: null });
+  });
+
+  it('snaps a mid-month start to the 1st, so everyone renews together', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember({ limit: null });
+    await admin.call('admin_assign_subscription', {
+      p_member_id: member.userId,
+      p_plan_id: await db.planIdForLimit(2),
+      p_starts_on: '2026-11-15',
+    });
+    const row = await db.sql<{ s: string }>(
+      'select starts_on::text s from public.member_subscriptions where member_id = $1 and is_active',
+      [member.userId],
+    );
+    expect(row.rows[0].s).toBe('2026-11-01');
+  });
+
+  it('treats an end on the 1st as "until that 1st" (1.11–1.12 is November)', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember({ limit: null });
+    await admin.call('admin_assign_subscription', {
+      p_member_id: member.userId,
+      p_plan_id: await db.planIdForLimit(2),
+      p_starts_on: '2026-11-01',
+      p_ends_on: '2026-12-01',
+    });
+    const row = await db.sql<{ s: string; e: string }>(
+      'select starts_on::text s, ends_on::text e from public.member_subscriptions where member_id = $1 and is_active',
+      [member.userId],
+    );
+    expect(row.rows[0]).toEqual({ s: '2026-11-01', e: '2026-11-30' });
+  });
+
+  it('date edits also snap the start to the 1st of that month', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember({ limit: 2, startsOn: '2026-10-01' });
+    const id = (await db.sql<{ id: string }>('select id from public.member_subscriptions where member_id = $1', [member.userId])).rows[0].id;
+    await admin.call('admin_set_subscription_validity', {
+      p_subscription_id: id,
+      p_starts_on: '2026-11-18',
+      p_ends_on: '2026-12-01',
+    });
+    const row = await db.sql<{ s: string; e: string }>(
+      'select starts_on::text s, ends_on::text e from public.member_subscriptions where id = $1',
+      [id],
+    );
+    expect(row.rows[0]).toEqual({ s: '2026-11-01', e: '2026-11-30' });
   });
 });
 

@@ -2,7 +2,7 @@
 import { Alert, Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
 import type { Allowance } from '@/lib/domain/types';
-import { formatHours, formatMonthHe } from '@/lib/time';
+import { formatHours, formatMonthCycleHe, formatMonthHe } from '@/lib/time';
 
 /** Segmented monthly usage: one segment per allowed session. Decorative; the text beside it says the same. */
 export function MonthlyUsageProgress({ used, total }: { used: number; total: number }) {
@@ -53,7 +53,9 @@ export function SubscriptionSummary({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-small font-semibold text-navy-900">{title}</p>
-          <p className="text-caption text-muted">{formatMonthHe(allowance.month_start)}</p>
+          <p className="text-caption text-muted">
+            {formatMonthHe(allowance.month_start)} · {formatMonthCycleHe(allowance.month_start)}
+          </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-chip border border-pink-200 bg-pink-50 px-3 py-1 text-caption font-semibold text-pink-700">
           <CalendarCheck className="size-3.5" aria-hidden="true" />

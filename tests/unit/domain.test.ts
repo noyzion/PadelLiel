@@ -10,6 +10,7 @@ import {
   registerSchema,
   sessionFormSchema,
   settingsSchema,
+  subscriptionValiditySchema,
   updateMemberSchema,
 } from '@/lib/validation/schemas';
 import fs from 'node:fs';
@@ -161,10 +162,17 @@ describe('input validation', () => {
     expect(updateMemberSchema.safeParse({ memberId: id, patch: { role: 'admin' } }).success).toBe(false);
   });
 
+  it('assigning a plan does not take an end date', () => {
+    const id = '11111111-1111-4111-8111-111111111111';
+    expect(assignSubscriptionSchema.safeParse({ memberId: id, planId: id }).success).toBe(true);
+    expect(assignSubscriptionSchema.safeParse({ memberId: id, planId: id, startsOn: '2026-11-01' }).success).toBe(true);
+    expect(assignSubscriptionSchema.safeParse({ memberId: id, planId: id, startsOn: '2026-11-01', endsOn: '2026-12-01' }).success).toBe(false);
+  });
+
   it('subscription validity must be ordered', () => {
     const id = '11111111-1111-4111-8111-111111111111';
-    expect(assignSubscriptionSchema.safeParse({ memberId: id, planId: id, startsOn: '2026-11-01', endsOn: '2026-10-01' }).success).toBe(false);
-    expect(assignSubscriptionSchema.safeParse({ memberId: id, planId: id }).success).toBe(true);
+    expect(subscriptionValiditySchema.safeParse({ subscriptionId: id, startsOn: '2026-11-01', endsOn: '2026-10-01' }).success).toBe(false);
+    expect(subscriptionValiditySchema.safeParse({ subscriptionId: id, startsOn: '2026-11-01' }).success).toBe(true);
   });
 
   it('settings bound the cancellation cutoff', () => {

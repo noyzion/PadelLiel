@@ -74,11 +74,18 @@ describe('one free trial session', () => {
     expect(await member.allowance(NEXT_MONTH)).toMatchObject({ used: 1, remaining: 1 });
   });
 
-  it('still enforces skill, overlap and capacity', async () => {
-    const member = await db.createMember({ limit: null, name: 'Rules', level: 'intermediate' });
-    const wrongLevel = await db.createSession({ date: '2026-11-09', level: 'advanced' });
-    await expect(member.book(wrongLevel)).rejects.toMatchObject(code('SKILL_LEVEL_MISMATCH'));
+  it('lets her pick any level, even with no level assigned yet', async () => {
+    const noLevel = await db.createMember({ limit: null, name: 'NoLevel', level: null });
+    const advanced = await db.createSession({ date: '2026-11-09', level: 'advanced' });
+    await expect(noLevel.book(advanced)).resolves.toBeTruthy();
 
+    const otherLevel = await db.createMember({ limit: null, name: 'OtherLevel', level: 'beginner' });
+    const intermediate = await db.createSession({ date: '2026-11-13', level: 'intermediate' });
+    await expect(otherLevel.book(intermediate)).resolves.toBeTruthy();
+  });
+
+  it('still enforces overlap after the trial is taken', async () => {
+    const member = await db.createMember({ limit: null, name: 'Rules', level: 'intermediate' });
     const a = await db.createSession({ date: '2026-11-10', start: '07:00', end: '08:00' });
     const overlap = await db.createSession({ date: '2026-11-10', start: '07:30', end: '08:30' });
     await member.book(a);

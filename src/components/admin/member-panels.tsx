@@ -19,7 +19,7 @@ import { useToast } from '@/components/ui/toast';
 import { useServerAction } from '@/components/use-server-action';
 import { APPROVAL_LABEL_HE, APPROVAL_TONE } from '@/lib/domain/labels';
 import type { ApprovalStatus, SkillLevel, SubscriptionPlan } from '@/lib/domain/types';
-import { formatDateHe, formatMonthHe } from '@/lib/time';
+import { formatDateHe, formatMonthCycleHe, formatMonthHe, monthStartOf } from '@/lib/time';
 
 /* ------------------------------------------------------------------ */
 /* Profile: approval, level, notes                                      */
@@ -309,11 +309,9 @@ export function SubscriptionManager({
 }) {
   const { pending, run } = useServerAction();
   const [planId, setPlanId] = useState('');
-  const [startsOn, setStartsOn] = useState('');
-  const [endsOn, setEndsOn] = useState('');
+  const [startsOn, setStartsOn] = useState(monthStartOf(today));
   const [editing, setEditing] = useState<SubscriptionView | null>(null);
   const [editStart, setEditStart] = useState('');
-  const [editEnd, setEditEnd] = useState('');
 
   return (
     <Card className="flex flex-col gap-4">
@@ -329,7 +327,7 @@ export function SubscriptionManager({
               </p>
               <p className="text-caption text-muted">
                 מ-{formatDateHe(s.starts_on)}
-                {s.ends_on ? ` עד ${formatDateHe(s.ends_on)}` : ' ללא תאריך סיום'}
+                {s.ends_on ? ` עד ${formatDateHe(s.ends_on)}` : ' · מתחדש ב־1 בכל חודש'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -340,7 +338,6 @@ export function SubscriptionManager({
                 onClick={() => {
                   setEditing(s);
                   setEditStart(s.starts_on);
-                  setEditEnd(s.ends_on ?? '');
                 }}
               >
                 תאריכים
@@ -366,12 +363,11 @@ export function SubscriptionManager({
         className="flex flex-col gap-3 rounded-2xl border border-line bg-canvas p-4"
         onSubmit={(e) => {
           e.preventDefault();
-          run(() => assignSubscriptionAction({ memberId, planId, startsOn: startsOn || undefined, endsOn: endsOn || undefined }), {
+          run(() => assignSubscriptionAction({ memberId, planId, startsOn: startsOn || undefined }), {
             success: 'המנוי עודכן',
             onSuccess: () => {
               setPlanId('');
-              setStartsOn('');
-              setEndsOn('');
+              setStartsOn(monthStartOf(today));
             },
           });
         }}
@@ -391,26 +387,22 @@ export function SubscriptionManager({
             </Select>
           )}
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="תחילה" hint={`ברירת מחדל: ${formatDateHe(today)}`}>
-            {(p) => <Input {...p} type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />}
-          </Field>
-          <Field label="סיום (אופציונלי)">
-            {(p) => <Input {...p} type="date" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} />}
-          </Field>
-        </div>
+        <Field label="תחילה" hint="נספר מתחילת החודש (ה־1)">
+          {(p) => <Input {...p} type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />}
+        </Field>
         <Button type="submit" loading={pending} disabled={!planId} className="self-start">
           שמירת מנוי
         </Button>
         <p className="text-caption text-muted">
-          החלפת תוכנית באמצע חודש לא מאפסת אימונים שכבר נספרו באותו חודש. מנוי קודם נסגר ביום שלפני ההתחלה החדשה.
+          המנוי חודשי לכולן: {formatMonthCycleHe(today)} וכן הלאה. תאריך באמצע חודש נספר מה־1, והמכסה מתחדשת אוטומטית כל 1 בחודש.
+          החלפת תוכנית לא מאפסת אימונים שכבר נספרו באותו חודש.
         </p>
       </form>
 
       <Modal
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
-        title="תאריכי המנוי"
+        title="תחילת המנוי"
         footer={
           <>
             <Button variant="secondary" onClick={() => setEditing(null)}>ביטול
@@ -419,10 +411,18 @@ export function SubscriptionManager({
               loading={pending}
               onClick={() =>
                 editing &&
-                run(() => setSubscriptionValidityAction({ subscriptionId: editing.id, startsOn: editStart, endsOn: editEnd || undefined }), {
-                  success: 'התאריכים עודכנו',
-                  onSuccess: () => setEditing(null),
-                })
+                run(
+                  () =>
+                    setSubscriptionValidityAction({
+                      subscriptionId: editing.id,
+                      startsOn: editStart,
+                      endsOn: editing.ends_on ?? undefined,
+                    }),
+                  {
+                    success: 'התאריכים עודכנו',
+                    onSuccess: () => setEditing(null),
+                  },
+                )
               }
             >
               שמירה
@@ -430,10 +430,9 @@ export function SubscriptionManager({
           </>
         }
       >
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="תחילה">{(p) => <Input {...p} type="date" value={editStart} onChange={(e) => setEditStart(e.target.value)} />}</Field>
-          <Field label="סיום">{(p) => <Input {...p} type="date" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} />}</Field>
-        </div>
+        <Field label="תחילה" hint="נספר מתחילת החודש (ה־1)">
+          {(p) => <Input {...p} type="date" value={editStart} onChange={(e) => setEditStart(e.target.value)} />}
+        </Field>
       </Modal>
     </Card>
   );

@@ -137,6 +137,12 @@ export function formatDayMonth(date: string): string {
   return `${d}.${m}`;
 }
 
+/** "1.11 – 1.12" for the calendar-month cycle containing `date` (renews on the 1st). */
+export function formatMonthCycleHe(date: string): string {
+  const start = monthStartOf(date);
+  return `${formatDayMonth(start)} – ${formatDayMonth(shiftMonth(start, 1))}`;
+}
+
 /** "יום שני, 2.11" */
 export function formatDateHe(date: string): string {
   return `יום ${weekdayNameHe(date)}, ${formatDayMonth(date)}`;
