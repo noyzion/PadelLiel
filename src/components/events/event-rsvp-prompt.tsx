@@ -33,7 +33,7 @@ export function EventRsvpPrompt({ event }: { event: EventView | null }) {
   if (!event) return null;
 
   const onEventPage = pathname === `/events/${event.id}`;
-  const open = !onEventPage && closedFor !== eventId && !readDismissed(event.id);
+  const open = !onEventPage && closedFor !== event.id && !readDismissed(event.id);
 
   const dismiss = () => {
     try {
