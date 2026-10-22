@@ -5,11 +5,23 @@ import { Alert, PageHeader, SectionHeading } from '@/components/ui/card';
 import { eventAnchor, isEventPast, type EventView } from '@/lib/domain/events';
 import { nowMs } from '@/lib/now';
 import { requireAdmin } from '@/server/auth';
-import { listAllEvents } from '@/server/services/events';
+import { listAllEventRsvps, listAllEvents, type EventRsvpRow } from '@/server/services/events';
 
 export const metadata: Metadata = { title: 'אירועים בקהילה' };
 
-function Section({ id, title, events, empty }: { id: string; title: string; events: EventView[]; empty: string }) {
+function Section({
+  id,
+  title,
+  events,
+  empty,
+  rsvpsByEvent,
+}: {
+  id: string;
+  title: string;
+  events: EventView[];
+  empty: string;
+  rsvpsByEvent: Map<string, EventRsvpRow[]>;
+}) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
       <SectionHeading id={id} count={events.length}>
@@ -20,7 +32,7 @@ function Section({ id, title, events, empty }: { id: string; title: string; even
       ) : (
         <ul className="flex flex-col gap-3">
           {events.map((e) => (
-            <EventRow key={e.id} event={e} />
+            <EventRow key={e.id} event={e} rsvps={rsvpsByEvent.get(e.id) ?? []} />
           ))}
         </ul>
       )}
@@ -30,7 +42,7 @@ function Section({ id, title, events, empty }: { id: string; title: string; even
 
 export default async function AdminEventsPage() {
   const { db } = await requireAdmin();
-  const events = await listAllEvents(db);
+  const [events, rsvpsByEvent] = await Promise.all([listAllEvents(db), listAllEventRsvps(db)]);
   const now = nowMs();
 
   // Drafts read like a calendar: earliest date first.
@@ -57,9 +69,15 @@ export default async function AdminEventsPage() {
       <Alert tone="blue">
         המתאמנות יכולות לאשר הגעה. אישור לאירוע לא נספר במכסת האימונים ואין בו תשלום.
       </Alert>
-      <Section id="events-drafts" title="טיוטות" events={drafts} empty="אין טיוטות." />
-      <Section id="events-upcoming" title="מפורסמים · קרובים" events={upcoming} empty="אין אירועים קרובים שפורסמו." />
-      <Section id="events-past" title="אירועי עבר" events={past} empty="אין אירועי עבר." />
+      <Section id="events-drafts" title="טיוטות" events={drafts} empty="אין טיוטות." rsvpsByEvent={rsvpsByEvent} />
+      <Section
+        id="events-upcoming"
+        title="מפורסמים · קרובים"
+        events={upcoming}
+        empty="אין אירועים קרובים שפורסמו."
+        rsvpsByEvent={rsvpsByEvent}
+      />
+      <Section id="events-past" title="אירועי עבר" events={past} empty="אין אירועי עבר." rsvpsByEvent={rsvpsByEvent} />
     </div>
   );
 }

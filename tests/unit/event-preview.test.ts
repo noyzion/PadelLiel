@@ -221,6 +221,13 @@ describe('preview wiring and access control (source guards)', () => {
     expect(page).not.toMatch(/createEvent|updateEvent|setEventStatus\(|deleteEvent/);
   });
 
+  it('the admin events list shows RSVP counts and names from the shared roster query', () => {
+    const page = read('app', 'admin', 'events', 'page.tsx');
+    expect(page).toContain('listAllEventRsvps');
+    expect(page).toContain('rsvps={rsvpsByEvent.get(e.id)');
+    expect(read('components', 'admin', 'event-row.tsx')).toContain('eventRsvpListSummary');
+  });
+
   it('EventDetails stays free of personal RSVP actions, so the admin preview cannot drift', () => {
     expect(read('components', 'events', 'event-details.tsx')).not.toMatch(/rsvp|setEventRsvp/i);
     expect(read('app', '(member)', 'events', '[id]', 'page.tsx')).toContain('EventRsvp');

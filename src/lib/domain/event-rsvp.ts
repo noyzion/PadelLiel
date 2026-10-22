@@ -32,6 +32,23 @@ export function eventRsvpPromptMessage(title: string, when: EventRsvpWhen): stri
   return `${lead} «${title}». נשמח לאישור הגעה, כדי שנדע לחכות לך 💛🎾`;
 }
 
+const GOING_NAMES_PREVIEW = 5;
+
+/** Compact coach summary for one event on the events list. */
+export function eventRsvpListSummary(rows: { status: EventRsvpStatus; full_name: string }[]): {
+  going: number;
+  notGoing: number;
+  goingNames: string;
+} {
+  const going = rows.filter((r) => r.status === 'GOING');
+  const names = going.map((r) => r.full_name);
+  const goingNames =
+    names.length > GOING_NAMES_PREVIEW
+      ? `${names.slice(0, GOING_NAMES_PREVIEW).join(', ')} ועוד ${names.length - GOING_NAMES_PREVIEW}`
+      : names.join(', ');
+  return { going: going.length, notGoing: rows.length - going.length, goingNames };
+}
+
 export function isEventInRsvpWindow(
   event: { effective_starts_at: string | null; effective_ends_at: string | null },
   nowMs: number,

@@ -108,6 +108,25 @@ describe('set_event_rsvp', () => {
     await expect(dana.rpc('admin_list_event_rsvps', { p_event_id: eventId })).rejects.toMatchObject(code('NOT_AUTHORIZED'));
   });
 
+  it('lets the coach see who is coming on every event at once', async () => {
+    const dana = await db.createMember({ name: 'דנה' });
+    const noa = await db.createMember({ name: 'נועה' });
+    const admin = await db.createAdmin();
+    const yoga = await makeEvent({ starts: '2026-10-30T07:00:00Z', title: 'Yoga' });
+    const coffee = await makeEvent({ starts: '2026-10-31T07:00:00Z', title: 'Coffee' });
+    await dana.call('set_event_rsvp', { p_event_id: yoga, p_status: 'GOING' });
+    await noa.call('set_event_rsvp', { p_event_id: coffee, p_status: 'GOING' });
+
+    const all = await admin.rpc<{ event_id: string; full_name: string; status: string }>('admin_list_all_event_rsvps');
+    expect(all).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ event_id: yoga, full_name: 'דנה', status: 'GOING' }),
+        expect.objectContaining({ event_id: coffee, full_name: 'נועה', status: 'GOING' }),
+      ]),
+    );
+    await expect(dana.rpc('admin_list_all_event_rsvps')).rejects.toMatchObject(code('NOT_AUTHORIZED'));
+  });
+
   it('never changes a trainee’s monthly allowance', async () => {
     const member = await db.createMember({ limit: 2 });
     const session = await db.createSession({ date: '2026-11-03', start: '07:00', end: '08:00' });

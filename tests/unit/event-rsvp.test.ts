@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EVENT_RSVP_PROMPT_TITLE,
   EVENT_RSVP_WINDOW_MS,
+  eventRsvpListSummary,
   eventRsvpPromptMessage,
   eventRsvpPromptWhen,
   isEventInRsvpWindow,
@@ -53,6 +54,23 @@ describe('RSVP window', () => {
         now,
       ),
     ).toBe(false);
+  });
+});
+
+describe('eventRsvpListSummary', () => {
+  it('counts going / not going and lists the names that are coming', () => {
+    expect(
+      eventRsvpListSummary([
+        { status: 'GOING', full_name: 'דנה' },
+        { status: 'NOT_GOING', full_name: 'נועה' },
+        { status: 'GOING', full_name: 'יעל' },
+      ]),
+    ).toEqual({ going: 2, notGoing: 1, goingNames: 'דנה, יעל' });
+  });
+
+  it('shortens a long going list', () => {
+    const rows = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'].map((full_name) => ({ status: 'GOING' as const, full_name }));
+    expect(eventRsvpListSummary(rows).goingNames).toBe('א, ב, ג, ד, ה ועוד 1');
   });
 });
 

@@ -275,6 +275,7 @@ export function setEventRsvp(db: Db, eventId: string, status: EventRsvpStatus) {
 }
 
 export interface EventRsvpRow {
+  event_id?: string;
   member_id: string;
   full_name: string;
   phone: string | null;
@@ -284,4 +285,16 @@ export interface EventRsvpRow {
 
 export async function listEventRsvps(db: Db, eventId: string): Promise<EventRsvpRow[]> {
   return (await rpc<EventRsvpRow[] | null>(db, 'admin_list_event_rsvps', { p_event_id: eventId })) ?? [];
+}
+
+export async function listAllEventRsvps(db: Db): Promise<Map<string, EventRsvpRow[]>> {
+  const rows = (await rpc<EventRsvpRow[] | null>(db, 'admin_list_all_event_rsvps')) ?? [];
+  const byEvent = new Map<string, EventRsvpRow[]>();
+  for (const row of rows) {
+    if (!row.event_id) continue;
+    const list = byEvent.get(row.event_id) ?? [];
+    list.push(row);
+    byEvent.set(row.event_id, list);
+  }
+  return byEvent;
 }
