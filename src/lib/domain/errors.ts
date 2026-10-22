@@ -39,6 +39,8 @@ export const ERROR_MESSAGES_HE = {
   PLAN_NOT_FOUND: 'המנוי לא נמצא.',
   ANOTHER_SUBSCRIPTION_ACTIVE: 'כבר קיים מנוי פעיל למתאמנת. החליפי מנוי במקום להפעיל ישן.',
   EVENT_NOT_FOUND: 'האירוע לא נמצא.',
+  EVENT_NOT_PUBLISHED: 'האירוע אינו פתוח לאישור הגעה.',
+  EVENT_ALREADY_ENDED: 'האירוע כבר הסתיים.',
   INVALID_INPUT: 'הנתונים שהוזנו אינם תקינים.',
   INTERNAL: 'אירעה שגיאה. נסי שוב בעוד רגע.',
 } as const;

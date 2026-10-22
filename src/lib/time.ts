@@ -64,6 +64,11 @@ export function weekDates(date: string): string[] {
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 }
 
+/** Dates of the week that are today or later (members do not see days that already passed). */
+export function upcomingWeekDates(weekStart: string, today: string): string[] {
+  return weekDates(weekStart).filter((date) => date >= today);
+}
+
 /** Today's calendar date in Israel for the given instant. */
 export function israelToday(now: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', {

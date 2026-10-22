@@ -15,6 +15,7 @@ import {
   parseWeekParam,
   shiftMonth,
   shiftWeek,
+  upcomingWeekDates,
   weekDates,
   weekEndOf,
   weekStartOf,
@@ -36,6 +37,18 @@ describe('week arithmetic (Sunday-Saturday)', () => {
     expect(weekDates('2026-11-04')).toEqual([
       '2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07',
     ]);
+  });
+
+  it('lists remaining days of the week from today onward', () => {
+    expect(upcomingWeekDates('2026-11-01', '2026-11-01')).toEqual([
+      '2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07',
+    ]);
+    expect(upcomingWeekDates('2026-11-01', '2026-11-04')).toEqual([
+      '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07',
+    ]);
+    expect(upcomingWeekDates('2026-11-01', '2026-11-07')).toEqual(['2026-11-07']);
+    // A future week still shows all seven days.
+    expect(upcomingWeekDates('2026-11-08', '2026-11-04')).toHaveLength(7);
   });
 
   it('is unaffected by daylight-saving changes', () => {

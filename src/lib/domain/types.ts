@@ -190,7 +190,8 @@ export type NotificationType =
   | 'staff_member_pending'
   | 'staff_booking_created'
   | 'staff_booking_cancelled'
-  | 'staff_waitlist_joined';
+  | 'staff_waitlist_joined'
+  | 'event_rsvp_reminder';
 
 /** A row of the trainee's in-app notification center. */
 export interface AppNotification {

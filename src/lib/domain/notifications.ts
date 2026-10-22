@@ -75,4 +75,5 @@ export const NOTIFICATION_TYPE_LABELS_HE: Record<NotificationType, string> = {
   staff_booking_created: 'הרשמה חדשה',
   staff_booking_cancelled: 'ביטול הרשמה',
   staff_waitlist_joined: 'רשימת המתנה',
+  event_rsvp_reminder: 'אישור הגעה לאירוע',
 };

@@ -210,6 +210,13 @@ describe('private data isolation', () => {
     expect(rows.rowCount).toBe(0);
   });
 
+  it('cancelled sessions are invisible to trainees at the table level', async () => {
+    const m = await db.createMember();
+    const cancelled = await db.createSession({ date: '2026-11-20', start: '10:00', end: '11:00', status: 'CANCELLED' });
+    const rows = await m.query('select id from public.sessions where id = $1', [cancelled]);
+    expect(rows.rowCount).toBe(0);
+  });
+
   it('anonymous visitors cannot read or call anything', async () => {
     await expect(asAnon('select * from public.profiles')).rejects.toThrow(/permission denied/);
     await expect(asAnon('select * from public.sessions')).rejects.toThrow(/permission denied/);

@@ -1,7 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
+import { Badge } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
+import { EVENT_RSVP_LABEL_HE, type EventRsvpStatus } from '@/lib/domain/event-rsvp';
 import {
   EVENT_DATE_TBA_HE,
   EVENT_TIME_TBA_HE,
@@ -60,7 +62,15 @@ export function EventCover({
  * A boutique-style announcement: photo first, then date and time, title, a short teaser and a quiet
  * "לפרטים נוספים" link. The whole card is clickable (the link is stretched over it).
  */
-export function EventCard({ event, past = false }: { event: EventView; past?: boolean }) {
+export function EventCard({
+  event,
+  past = false,
+  rsvp = null,
+}: {
+  event: EventView;
+  past?: boolean;
+  rsvp?: EventRsvpStatus | null;
+}) {
   const when = eventWhenHe(event, true);
   const teaser = splitParagraphs(event.description)[0] ?? '';
 
@@ -86,7 +96,12 @@ export function EventCard({ event, past = false }: { event: EventView; past?: bo
             </>
           ) : null}
         </p>
-        <h3 className="text-card font-semibold text-navy-900">{event.title}</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-card font-semibold text-navy-900">{event.title}</h3>
+          {rsvp ? (
+            <Badge tone={rsvp === 'GOING' ? 'green' : 'neutral'}>{EVENT_RSVP_LABEL_HE[rsvp]}</Badge>
+          ) : null}
+        </div>
         {teaser ? <p className="line-clamp-3 text-small text-muted">{teaser}</p> : null}
         <p className="mt-1 flex items-center gap-1.5 text-caption text-muted">
           <MapPin className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.6} />

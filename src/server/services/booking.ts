@@ -20,17 +20,24 @@ export const getWeekSchedule = cache(async (db: Db, weekStart: string) => {
 
 /**
  * Whether the caller can see any session in that week. Uses a head-count on `sessions` (RLS hides
- * drafts from trainees) so the schedule page does not depend on a new RPC that may not be applied yet.
+ * drafts and cancelled sessions from trainees) so the schedule page does not depend on a new RPC
+ * that may not be applied yet.
  */
 export const weekHasSessions = cache(async (db: Db, weekStart: string): Promise<boolean> => {
-  const { count, error } = await db.from('sessions').select('id', { count: 'exact', head: true }).eq('week_start', weekStart);
+  const { count, error } = await db
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('week_start', weekStart)
+    .neq('status', 'CANCELLED');
   if (error) throw toAppError(error);
   return (count ?? 0) > 0;
 });
 
 export const getMyBookings = cache(async (db: Db) => {
   const rows = await rpc<MyBooking[]>(db, 'get_my_bookings');
-  return (rows ?? []).map((b) => ({ ...b, is_trial: Boolean(b.is_trial) }));
+  return (rows ?? [])
+    .map((b) => ({ ...b, is_trial: Boolean(b.is_trial) }))
+    .filter((b) => b.session_status !== 'CANCELLED');
 });
 
 /** The single, centralized monthly-quota calculation (`monthStart` = any date in the month). */

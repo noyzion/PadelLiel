@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, BellRing, CalendarCheck, CalendarDays, CalendarX, Clock, Hourglass, UserPlus, type LucideIcon } from 'lucide-react';
+import { Bell, BellRing, CalendarCheck, CalendarDays, CalendarHeart, CalendarX, Clock, Hourglass, UserPlus, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -24,6 +24,7 @@ const ICONS: Record<NotificationType, LucideIcon> = {
   staff_booking_created: CalendarCheck,
   staff_booking_cancelled: CalendarX,
   staff_waitlist_joined: Hourglass,
+  event_rsvp_reminder: CalendarHeart,
 };
 
 function announceChange() {

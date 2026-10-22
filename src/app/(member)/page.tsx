@@ -6,7 +6,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { Card, SectionHeading } from '@/components/ui/card';
 import { levelLabel } from '@/lib/domain/labels';
 import { nowMs } from '@/lib/now';
-import { currentMonthStart, currentWeekStart, greetingHe, shiftWeek, weekStartOf } from '@/lib/time';
+import { currentMonthStart, currentWeekStart, greetingHe, israelToday, shiftWeek, weekStartOf } from '@/lib/time';
 import { requireMember } from '@/server/auth';
 import { getAllowance, getMyBookings, getWeekSchedule } from '@/server/services/booking';
 import { getSettings, getSkillLevels } from '@/server/services/settings';
@@ -29,6 +29,7 @@ export default async function MemberHomePage() {
   ]);
 
   const now = nowMs();
+  const today = israelToday(new Date(now));
   const upcoming = bookings
     .filter((b) => b.can_cancel && new Date(b.starts_at).getTime() > now)
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
@@ -38,7 +39,14 @@ export default async function MemberHomePage() {
 
   // Sessions she can book right now, soonest first (the database already decided: block_reason === null).
   const available = [...thisWeekSessions, ...nextWeekSessions]
-    .filter((s) => s.status === 'PUBLISHED' && s.block_reason === null && !s.my_booking_id)
+    .filter(
+      (s) =>
+        s.status === 'PUBLISHED' &&
+        s.block_reason === null &&
+        !s.my_booking_id &&
+        s.session_date >= today &&
+        new Date(s.starts_at).getTime() > now,
+    )
     .slice(0, 3);
 
   return (

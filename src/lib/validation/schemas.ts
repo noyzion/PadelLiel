@@ -243,6 +243,10 @@ export const eventImportSchema = z.object({
 
 export const eventIdSchema = z.object({ eventId: uuid });
 export const eventStatusSchema = z.object({ eventId: uuid, status: z.enum(['DRAFT', 'PUBLISHED']) });
+export const eventRsvpSchema = z.object({
+  eventId: uuid,
+  status: z.enum(['GOING', 'NOT_GOING']),
+});
 
 export function firstIssueMessage(error: z.ZodError): string {
   return error.issues[0]?.message ?? 'הנתונים שהוזנו אינם תקינים';

@@ -12,7 +12,7 @@ import {
   israelToday,
   parseWeekParam,
   shiftWeek,
-  weekDates,
+  upcomingWeekDates,
   weekdayNameHe,
 } from '@/lib/time';
 import { requireMember } from '@/server/auth';
@@ -52,10 +52,12 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
       levelsP,
       allowanceP,
     ]);
-    nextWeekOpen = nextWeekSessions.length > 0;
+    const thisWeekVisible = thisWeekSessions.filter((session) => session.status !== 'CANCELLED');
+    const nextWeekVisible = nextWeekSessions.filter((session) => session.status !== 'CANCELLED');
+    nextWeekOpen = nextWeekVisible.length > 0;
     showNextWeek = nextWeekOpen;
     weekStart = showNextWeek ? nextWeek : thisWeek;
-    sessions = showNextWeek ? nextWeekSessions : thisWeekSessions;
+    sessions = showNextWeek ? nextWeekVisible : thisWeekVisible;
     settings = s;
     levels = l;
     trialAvailable = allowance.trial_available;
@@ -70,7 +72,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
     nextWeekOpen = hasNext;
     showNextWeek = false;
     weekStart = thisWeek;
-    sessions = thisWeekSessions;
+    sessions = thisWeekSessions.filter((session) => session.status !== 'CANCELLED');
     settings = s;
     levels = l;
     trialAvailable = allowance.trial_available;
@@ -78,10 +80,11 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
 
   const now = nowMs();
   const today = israelToday(new Date(now));
-  const dates = weekDates(weekStart);
+  const dates = upcomingWeekDates(weekStart, today);
+  const upcomingSessions = sessions.filter((s) => new Date(s.starts_at).getTime() > now);
 
   const days: DayTab[] = dates.map((date) => {
-    const daySessions = sessions.filter((s) => s.session_date === date);
+    const daySessions = upcomingSessions.filter((s) => s.session_date === date);
     return {
       date,
       weekday: weekdayNameHe(date),
@@ -102,12 +105,8 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
     };
   });
 
-  // Open on the first day from today onward that has sessions (any day of a future week counts as
-  // upcoming); fall back to the first day with sessions, then to the first day of the week.
-  const defaultDate =
-    days.find((d) => d.sessionCount > 0 && d.date >= today)?.date ??
-    days.find((d) => d.sessionCount > 0)?.date ??
-    days[0].date;
+  // Open on the first remaining day that has a session; otherwise the first remaining day.
+  const defaultDate = days.find((d) => d.sessionCount > 0)?.date ?? days[0]?.date;
 
   return (
     <div className="flex flex-col gap-5">
@@ -125,8 +124,10 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
 
       {sessions.length === 0 ? (
         <EmptyState title="עוד לא פורסמו אימונים לשבוע הזה" description="אימונים חדשים יופיעו כאן כשיפורסמו." />
-      ) : (
+      ) : defaultDate ? (
         <DayTabs key={weekStart} days={days} defaultDate={defaultDate} />
+      ) : (
+        <EmptyState title="אין אימונים מהיום והלאה" description="אימונים חדשים יופיעו כאן כשיפורסמו." />
       )}
     </div>
   );

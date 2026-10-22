@@ -284,7 +284,7 @@ describe('schedule read API', () => {
     expect(Object.keys(row).some((k) => k.includes('member'))).toBe(false);
   });
 
-  it('week_has_sessions matches whether get_week_schedule would return rows (drafts only for admins)', async () => {
+  it('week_has_sessions matches whether get_week_schedule would return rows (drafts and cancelled only for admins)', async () => {
     const admin = await db.createAdmin();
     const member = await db.createMember();
     const empty = '2026-12-13';
@@ -295,6 +295,29 @@ describe('schedule read API', () => {
     expect(await admin.call<boolean>('week_has_sessions', { p_week_start: empty })).toBe(false);
     expect(await member.call<boolean>('week_has_sessions', { p_week_start: withDraft })).toBe(false);
     expect(await admin.call<boolean>('week_has_sessions', { p_week_start: withDraft })).toBe(true);
+  });
+
+  it('hides cancelled sessions from trainees and keeps them for admins', async () => {
+    const admin = await db.createAdmin();
+    const member = await db.createMember();
+    const week = '2026-11-15';
+    const cancelled = await db.createSession({ date: '2026-11-16', start: '10:00', end: '11:00', status: 'CANCELLED' });
+    const open = await db.createSession({ date: '2026-11-17', start: '07:00' });
+
+    const memberView = await member.rpc<{ id: string }>('get_week_schedule', { p_week_start: week });
+    expect(memberView.map((r) => r.id)).not.toContain(cancelled);
+    expect(memberView.map((r) => r.id)).toContain(open);
+
+    const adminView = await admin.rpc<{ id: string }>('get_week_schedule', { p_week_start: week });
+    expect(adminView.map((r) => r.id)).toContain(cancelled);
+
+    expect((await member.query('select id from public.sessions where id = $1', [cancelled])).rowCount).toBe(0);
+    expect((await admin.query('select id from public.sessions where id = $1', [cancelled])).rowCount).toBe(1);
+
+    const onlyCancelled = '2026-12-27';
+    await db.createSession({ date: '2026-12-28', start: '08:00', end: '09:00', status: 'CANCELLED' });
+    expect(await member.call<boolean>('week_has_sessions', { p_week_start: onlyCancelled })).toBe(false);
+    expect(await admin.call<boolean>('week_has_sessions', { p_week_start: onlyCancelled })).toBe(true);
   });
 });
 

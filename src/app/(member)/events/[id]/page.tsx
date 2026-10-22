@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { EventDetails } from '@/components/events/event-details';
+import { EventRsvp } from '@/components/events/event-rsvp';
 import { isEventPast } from '@/lib/domain/events';
 import { nowMs } from '@/lib/now';
 import { requireMember } from '@/server/auth';
-import { getPublishedEvent } from '@/server/services/events';
+import { getMyEventRsvp, getPublishedEvent } from '@/server/services/events';
 
 export const metadata: Metadata = { title: 'אירועים בקהילה' };
 
@@ -20,16 +21,21 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ i
   // Admin previews live under /admin/events and never reach this page.
   const event = await getPublishedEvent(db, id);
   if (!event) notFound();
+  const past = isEventPast(event, nowMs());
+  const rsvp = past ? null : await getMyEventRsvp(db, event.id);
 
   return (
-    <EventDetails
-      event={event}
-      past={isEventPast(event, nowMs())}
-      before={
-        <Link href="/events" className="inline-flex items-center gap-1 self-start text-small text-muted hover:text-ink">
-          → חזרה לאירועים
-        </Link>
-      }
-    />
+    <div className="flex flex-col gap-6">
+      <EventDetails
+        event={event}
+        past={past}
+        before={
+          <Link href="/events" className="inline-flex items-center gap-1 self-start text-small text-muted hover:text-ink">
+            → חזרה לאירועים
+          </Link>
+        }
+      />
+      {past ? null : <EventRsvp eventId={event.id} initialStatus={rsvp} />}
+    </div>
   );
 }

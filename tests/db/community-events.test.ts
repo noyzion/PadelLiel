@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BASE_NOW, NEXT_MONTH, TestDb, type UserSession } from './support/harness';
 
-// Community events: an informational noticeboard. Tested against the real migrations, RLS and
+// Community events: noticeboard + optional RSVPs. Tested against the real migrations, RLS and
 // storage policies (the Supabase auth/storage schemas are stubbed, the policies are the real ones).
 let db: TestDb;
 beforeAll(async () => {
@@ -402,7 +402,7 @@ describe('event image storage permissions', () => {
 });
 
 describe('events are independent of training', () => {
-  it('community_events has no registration, RSVP, capacity, attendance, payment or notification columns', async () => {
+  it('community_events itself has no RSVP or payment columns; confirmations live on event_rsvps', async () => {
     const cols = await db.sql<{ column_name: string }>(
       "select column_name from information_schema.columns where table_schema = 'public' and table_name = 'community_events' order by column_name",
     );
@@ -412,16 +412,19 @@ describe('events are independent of training', () => {
         'id', 'import_key', 'location', 'starts_at', 'status', 'title', 'updated_at',
       ].sort(),
     );
-    const tables = await db.sql(
+    const tables = await db.sql<{ table_name: string }>(
       `select table_name from information_schema.tables
-       where table_schema = 'public' and table_name ~* '(rsvp|attend|participant|ticket|event.*(registration|booking|subscription))'`,
+       where table_schema = 'public' and table_name ~* '(rsvp|attend|participant|ticket|event.*(registration|booking|subscription))'
+       order by table_name`,
     );
-    expect(tables.rowCount).toBe(0);
+    expect(tables.rows.map((r) => r.table_name)).toEqual(['event_rsvps']);
   });
 
-  it('no table references community_events, and it references nothing but the creator profile', async () => {
-    const inbound = await db.sql("select conrelid::regclass::text t from pg_constraint where contype = 'f' and confrelid = 'public.community_events'::regclass");
-    expect(inbound.rowCount).toBe(0);
+  it('only RSVPs and notification jobs reference community_events, and it references nothing but the creator profile', async () => {
+    const inbound = await db.sql<{ t: string }>(
+      "select conrelid::regclass::text t from pg_constraint where contype = 'f' and confrelid = 'public.community_events'::regclass order by 1",
+    );
+    expect(inbound.rows.map((r) => r.t)).toEqual(['event_rsvps', 'notification_jobs']);
     const outbound = await db.sql("select confrelid::regclass::text t from pg_constraint where contype = 'f' and conrelid = 'public.community_events'::regclass");
     expect(outbound.rows.map((r) => r.t)).toEqual(['profiles']);
   });

@@ -18,8 +18,8 @@ export interface DayTab {
 }
 
 /**
- * The seven days of the viewed week as tabs; picking a day shows only that day's sessions.
- * Selection is local state (the whole week is already loaded), so switching days is instant.
+ * Remaining days of the viewed week as tabs (today onward on the current week).
+ * Picking a day shows only that day's sessions. Selection is local state, so switching is instant.
  * Remount with `key={weekStart}` when the week changes so the default day is recomputed.
  */
 export function DayTabs({ days, defaultDate }: { days: DayTab[]; defaultDate: string }) {
@@ -44,13 +44,15 @@ export function DayTabs({ days, defaultDate }: { days: DayTab[]; defaultDate: st
   };
 
   const active = days.find((d) => d.date === selected) ?? days[0];
+  if (!active) return null;
 
   return (
     <div className="flex flex-col gap-4">
       <div
         role="tablist"
         aria-label="ימי השבוע"
-        className="grid grid-cols-7 gap-1 rounded-card border border-line bg-surface p-1.5 shadow-soft"
+        className="grid gap-1 rounded-card border border-line bg-surface p-1.5 shadow-soft"
+        style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}
       >
         {days.map((day, index) => {
           const isSelected = day.date === active.date;

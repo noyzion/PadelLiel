@@ -58,6 +58,7 @@ describe('early cancellation (>= 8h before start)', () => {
     expect(await db.bookingStatus(bookingId)).toBe('CANCELLED_EARLY');
     expect(await db.occupied(session)).toBe(0);
     expect(await member.allowance('2026-11-01')).toMatchObject({ used: 0, remaining: 1 });
+    expect((await member.rpc<{ booking_id: string; status: string }>('get_my_bookings')).map((r) => r.booking_id)).toContain(bookingId);
 
     // she can use the freed allowance on a different session
     const other = await db.createSession({ date: '2026-11-03', start: '07:00' });
@@ -266,6 +267,8 @@ describe('coach cancels a session', () => {
     expect(await db.bookingStatus(ba)).toBe('CANCELLED_BY_COACH');
     expect(await db.bookingStatus(bb)).toBe('CANCELLED_BY_COACH');
     expect(await a.allowance('2026-11-01')).toMatchObject({ used: 0, remaining: 1 });
+    expect(await a.rpc('get_my_bookings')).toHaveLength(0);
+    expect((await a.rpc<{ id: string }>('get_week_schedule', { p_week_start: '2026-11-01' })).map((r) => r.id)).not.toContain(session);
     await expect(late.book(session)).rejects.toMatchObject(code('SESSION_NOT_PUBLISHED'));
     const row = await db.sql('select status, cancel_reason from public.sessions where id = $1', [session]);
     expect(row.rows[0]).toMatchObject({ status: 'CANCELLED', cancel_reason: 'Rain' });

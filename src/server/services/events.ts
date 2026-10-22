@@ -2,6 +2,7 @@ import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type { Db } from '@/lib/supabase/server';
 import { AppError, toAppError } from '@/lib/domain/errors';
+import { EVENT_RSVP_WINDOW_MS, type EventRsvpStatus } from '@/lib/domain/event-rsvp';
 import { WHEN_PUBLISH_NEEDS_DATE } from '@/lib/domain/event-when';
 import {
   EVENT_IMAGE_BUCKET,
@@ -13,10 +14,11 @@ import {
   type EventView,
 } from '@/lib/domain/events';
 import { currentMonthStart, israelLocalToInstant, shiftMonth } from '@/lib/time';
-import { unwrap } from '../rpc';
+import { rpc, unwrap } from '../rpc';
 
 /**
- * Community events: an informational noticeboard, fully independent of training sessions.
+ * Community events: a noticeboard plus optional attendance confirmation.
+ * Independent of training sessions — an RSVP never touches quota.
  * Visibility is enforced by Row Level Security (trainees only ever see PUBLISHED events);
  * the status filters below only make the intent explicit.
  */
@@ -223,4 +225,63 @@ export async function deleteEvent(db: Db, id: string): Promise<void> {
   ) as { cover_image: string | null }[];
   if (deleted.length === 0) throw new AppError('EVENT_NOT_FOUND');
   await removeImage(db, deleted[0].cover_image);
+}
+
+/* ------------------------------ RSVP ------------------------------ */
+
+export async function getMyEventRsvp(db: Db, eventId: string): Promise<EventRsvpStatus | null> {
+  const row = unwrap(
+    await db.from('event_rsvps').select('status').eq('event_id', eventId).maybeSingle(),
+  ) as { status: EventRsvpStatus } | null;
+  return row?.status ?? null;
+}
+
+export async function getMyEventRsvps(db: Db, eventIds: string[]): Promise<Map<string, EventRsvpStatus>> {
+  const map = new Map<string, EventRsvpStatus>();
+  if (eventIds.length === 0) return map;
+  const rows = unwrap(await db.from('event_rsvps').select('event_id, status').in('event_id', eventIds)) as {
+    event_id: string;
+    status: EventRsvpStatus;
+  }[];
+  for (const row of rows ?? []) map.set(row.event_id, row.status);
+  return map;
+}
+
+/** Soonest published event in the next 24 hours that this trainee has not answered yet. */
+export async function getEventRsvpPrompt(db: Db, now: Date): Promise<EventView | null> {
+  const until = new Date(now.getTime() + EVENT_RSVP_WINDOW_MS).toISOString();
+  const events = (unwrap(
+    await db
+      .from('community_events')
+      .select('*')
+      .eq('status', 'PUBLISHED')
+      .gt('effective_ends_at', now.toISOString())
+      .lte('effective_starts_at', until)
+      .order('effective_starts_at', { ascending: true })
+      .order('id')
+      .limit(20),
+  ) ?? []) as CommunityEvent[];
+  if (events.length === 0) return null;
+  const answered = await getMyEventRsvps(
+    db,
+    events.map((e) => e.id),
+  );
+  const pending = events.find((e) => !answered.has(e.id));
+  return pending ? toView(db, pending) : null;
+}
+
+export function setEventRsvp(db: Db, eventId: string, status: EventRsvpStatus) {
+  return rpc<EventRsvpStatus>(db, 'set_event_rsvp', { p_event_id: eventId, p_status: status });
+}
+
+export interface EventRsvpRow {
+  member_id: string;
+  full_name: string;
+  phone: string | null;
+  status: EventRsvpStatus;
+  updated_at: string;
+}
+
+export async function listEventRsvps(db: Db, eventId: string): Promise<EventRsvpRow[]> {
+  return (await rpc<EventRsvpRow[] | null>(db, 'admin_list_event_rsvps', { p_event_id: eventId })) ?? [];
 }

@@ -11,7 +11,7 @@ import { parseInput, runAction, type ActionResult } from '@/server/action';
 import { applyAnnualImport, type ImportResult } from '@/server/services/event-import';
 import { createEvent, deleteEvent, setEventStatus, updateEvent, type ImageUpload } from '@/server/services/events';
 
-// Community events are informational only (no registration, RSVP, capacity, ...). Staff = approved admins:
+// Community events (plus optional RSVPs on a separate table). Staff = approved admins:
 // every action re-checks that, and Row Level Security + storage policies enforce it again in the database.
 
 function refresh() {

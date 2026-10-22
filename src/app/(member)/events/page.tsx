@@ -5,7 +5,7 @@ import { VENUE_NAME } from '@/lib/brand';
 import { nowMs } from '@/lib/now';
 import { currentMonthStart, formatMonthHe } from '@/lib/time';
 import { requireMember } from '@/server/auth';
-import { currentMonthRange, listPastEvents, listUpcomingEvents } from '@/server/services/events';
+import { currentMonthRange, getMyEventRsvps, listPastEvents, listUpcomingEvents } from '@/server/services/events';
 
 export const metadata: Metadata = { title: 'אירועים בקהילה' };
 
@@ -18,6 +18,10 @@ export default async function EventsPage() {
     listUpcomingEvents(db, now, range),
     listPastEvents(db, now, 60, range),
   ]);
+  const rsvps = await getMyEventRsvps(
+    db,
+    [...upcoming, ...past].map((event) => event.id),
+  );
 
   return (
     <div className="flex flex-col gap-10">
@@ -32,7 +36,7 @@ export default async function EventsPage() {
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard key={event.id} event={event} rsvp={rsvps.get(event.id) ?? null} />
             ))}
           </div>
         )}
@@ -43,7 +47,7 @@ export default async function EventsPage() {
           <SectionHeading id="events-past">אירועי עבר</SectionHeading>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {past.map((event) => (
-              <EventCard key={event.id} event={event} past />
+              <EventCard key={event.id} event={event} past rsvp={rsvps.get(event.id) ?? null} />
             ))}
           </div>
         </section>

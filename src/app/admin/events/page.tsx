@@ -55,7 +55,7 @@ export default async function AdminEventsPage() {
         }
       />
       <Alert tone="blue">
-        האירועים הם הודעות לקריאה בלבד: אין הרשמה, תשלום או רשימת משתתפות, והם לא משפיעים על מכסת האימונים.
+        המתאמנות יכולות לאשר הגעה. אישור לאירוע לא נספר במכסת האימונים ואין בו תשלום.
       </Alert>
       <Section id="events-drafts" title="טיוטות" events={drafts} empty="אין טיוטות." />
       <Section id="events-upcoming" title="מפורסמים · קרובים" events={upcoming} empty="אין אירועים קרובים שפורסמו." />

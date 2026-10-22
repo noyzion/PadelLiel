@@ -43,8 +43,8 @@ export interface EventFormInitial {
 }
 
 /**
- * Create or edit a community event. The event is informational only: there is deliberately no
- * registration, capacity or attendance setting here.
+ * Create or edit a community event. Attendance confirmations are collected on the event page,
+ * not as a capacity setting here. An RSVP never touches the monthly training quota.
  */
 export function EventForm({
   initial,

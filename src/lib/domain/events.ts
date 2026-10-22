@@ -2,8 +2,8 @@ import { VENUE_NAME } from '@/lib/brand';
 import { formatEventDatesHe, formatEventWhenHe, israelNoonOf } from '@/lib/time';
 
 /**
- * Community events: an informational noticeboard. Nothing here knows about sessions, bookings,
- * plans or allowances, and nothing may ever be added that does (no registration, RSVP, capacity, ...).
+ * Community events: a noticeboard plus optional attendance confirmation (`event_rsvps`).
+ * Nothing here knows about sessions, bookings, plans or allowances — an RSVP never touches quota.
  */
 
 export type EventStatus = 'DRAFT' | 'PUBLISHED';
