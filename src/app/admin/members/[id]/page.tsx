@@ -9,7 +9,8 @@ import {
   SubscriptionManager,
 } from '@/components/admin/member-panels';
 import { BackLink } from '@/components/admin/session-panels';
-import { BookingStatusBadge } from '@/components/domain/badges';
+import { BookingStatusBadge, TrialMemberIndicator } from '@/components/domain/badges';
+import { memberHadTrialSession } from '@/lib/domain/trial';
 import { Badge, Card, PageHeader, ProgressBar, SectionHeading } from '@/components/ui/card';
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
@@ -64,12 +65,16 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
   const nowIso = new Date().toISOString();
   const upcoming = bookings.filter((b) => b.status === 'CONFIRMED' && b.session && b.session.starts_at >= nowIso);
   const history = bookings.filter((b) => !upcoming.includes(b));
+  const hadTrialSession = memberHadTrialSession(bookings);
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <BackLink href="/admin/members">חזרה לרשימת המתאמנות</BackLink>
         <PageHeader title={profile.full_name} description={levelLabel(profile.skill_level_code, levels)} />
+        <div className="mt-2">
+          <TrialMemberIndicator hadTrial={hadTrialSession} />
+        </div>
         <p className="text-small text-muted">
           <span dir="ltr">{formatIsraeliPhone(profile.phone) || '-'}</span>
           {profile.email ? (

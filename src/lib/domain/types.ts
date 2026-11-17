@@ -157,6 +157,8 @@ export interface MemberOverview {
   used: number;
   remaining: number;
   has_active_subscription: boolean;
+  /** Booked or finished a one-time trial session (not an early cancel that restores trial). */
+  had_trial_session: boolean;
 }
 
 export interface SessionRow {

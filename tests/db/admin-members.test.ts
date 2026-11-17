@@ -19,6 +19,7 @@ interface Row {
   remaining: number;
   adjustments: number;
   has_active_subscription: boolean;
+  had_trial_session: boolean;
 }
 
 describe('admin_list_members', () => {

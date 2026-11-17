@@ -14,8 +14,9 @@ import { shiftMonth } from '@/lib/time';
 import { embedded, rpc, unwrap } from '../rpc';
 import { getAllowance, getMonthlyUsage } from './booking';
 
-export function listMembers(db: Db, monthStart: string) {
-  return rpc<MemberOverview[]>(db, 'admin_list_members', { p_month_start: monthStart });
+export async function listMembers(db: Db, monthStart: string) {
+  const rows = await rpc<MemberOverview[]>(db, 'admin_list_members', { p_month_start: monthStart });
+  return (rows ?? []).map((m) => ({ ...m, had_trial_session: Boolean(m.had_trial_session) }));
 }
 
 export async function updateMember(db: Db, memberId: string, patch: Record<string, unknown>) {

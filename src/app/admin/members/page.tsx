@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { PendingLink } from '@/components/ui/pending-link';
-import { ApprovalBadge, SkillLevelBadge } from '@/components/domain/badges';
+import { ApprovalBadge, SkillLevelBadge, TrialMemberIndicator } from '@/components/domain/badges';
 import { Badge, Card, EmptyState, PageHeader } from '@/components/ui/card';
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { FilterChips } from '@/components/ui/filter-chips';
@@ -110,6 +110,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                     <ApprovalBadge status={m.approval_status} />
                     <SkillLevelBadge label={levelLabel(m.skill_level_code, levels)} />
                     <SubscriptionBadge m={m} />
+                    <TrialMemberIndicator hadTrial={m.had_trial_session} />
                     {monthlyUsage(m) ? <Badge tone="neutral">{monthlyUsage(m)}</Badge> : null}
                   </div>
                 </Card>
@@ -124,6 +125,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                 <Th>שם</Th>
                 <Th>טלפון</Th>
                 <Th>רמה</Th>
+                <Th>אימון ניסיון</Th>
                 <Th>מנוי</Th>
                 <Th>שימוש החודש</Th>
                 <Th>סטטוס</Th>
@@ -151,6 +153,9 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                   </Td>
                   <Td>
                     <SkillLevelBadge label={levelLabel(m.skill_level_code, levels)} />
+                  </Td>
+                  <Td>
+                    <TrialMemberIndicator hadTrial={m.had_trial_session} />
                   </Td>
                   <Td>
                     <SubscriptionBadge m={m} />
