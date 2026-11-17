@@ -13,6 +13,7 @@ import { BookingStatusBadge } from '@/components/domain/badges';
 import { Badge, Card, PageHeader, ProgressBar, SectionHeading } from '@/components/ui/card';
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
+import { formatTrialPriceHe } from '@/lib/domain/trial';
 import { formatIsraeliPhone } from '@/lib/phone';
 import type { Allowance } from '@/lib/domain/types';
 import { currentMonthStart, formatDateHe, formatInstantHe, formatMonthCycleHe, formatMonthHe, formatTimeRange, israelToday, shiftMonth } from '@/lib/time';
@@ -42,7 +43,7 @@ function AllowanceSummary({ title, allowance }: { title: string; allowance: Allo
         </>
       ) : (
         <p className="text-small text-muted">
-          {allowance.trial_available ? 'אין מנוי פעיל · יש אימון ניסיון אחד' : 'אין מנוי פעיל בחודש הזה'}
+          {allowance.trial_available ? `אין מנוי פעיל · יש אימון ניסיון אחד (${formatTrialPriceHe()})` : 'אין מנוי פעיל בחודש הזה'}
         </p>
       )}
     </Card>

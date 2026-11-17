@@ -5,6 +5,7 @@ import { SubscriptionSummary } from '@/components/member/subscription-summary';
 import { ButtonLink } from '@/components/ui/button';
 import { Card, SectionHeading } from '@/components/ui/card';
 import { levelLabel } from '@/lib/domain/labels';
+import { formatTrialPriceHe } from '@/lib/domain/trial';
 import { nowMs } from '@/lib/now';
 import { currentMonthStart, currentWeekStart, greetingHe, israelToday, shiftWeek, weekStartOf } from '@/lib/time';
 import { requireMember } from '@/server/auth';
@@ -73,13 +74,19 @@ export default async function MemberHomePage() {
             ) : (
               <Card className="flex flex-col gap-1 text-small text-muted">
                 <p className="text-card font-semibold text-navy-900">עוד לא נרשמת לאימון קרוב</p>
-                <p>{thisMonth.trial_available ? 'אפשר לבחור את אימון הניסיון בלוח האימונים, באיזה מועד שתרצי.' : 'אפשר לבחור אימון בלוח האימונים.'}</p>
+                <p>
+                  {thisMonth.trial_available
+                    ? `אפשר לבחור אימון ניסיון (${formatTrialPriceHe()}) בלוח האימונים, באיזה מועד שתרצי. התשלום במעמד האימון.`
+                    : 'אפשר לבחור אימון בלוח האימונים.'}
+                </p>
               </Card>
             )}
           </section>
 
           <ButtonLink href="/schedule" size="lg" racket="end" className="order-4 w-full lg:order-none">
-            <span className="text-card font-bold">{thisMonth.trial_available ? 'להרשמה לאימון ניסיון' : 'להרשמה לאימון'}</span>
+            <span className="text-card font-bold">
+              {thisMonth.trial_available ? `להרשמה לאימון ניסיון (${formatTrialPriceHe()})` : 'להרשמה לאימון'}
+            </span>
           </ButtonLink>
 
           {available.length > 0 ? (

@@ -1,6 +1,7 @@
 ﻿import { CalendarCheck } from 'lucide-react';
 import { Alert, Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
+import { formatTrialPriceHe } from '@/lib/domain/trial';
 import type { Allowance } from '@/lib/domain/types';
 import { formatHours, formatMonthCycleHe, formatMonthHe } from '@/lib/time';
 
@@ -37,7 +38,7 @@ export function SubscriptionSummary({
         <p className="text-small font-semibold text-muted">{title}</p>
         {allowance.trial_available ? (
           <Alert tone="blue" className="mt-3" title="אימון ניסיון">
-            יש לך אימון אחד בחינם. בחרי אותו בלוח האימונים, באיזה מועד שתרצי. אם אחר כך תעברי למנוי, האימון הזה לא ירד מהמכסה החודשית.
+            יש לך אימון ניסיון אחד בעלות {formatTrialPriceHe()}. בחרי אותו בלוח האימונים, באיזה מועד שתרצי. התשלום במעמד האימון. אם אחר כך תעברי למנוי, האימון הזה לא ירד מהמכסה החודשית.
           </Alert>
         ) : (
           <Alert tone="amber" className="mt-3">

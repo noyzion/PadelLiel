@@ -8,6 +8,7 @@ import { NotificationSettings } from '@/components/notifications/notification-se
 import { Badge, Card, SectionHeading } from '@/components/ui/card';
 import { DataTable, Td, THead, Th, Tr } from '@/components/ui/data-table';
 import { levelLabel } from '@/lib/domain/labels';
+import { formatTrialPriceHe } from '@/lib/domain/trial';
 import { getVapidPublicKey } from '@/lib/env';
 import { formatIsraeliPhone } from '@/lib/phone';
 import { currentMonthStart, formatMonthCycleHe, formatMonthHe, shiftMonth } from '@/lib/time';
@@ -56,7 +57,7 @@ export default async function ProfilePage() {
             {allowance.has_active_subscription
               ? `מנוי: ${allowance.plan_name}`
               : allowance.trial_available
-                ? 'יש אימון ניסיון'
+                ? `אימון ניסיון (${formatTrialPriceHe()})`
                 : 'אין מנוי פעיל'}
           </Badge>
           {sub?.ends_on ? (

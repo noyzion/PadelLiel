@@ -63,7 +63,7 @@ export interface Allowance {
   used: number;
   remaining: number;
   has_active_subscription: boolean;
-  /** One free session left (only when there is no plan in force this month). */
+  /** One trial session left (only when there is no plan in force this month). */
   trial_available: boolean;
 }
 
@@ -104,7 +104,7 @@ export interface ScheduleSession {
   cancellation_deadline: string;
   /** True when "now" is already inside the cancellation cutoff window (last-minute). */
   is_late_window: boolean;
-  /** The caller's occupying booking on this session is the one-time free trial. */
+  /** The caller's occupying booking on this session is the one-time trial session. */
   my_booking_is_trial: boolean;
 }
 

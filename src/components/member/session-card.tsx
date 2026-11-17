@@ -14,6 +14,7 @@ import { useToast } from '@/components/ui/toast';
 import { VENUE_NAME } from '@/lib/brand';
 import { cn } from '@/lib/cn';
 import { blockReasonHe } from '@/lib/domain/errors';
+import { formatTrialPriceHe } from '@/lib/domain/trial';
 import type { ScheduleSession } from '@/lib/domain/types';
 import { formatDateHe, formatHours, formatTimeRange } from '@/lib/time';
 
@@ -29,7 +30,7 @@ export function SessionCard({
   cutoffHours: number;
   /** The server's current time (ms). Passed in so the card renders the same on the server and in the browser. */
   nowMs: number;
-  /** She can still take her one free session (no plan in force). */
+  /** She can still take her one paid trial session (no plan in force). */
   trialAvailable?: boolean;
 }) {
   const [lateBookOpen, setLateBookOpen] = useState(false);
@@ -56,7 +57,7 @@ export function SessionCard({
       const result = await bookSessionAction({ sessionId: session.id, ackLatePolicy: ack });
       if (result.ok) {
         setLateBookOpen(false);
-        toast.success('נרשמת לאימון');
+        toast.success(trialAvailable ? `נרשמת לאימון הניסיון. עלות ${formatTrialPriceHe()} — התשלום במעמד האימון.` : 'נרשמת לאימון');
       } else if (result.code === 'LATE_POLICY_ACK_REQUIRED') {
         setLateBookOpen(true);
       } else {
@@ -149,7 +150,7 @@ export function SessionCard({
 
         {canBook ? (
           <Button className="w-full" loading={pending} onClick={() => (session.is_late_window ? setLateBookOpen(true) : book(false))}>
-            {trialAvailable ? 'להרשמה לאימון ניסיון' : 'להרשמה לאימון'}
+            {trialAvailable ? `להרשמה לאימון ניסיון (${formatTrialPriceHe()})` : 'להרשמה לאימון'}
           </Button>
         ) : null}
 
@@ -181,6 +182,9 @@ export function SessionCard({
         ) : null}
 
         {finished && !isBooked && !cancelled ? <p className="text-small text-muted">האימון הסתיים או שכבר התחיל.</p> : null}
+        {canBook && trialAvailable ? (
+          <p className="text-center text-caption text-muted">עלות אימון הניסיון {formatTrialPriceHe()}. התשלום במעמד האימון.</p>
+        ) : null}
         {canBook && session.is_late_window ? (
           <p className="text-center text-caption text-muted">הרשמה של פחות מ-{hours} שעות לפני האימון</p>
         ) : null}
@@ -204,7 +208,7 @@ export function SessionCard({
         <p className="mb-3 text-body font-semibold text-navy-900">{label}</p>
         <Alert tone="amber" title="שימי לב">
           {trialAvailable
-            ? `האימון מתחיל בעוד פחות מ-${hours} שעות. ביטול מאוחר ינצל את אימון הניסיון, ולא יהיה אפשר לקחת אימון חינם נוסף.`
+            ? `האימון מתחיל בעוד פחות מ-${hours} שעות. ביטול מאוחר ינצל את אימון הניסיון, ולא יהיה אפשר לקחת אימון ניסיון נוסף.`
             : `האימון מתחיל בעוד פחות מ-${hours} שעות. אם תבטלי את ההרשמה הזו, האימון עדיין ייספר במכסה החודשית שלך.`}
         </Alert>
       </Modal>

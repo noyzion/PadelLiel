@@ -4,6 +4,7 @@ import { DayTabs, type DayTab } from '@/components/member/day-tabs';
 import { EmptyState, PageHeader } from '@/components/ui/card';
 import { WeekNav } from '@/components/week-nav';
 import { levelLabel } from '@/lib/domain/labels';
+import { formatTrialPriceHe } from '@/lib/domain/trial';
 import { nowMs } from '@/lib/now';
 import {
   currentMonthStart,
@@ -112,7 +113,11 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
     <div className="flex flex-col gap-5">
       <PageHeader
         title="לוח אימונים"
-        description={trialAvailable ? 'יש לך אימון ניסיון אחד בחינם. בחרי איזה מועד שתרצי.' : 'בחרי יום ואז אימון להרשמה'}
+        description={
+          trialAvailable
+            ? `יש לך אימון ניסיון אחד בעלות ${formatTrialPriceHe()}. בחרי איזה מועד שתרצי — התשלום במעמד האימון.`
+            : 'בחרי יום ואז אימון להרשמה'
+        }
       />
       <WeekNav
         basePath="/schedule"
