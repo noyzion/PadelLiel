@@ -14,7 +14,7 @@ export function EventRsvpRoster({ rows }: { rows: EventRsvpRow[] }) {
       </SectionHeading>
       <p className="text-small text-muted">
         {going.length} מגיעות
-        {notGoing.length > 0 ? ` · ${notGoing.length} לא יוכלו להגיע` : null}
+        {notGoing.length > 0 ? ` - ${notGoing.length} לא יוכלו להגיע` : null}
       </p>
       {rows.length === 0 ? (
         <p className="rounded-card border border-line bg-surface px-5 py-8 text-center text-small text-muted">

@@ -25,7 +25,7 @@ export default async function EventsPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <PageHeader title="אירועים בקהילה" description={`מה קורה אצלנו ב${VENUE_NAME} · ${formatMonthHe(currentMonthStart(now))}`} />
+      <PageHeader title="אירועים בקהילה" description={`מה קורה אצלנו ב${VENUE_NAME} - ${formatMonthHe(currentMonthStart(now))}`} />
 
       <section aria-labelledby="events-upcoming" className="flex flex-col gap-4">
         <SectionHeading id="events-upcoming">אירועים קרובים</SectionHeading>

@@ -310,7 +310,7 @@ describe('calendar-month subscriptions (1st to 1st)', () => {
     expect(row.rows[0].s).toBe('2026-11-01');
   });
 
-  it('treats an end on the 1st as "until that 1st" (1.11–1.12 is November)', async () => {
+  it('treats an end on the 1st as "until that 1st" (1.11-1.12 is November)', async () => {
     const admin = await db.createAdmin();
     const member = await db.createMember({ limit: null });
     await admin.call('admin_assign_subscription', {

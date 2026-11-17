@@ -17,7 +17,7 @@ export function SessionPreview({ session, levelLabel, href }: { session: Schedul
           <bdi>{formatTimeRange(session.start_time, session.end_time)}</bdi>
         </p>
         <p className="text-small text-muted">
-          {formatDateHe(session.session_date)} · נותרו {free} מתוך {session.capacity} מקומות
+          {formatDateHe(session.session_date)} - נותרו {free} מתוך {session.capacity} מקומות
         </p>
       </div>
       <div className="flex items-center gap-2">

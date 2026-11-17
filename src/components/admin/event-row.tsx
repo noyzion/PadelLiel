@@ -31,11 +31,11 @@ export function EventRow({ event, rsvps = [] }: { event: EventView; rsvps?: Even
           <bdi>{when.date}</bdi>
           {when.time ? (
             <>
-              {' · '}
+              {' - '}
               <bdi className="num">{when.time}</bdi>
             </>
           ) : null}
-          {isDateOnlyEvent(event) ? <span> · {EVENT_TIME_TBA_HE}</span> : null}
+          {isDateOnlyEvent(event) ? <span> - {EVENT_TIME_TBA_HE}</span> : null}
         </p>
         <p className="flex items-center gap-1.5 text-caption text-muted">
           <MapPin className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.6} />
@@ -74,7 +74,7 @@ function RsvpLine({
       {summary.goingNames ? <span>מגיעות: {summary.goingNames}</span> : <span>אין מי שאישרה הגעה.</span>}
       {summary.notGoing > 0 ? (
         <span className="text-muted">
-          {' · '}
+          {' - '}
           {summary.notGoing} לא יוכלו להגיע
         </span>
       ) : null}

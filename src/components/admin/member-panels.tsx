@@ -323,11 +323,11 @@ export function SubscriptionManager({
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-small">
             <div>
               <p className="font-semibold">
-                {s.plan_name} · {s.monthly_limit} בחודש
+                {s.plan_name} - {s.monthly_limit} בחודש
               </p>
               <p className="text-caption text-muted">
                 מ-{formatDateHe(s.starts_on)}
-                {s.ends_on ? ` עד ${formatDateHe(s.ends_on)}` : ' · מתחדש ב־1 בכל חודש'}
+                {s.ends_on ? ` עד ${formatDateHe(s.ends_on)}` : ' - מתחדש ב-1 בכל חודש'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -387,14 +387,14 @@ export function SubscriptionManager({
             </Select>
           )}
         </Field>
-        <Field label="תחילה" hint="נספר מתחילת החודש (ה־1)">
+        <Field label="תחילה" hint="נספר מתחילת החודש (ה-1)">
           {(p) => <Input {...p} type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} />}
         </Field>
         <Button type="submit" loading={pending} disabled={!planId} className="self-start">
           שמירת מנוי
         </Button>
         <p className="text-caption text-muted">
-          המנוי חודשי לכולן: {formatMonthCycleHe(today)} וכן הלאה. תאריך באמצע חודש נספר מה־1, והמכסה מתחדשת אוטומטית כל 1 בחודש.
+          המנוי חודשי לכולן: {formatMonthCycleHe(today)} וכן הלאה. תאריך באמצע חודש נספר מה-1, והמכסה מתחדשת אוטומטית כל 1 בחודש.
           החלפת תוכנית לא מאפסת אימונים שכבר נספרו באותו חודש.
         </p>
       </form>
@@ -430,7 +430,7 @@ export function SubscriptionManager({
           </>
         }
       >
-        <Field label="תחילה" hint="נספר מתחילת החודש (ה־1)">
+        <Field label="תחילה" hint="נספר מתחילת החודש (ה-1)">
           {(p) => <Input {...p} type="date" value={editStart} onChange={(e) => setEditStart(e.target.value)} />}
         </Field>
       </Modal>
@@ -474,7 +474,7 @@ export function AllowanceAdjustForm({ memberId, months }: { memberId: string; mo
               </Select>
             )}
           </Field>
-          <Field label="שינוי (+/−)">
+          <Field label="שינוי (+/-)">
             {(p) => <Input {...p} type="number" inputMode="numeric" min={-31} max={31} value={delta} onChange={(e) => setDelta(Number(e.target.value))} required />}
           </Field>
         </div>

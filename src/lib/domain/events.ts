@@ -3,7 +3,7 @@ import { formatEventDatesHe, formatEventWhenHe, israelNoonOf } from '@/lib/time'
 
 /**
  * Community events: a noticeboard plus optional attendance confirmation (`event_rsvps`).
- * Nothing here knows about sessions, bookings, plans or allowances — an RSVP never touches quota.
+ * Nothing here knows about sessions, bookings, plans or allowances - an RSVP never touches quota.
  */
 
 export type EventStatus = 'DRAFT' | 'PUBLISHED';

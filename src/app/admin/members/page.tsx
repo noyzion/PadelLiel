@@ -29,13 +29,13 @@ function SubscriptionBadge({ m }: { m: MemberOverview }) {
   return (
     <Badge tone={m.has_active_subscription ? 'rose' : 'amber'}>
       {m.plan_name}
-      {m.has_active_subscription ? '' : ' · לא פעיל'}
+      {m.has_active_subscription ? '' : ' - לא פעיל'}
     </Badge>
   );
 }
 
 function monthlyUsage(m: MemberOverview): string | null {
-  return m.has_active_subscription ? `נוצלו ${m.used} · נותרו ${m.remaining}` : null;
+  return m.has_active_subscription ? `נוצלו ${m.used} - נותרו ${m.remaining}` : null;
 }
 
 export default async function AdminMembersPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
@@ -68,7 +68,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="מתאמנות" description={`${members.length} רשומות${pendingCount ? ` · ${pendingCount} ממתינות לאישור` : ''}`} />
+      <PageHeader title="מתאמנות" description={`${members.length} רשומות${pendingCount ? ` - ${pendingCount} ממתינות לאישור` : ''}`} />
 
       <form method="get" role="search" className="flex flex-col gap-3 sm:flex-row">
         {status !== 'all' ? <input type="hidden" name="status" value={status} /> : null}
@@ -100,7 +100,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                       <span dir="ltr">{formatIsraeliPhone(m.phone) || '-'}</span>
                       {m.email ? (
                         <>
-                          {' · '}
+                          {' - '}
                           <span dir="ltr">{m.email}</span>
                         </>
                       ) : null}

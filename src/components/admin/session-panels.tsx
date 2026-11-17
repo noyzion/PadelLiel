@@ -418,7 +418,7 @@ export function AssignForm({
               <option value="">בחרי…</option>
               {options.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.full_name} · {levelLabel(m.skill_level_code, levels)}
+                  {m.full_name} - {levelLabel(m.skill_level_code, levels)}
                 </option>
               ))}
             </Select>
@@ -477,7 +477,7 @@ export function Waitlist({ entries, isFull }: { entries: WaitlistRow[]; isFull: 
       </div>
       {past.length > 0 ? (
         <p className="text-caption text-muted">
-          היסטוריה: {past.map((e) => `${e.member?.full_name ?? '-'} (${WAITLIST_STATUS_LABEL_HE[e.status]})`).join(' · ')}
+          היסטוריה: {past.map((e) => `${e.member?.full_name ?? '-'} (${WAITLIST_STATUS_LABEL_HE[e.status]})`).join(' - ')}
         </p>
       ) : null}
 

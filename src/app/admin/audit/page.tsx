@@ -21,7 +21,7 @@ const ENTITY_HE: Record<string, string> = {
 
 function describe(action: string, entityType: string) {
   const [operation = ''] = action.split(':');
-  return `${ENTITY_HE[entityType] ?? entityType} · ${OPERATION_HE[operation] ?? operation}`;
+  return `${ENTITY_HE[entityType] ?? entityType} - ${OPERATION_HE[operation] ?? operation}`;
 }
 
 export default async function AdminAuditPage() {

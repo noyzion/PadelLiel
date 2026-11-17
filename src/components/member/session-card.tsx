@@ -39,7 +39,7 @@ export function SessionCard({
   const toast = useToast();
   const hours = formatHours(cutoffHours);
 
-  const label = `${formatDateHe(session.session_date)} · ${formatTimeRange(session.start_time, session.end_time)}`;
+  const label = `${formatDateHe(session.session_date)} - ${formatTimeRange(session.start_time, session.end_time)}`;
   const isBooked = Boolean(session.my_booking_id);
   const isOnWaitlist = Boolean(session.my_waitlist_entry_id);
   const cancelled = session.status === 'CANCELLED';
@@ -57,7 +57,7 @@ export function SessionCard({
       const result = await bookSessionAction({ sessionId: session.id, ackLatePolicy: ack });
       if (result.ok) {
         setLateBookOpen(false);
-        toast.success(trialAvailable ? `נרשמת לאימון הניסיון. עלות ${formatTrialPriceHe()} — התשלום במעמד האימון.` : 'נרשמת לאימון');
+        toast.success(trialAvailable ? `נרשמת לאימון הניסיון. עלות ${formatTrialPriceHe()} - התשלום במעמד האימון.` : 'נרשמת לאימון');
       } else if (result.code === 'LATE_POLICY_ACK_REQUIRED') {
         setLateBookOpen(true);
       } else {
@@ -127,7 +127,7 @@ export function SessionCard({
         <Alert tone="amber">
           <span className="inline-flex items-center gap-1.5 font-semibold">
             <Hourglass className="size-4" aria-hidden="true" />
-            את ברשימת ההמתנה · מקום {session.my_waitlist_position}
+            את ברשימת ההמתנה - מקום {session.my_waitlist_position}
           </span>
         </Alert>
       ) : null}

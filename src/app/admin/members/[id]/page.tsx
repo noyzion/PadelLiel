@@ -39,12 +39,12 @@ function AllowanceSummary({ title, allowance }: { title: string; allowance: Allo
           <ProgressBar value={allowance.used} max={allowance.effective_limit} label={title} />
           <p className="text-caption text-muted">
             נותרו {allowance.remaining}
-            {allowance.adjustments !== 0 ? ` · התאמה ידנית ${allowance.adjustments > 0 ? '+' : ''}${allowance.adjustments}` : ''}
+            {allowance.adjustments !== 0 ? ` - התאמה ידנית ${allowance.adjustments > 0 ? '+' : ''}${allowance.adjustments}` : ''}
           </p>
         </>
       ) : (
         <p className="text-small text-muted">
-          {allowance.trial_available ? `אין מנוי פעיל · יש אימון ניסיון אחד (${formatTrialPriceHe()})` : 'אין מנוי פעיל בחודש הזה'}
+          {allowance.trial_available ? `אין מנוי פעיל - יש אימון ניסיון אחד (${formatTrialPriceHe()})` : 'אין מנוי פעיל בחודש הזה'}
         </p>
       )}
     </Card>
@@ -79,18 +79,18 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
           <span dir="ltr">{formatIsraeliPhone(profile.phone) || '-'}</span>
           {profile.email ? (
             <>
-              {' · '}
+              {' - '}
               <span dir="ltr">{profile.email}</span>
             </>
           ) : null}
-          {' · '}הצטרפה {formatInstantHe(profile.created_at)}
+          {' - '}הצטרפה {formatInstantHe(profile.created_at)}
         </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <AllowanceSummary title={`החודש · ${formatMonthHe(month)} · ${formatMonthCycleHe(month)}`} allowance={thisMonth} />
+        <AllowanceSummary title={`החודש - ${formatMonthHe(month)} - ${formatMonthCycleHe(month)}`} allowance={thisMonth} />
         <AllowanceSummary
-          title={`החודש הבא · ${formatMonthHe(shiftMonth(month, 1))} · ${formatMonthCycleHe(shiftMonth(month, 1))}`}
+          title={`החודש הבא - ${formatMonthHe(shiftMonth(month, 1))} - ${formatMonthCycleHe(shiftMonth(month, 1))}`}
           allowance={nextMonth}
         />
       </div>
@@ -163,7 +163,7 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
                   <div>
                     <p className="font-medium">
                       {a.delta > 0 ? '+' : ''}
-                      {a.delta} · {formatMonthHe(a.month_start)}
+                      {a.delta} - {formatMonthHe(a.month_start)}
                     </p>
                     <p className="text-caption text-muted">{a.reason}</p>
                   </div>

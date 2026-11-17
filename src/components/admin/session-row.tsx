@@ -42,7 +42,7 @@ export function SessionRow({
               {session.occupied_count} / {session.capacity} רשומות
             </span>
             <span className="num">
-              {session.waitlist_count > 0 ? `${session.waitlist_count} בהמתנה · ` : ''}
+              {session.waitlist_count > 0 ? `${session.waitlist_count} בהמתנה - ` : ''}
               {Math.max(0, session.capacity - session.occupied_count)} פנויים
             </span>
           </div>

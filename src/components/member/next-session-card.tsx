@@ -17,7 +17,7 @@ export function NextSessionCard({
   levelLabel: string;
   cutoffHours: number;
 }) {
-  const label = `${formatDateHe(booking.session_date)} · ${formatTimeRange(booking.start_time, booking.end_time)}`;
+  const label = `${formatDateHe(booking.session_date)} - ${formatTimeRange(booking.start_time, booking.end_time)}`;
   return (
     <Card tone="blue" className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">

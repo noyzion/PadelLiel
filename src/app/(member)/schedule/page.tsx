@@ -115,7 +115,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
         title="לוח אימונים"
         description={
           trialAvailable
-            ? `יש לך אימון ניסיון אחד בעלות ${formatTrialPriceHe()}. בחרי איזה מועד שתרצי — התשלום במעמד האימון.`
+            ? `יש לך אימון ניסיון אחד בעלות ${formatTrialPriceHe()}. בחרי איזה מועד שתרצי - התשלום במעמד האימון.`
             : 'בחרי יום ואז אימון להרשמה'
         }
       />

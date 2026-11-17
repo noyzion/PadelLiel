@@ -240,7 +240,7 @@ describe('events with a date but no clock time', () => {
   });
 
   it('a multi-day timed event needs an end time (a bare end date is not enough)', () => {
-    expect(message({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27' })).toBe('באירוע רב־יומי עם שעת התחלה יש להזין גם שעת סיום');
+    expect(message({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27' })).toBe('באירוע רב-יומי עם שעת התחלה יש להזין גם שעת סיום');
     expect(eventFormSchema.safeParse({ ...draft, startsAt: '2026-11-25T07:00', endsAt: '2026-11-27T12:00' }).success).toBe(true);
   });
 

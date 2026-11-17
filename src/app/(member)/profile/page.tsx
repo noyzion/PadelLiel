@@ -66,7 +66,7 @@ export default async function ProfilePage() {
             </span>
           ) : sub ? (
             <span className="text-caption text-muted">
-              מתחדש ב־1 בכל חודש · {formatMonthCycleHe(month)}
+              מתחדש ב-1 בכל חודש - {formatMonthCycleHe(month)}
             </span>
           ) : null}
         </div>

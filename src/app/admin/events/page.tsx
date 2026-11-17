@@ -72,7 +72,7 @@ export default async function AdminEventsPage() {
       <Section id="events-drafts" title="טיוטות" events={drafts} empty="אין טיוטות." rsvpsByEvent={rsvpsByEvent} />
       <Section
         id="events-upcoming"
-        title="מפורסמים · קרובים"
+        title="מפורסמים - קרובים"
         events={upcoming}
         empty="אין אירועים קרובים שפורסמו."
         rsvpsByEvent={rsvpsByEvent}

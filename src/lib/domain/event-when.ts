@@ -21,7 +21,7 @@ export const WHEN_INVALID = 'תאריך או שעה לא תקינים';
 export const WHEN_END_BEFORE_START = 'שעת הסיום חייבת להיות אחרי שעת ההתחלה';
 export const WHEN_END_DATE_BEFORE_START = 'תאריך הסיום חייב להיות אחרי תאריך ההתחלה';
 export const WHEN_PUBLISH_NEEDS_DATE = 'כדי לפרסם אירוע יש להוסיף תאריך';
-export const WHEN_MULTI_DAY_NEEDS_END_TIME = 'באירוע רב־יומי עם שעת התחלה יש להזין גם שעת סיום';
+export const WHEN_MULTI_DAY_NEEDS_END_TIME = 'באירוע רב-יומי עם שעת התחלה יש להזין גם שעת סיום';
 export const WHEN_END_TIME_NEEDS_START_TIME = 'יש להזין שעת התחלה לפני שעת סיום';
 export const WHEN_END_NEEDS_DATE = 'יש להזין תאריך התחלה';
 

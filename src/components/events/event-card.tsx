@@ -86,12 +86,12 @@ export function EventCard({
           <bdi>{when.date}</bdi>
           {when.time ? (
             <>
-              <span aria-hidden="true"> · </span>
+              <span aria-hidden="true"> - </span>
               <bdi className="num">{when.time}</bdi>
             </>
           ) : isDateOnlyEvent(event) ? (
             <>
-              <span aria-hidden="true"> · </span>
+              <span aria-hidden="true"> - </span>
               <span>{EVENT_TIME_TBA_HE}</span>
             </>
           ) : null}

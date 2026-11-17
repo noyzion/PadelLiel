@@ -18,7 +18,7 @@ import { rpc, unwrap } from '../rpc';
 
 /**
  * Community events: a noticeboard plus optional attendance confirmation.
- * Independent of training sessions — an RSVP never touches quota.
+ * Independent of training sessions - an RSVP never touches quota.
  * Visibility is enforced by Row Level Security (trainees only ever see PUBLISHED events);
  * the status filters below only make the intent explicit.
  */

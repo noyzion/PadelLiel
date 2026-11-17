@@ -26,7 +26,7 @@ function WeekOccupancy({ title, stats }: { title: string; stats: WeekStats }) {
       <p className="num text-hero font-semibold text-navy-900">{stats.occupancyPercent}%</p>
       <ProgressBar value={stats.occupied} max={Math.max(stats.capacity, 1)} label={`תפוסה ${title}`} />
       <p className="text-caption text-muted">
-        {stats.occupied} מתוך {stats.capacity} מקומות · {stats.sessions} אימונים · {stats.fullSessions} מלאים · {stats.waiting} בהמתנה
+        {stats.occupied} מתוך {stats.capacity} מקומות - {stats.sessions} אימונים - {stats.fullSessions} מלאים - {stats.waiting} בהמתנה
       </p>
     </Card>
   );
@@ -124,8 +124,8 @@ export default async function AdminDashboardPage() {
                     <BookingStatusBadge status={c.status} />
                   </div>
                   <span className="text-caption text-muted">
-                    {formatDateHe(c.session_date)} · {formatTimeRange(c.start_time, c.end_time)}
-                    {c.cancelled_at ? ` · בוטל ${formatInstantHe(c.cancelled_at)}` : ''}
+                    {formatDateHe(c.session_date)} - {formatTimeRange(c.start_time, c.end_time)}
+                    {c.cancelled_at ? ` - בוטל ${formatInstantHe(c.cancelled_at)}` : ''}
                   </span>
                 </PendingLink>
               ))}

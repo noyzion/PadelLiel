@@ -13,7 +13,7 @@ const assistant = Assistant({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'אימוני פאדל לנשים כוכב יאיר', template: '%s · אימוני פאדל כוכב יאיר' },
+  title: { default: 'אימוני פאדל לנשים כוכב יאיר', template: '%s - אימוני פאדל כוכב יאיר' },
   description: 'ניהול הרשמות לאימוני פאדל של הצוות שלנו - קהילת נשים בכוכב יאיר',
   robots: { index: false, follow: false },
   // Installable web app (the manifest is served from app/manifest.ts). iPhone Push needs the Home Screen install.

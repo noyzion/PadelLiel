@@ -33,7 +33,7 @@ export default async function AdminSessionPage({ params }: { params: Promise<{ i
     <div className="flex flex-col gap-6">
       <div>
         <BackLink href={`/admin/schedule?week=${session.week_start}`}>חזרה ללוח האימונים</BackLink>
-        <PageHeader title={`${formatDateHe(session.session_date)} · ${formatTimeRange(session.start_time, session.end_time)}`} />
+        <PageHeader title={`${formatDateHe(session.session_date)} - ${formatTimeRange(session.start_time, session.end_time)}`} />
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Badge tone={SESSION_STATUS_TONE[session.status]}>{SESSION_STATUS_LABEL_HE[session.status]}</Badge>
           <Badge tone="blue">{levelLabel(session.skill_level_code, levels)}</Badge>

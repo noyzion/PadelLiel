@@ -33,7 +33,7 @@ export function EventRsvp({
     <Card tone="pink" className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       {status ? (
         <p className="text-body font-semibold text-navy-900">
-          {status === 'GOING' ? 'אישרת הגעה — מחכות לך!' : 'עדכנת שלא תוכלי להגיע.'}
+          {status === 'GOING' ? 'אישרת הגעה - מחכות לך!' : 'עדכנת שלא תוכלי להגיע.'}
         </p>
       ) : (
         <div>

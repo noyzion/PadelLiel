@@ -67,7 +67,7 @@ export default async function ImportEventsPage() {
 
       <p className="text-small text-muted">
         <span className="num">{summary.total}</span> אירועים בקובץ (<span className="num">{summary.singleDay}</span> ביום אחד,{' '}
-        <span className="num">{summary.multiDay}</span> רב־יומי) · ייווצרו <span className="num">{summary.create}</span> · יידלגו{' '}
+        <span className="num">{summary.multiDay}</span> רב-יומי) - ייווצרו <span className="num">{summary.create}</span> - יידלגו{' '}
         <span className="num">{summary.skipSameKey + summary.skipSimilar}</span>
       </p>
 
@@ -79,16 +79,16 @@ export default async function ImportEventsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-card font-semibold text-navy-900">{event.title}</h3>
                 <Badge tone="amber">טיוטה</Badge>
-                <Badge tone="blue">{event.span === 'MULTI_DAY' ? 'רב־יומי' : 'יום אחד'}</Badge>
+                <Badge tone="blue">{event.span === 'MULTI_DAY' ? 'רב-יומי' : 'יום אחד'}</Badge>
                 <Badge tone={ACTION_TONE[action]}>{IMPORT_ACTION_LABEL_HE[action]}</Badge>
               </div>
               <p className="text-small font-semibold text-pink-700">
                 <bdi>{when.date}</bdi>
-                <span className="font-normal text-muted"> · {EVENT_TIME_TBA_HE}</span>
+                <span className="font-normal text-muted"> - {EVENT_TIME_TBA_HE}</span>
               </p>
               <p className="whitespace-pre-line text-small text-ink">{event.description}</p>
               <p className="text-caption text-muted">
-                {event.location} · <bdi className="num">{event.importKey}</bdi>
+                {event.location} - <bdi className="num">{event.importKey}</bdi>
               </p>
               {match ? (
                 <p className="text-caption text-muted">

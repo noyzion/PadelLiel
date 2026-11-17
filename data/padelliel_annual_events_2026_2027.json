@@ -1,5 +1,5 @@
 {
-  "source": "Annual Padel Morning Club flyer provided by user (Oct 2026–Sep 2027)",
+  "source": "Annual Padel Morning Club flyer provided by user (Oct 2026-Sep 2027)",
   "purpose": "Import source data as UNPUBLISHED event drafts after verifying existing community_events schema.",
   "timezone": "Asia/Jerusalem",
   "important": "Flyer specifies dates but not event start/end times. Do not invent hours, image URLs, registration, or payment details.",

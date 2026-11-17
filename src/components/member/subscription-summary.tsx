@@ -1,4 +1,4 @@
-﻿import { CalendarCheck } from 'lucide-react';
+import { CalendarCheck } from 'lucide-react';
 import { Alert, Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
 import { formatTrialPriceHe } from '@/lib/domain/trial';
@@ -55,7 +55,7 @@ export function SubscriptionSummary({
         <div>
           <p className="text-small font-semibold text-navy-900">{title}</p>
           <p className="text-caption text-muted">
-            {formatMonthHe(allowance.month_start)} · {formatMonthCycleHe(allowance.month_start)}
+            {formatMonthHe(allowance.month_start)} - {formatMonthCycleHe(allowance.month_start)}
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-chip border border-pink-200 bg-pink-50 px-3 py-1 text-caption font-semibold text-pink-700">

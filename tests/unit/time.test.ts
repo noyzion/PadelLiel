@@ -91,8 +91,8 @@ describe('month arithmetic (monthly session quota)', () => {
   });
 
   it('formats the 1st-to-1st cycle', () => {
-    expect(formatMonthCycleHe('2026-11-18')).toBe('1.11 – 1.12');
-    expect(formatMonthCycleHe('2026-12-01')).toBe('1.12 – 1.1');
+    expect(formatMonthCycleHe('2026-11-18')).toBe('1.11 - 1.12');
+    expect(formatMonthCycleHe('2026-12-01')).toBe('1.12 - 1.1');
   });
 });
 
